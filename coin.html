@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coin — Vdear</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📈</text></svg>">
+</head>
+<body>
+  <div id="ticker" class="ticker-bar"></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">V</span>
+      <div><div class="brand-name">Vdear</div><div class="brand-sub">Coin Analytics</div></div>
+    </a>
+    <a href="index.html" class="back-link">← Về thị trường</a>
+  </header>
+
+  <main class="container coin-page">
+    <!-- Header coin -->
+    <section class="coin-header">
+      <img id="coinLogo" class="coin-logo" alt="">
+      <div class="coin-id">
+        <h1 id="coinName">—</h1>
+        <span class="coin-pair" id="coinPair">—</span>
+      </div>
+      <div class="coin-price-box">
+        <div class="big-price" id="coinPrice">—</div>
+        <div class="big-chg" id="coinChange">—</div>
+      </div>
+      <div class="coin-stats">
+        <div><span>24h Cao</span><b id="statHigh">—</b></div>
+        <div><span>24h Thấp</span><b id="statLow">—</b></div>
+        <div><span>Volume</span><b id="statVol">—</b></div>
+      </div>
+    </section>
+
+    <!-- Giá đa sàn -->
+    <div class="exchange-row" id="exchangeRow"></div>
+
+    <!-- Chú thích RSI nhấn mạnh -->
+    <div class="rsi-note neutral" id="rsiNote"></div>
+
+    <!-- Thang đo 0-100 -->
+    <section class="panel gauge-panel">
+      <div class="panel-head"><h2>Đánh giá tín hiệu (khung đang chọn)</h2>
+        <span class="gauge-side neutral" id="gaugeSide">—</span></div>
+      <div class="gauge">
+        <div class="gauge-track"><div class="gauge-fill neutral" id="gaugeFill" style="width:50%"></div>
+          <div class="gauge-ticks"><span>0 · SHORT</span><span>50</span><span>100 · LONG</span></div>
+        </div>
+        <div class="gauge-val" id="gaugeValue">—</div>
+      </div>
+      <div class="muted small" id="gaugeWin"></div>
+    </section>
+
+    <!-- Chart -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Biểu đồ nến &amp; RSI</h2>
+        <div class="tf-tabs" id="tfTabs"></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="price-area"><canvas id="priceCanvas"></canvas></div>
+        <div class="rsi-area"><canvas id="rsiCanvas"></canvas></div>
+        <div class="chart-error" id="chartError" style="display:none"></div>
+      </div>
+      <div class="rsi-legend">
+        <span><i class="sw" style="background:#ff3b57"></i> RSI 70–80 quá mua · &gt;80 quá mua mạnh (chú ý SHORT)</span>
+        <span><i class="sw" style="background:#00d68f"></i> RSI 20–30 quá bán · &lt;20 quá bán mạnh (chú ý LONG)</span>
+      </div>
+    </section>
+
+    <!-- Điểm các khung -->
+    <section class="panel">
+      <div class="panel-head"><h2>⏱️ Tín hiệu theo khung thời gian</h2>
+        <span class="muted small">⭐ = khung có khả năng đảo chiều cao nhất</span></div>
+      <div class="tfs-row" id="tfScores"></div>
+    </section>
+
+    <!-- Hỗ trợ / Kháng cự -->
+    <section class="panel">
+      <div class="panel-head"><h2>🧱 Vùng hỗ trợ &amp; kháng cự</h2>
+        <span class="muted small">Bấm 1 vùng để hiện lên chart</span></div>
+      <div class="sr-list" id="srList"></div>
+      <p class="hint">★ càng nhiều = vùng càng an toàn để vào lệnh. <span class="sr-tag long">LONG</span> tại hỗ trợ · <span class="sr-tag short">SHORT</span> tại kháng cự. Dải giá là vùng có thể đảo chiều mạnh.</p>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <span>Vdear · Dữ liệu nến: Binance · Giá: Binance · Bybit · OKX · Bitget</span>
+    <span class="muted">Chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</span>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/indicators.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/ticker.js"></script>
+  <script src="js/coin.js"></script>
+</body>
+</html>

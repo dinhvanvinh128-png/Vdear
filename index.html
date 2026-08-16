@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vdear — Crypto Intelligence Terminal</title>
+  <meta name="description" content="Bảng điều khiển crypto chuyên nghiệp: tín hiệu Long/Short, RSI, vùng hỗ trợ/kháng cự đa khung, dữ liệu 4 sàn Binance · Bybit · OKX · Bitget.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📈</text></svg>">
+</head>
+<body>
+  <!-- Ticker 50px -->
+  <div id="ticker" class="ticker-bar" aria-label="Bảng giá chạy"></div>
+
+  <!-- Header -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">V</span>
+      <div>
+        <div class="brand-name">Vdear</div>
+        <div class="brand-sub">Crypto Intelligence Terminal</div>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a class="active" href="index.html">Thị trường</a>
+      <a href="coin.html?c=BTC">BTC</a>
+      <a href="coin.html?c=ETH">ETH</a>
+      <a href="coin.html?c=SOL">SOL</a>
+    </nav>
+    <div class="topbar-right">
+      <span class="pill live"><span class="live-dot"></span> Realtime</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Thang tâm lý thị trường 0-100 -->
+    <section class="panel sentiment">
+      <div class="panel-head">
+        <h2>Tâm lý thị trường — nên LONG hay SHORT?</h2>
+        <span class="gauge-side neutral" id="sentLabel">Đang tính…</span>
+      </div>
+      <div class="gauge">
+        <div class="gauge-track"><div class="gauge-fill neutral" id="sentFill" style="width:50%"></div>
+          <div class="gauge-ticks"><span>0 · SHORT</span><span>50</span><span>100 · LONG</span></div>
+        </div>
+        <div class="gauge-val" id="sentValue">—</div>
+      </div>
+    </section>
+
+    <!-- Gợi ý Long/Short (quét 4h) -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>🎯 Gợi ý Long/Short · khung 4H <span class="tag">Top win-rate</span></h2>
+        <span class="muted small" id="scanStatus">Đang khởi tạo quét toàn thị trường…</span>
+      </div>
+      <p class="hint">Quét toàn bộ coin thanh khoản cao, xếp hạng theo xác suất thắng. Coin đang <b>quá mua/quá bán</b> được ưu tiên lên đầu.</p>
+      <div class="scan-grid" id="scanGrid"></div>
+      <div class="center"><button class="more-btn" id="scanMore" style="display:none">▼ Xem thêm</button></div>
+    </section>
+
+    <!-- Phân loại sector -->
+    <section class="panel">
+      <div class="panel-head"><h2>🧭 Phân loại mảng coin</h2></div>
+      <div class="sector-bar" id="sectorBar"></div>
+    </section>
+
+    <!-- Bảng biến động 24h -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>📊 Biến động 24h · Volume &amp; Giá</h2>
+        <select id="moverSort" class="select">
+          <option value="gain">Tăng nhiều nhất (+%)</option>
+          <option value="lose">Giảm nhiều nhất (−%)</option>
+          <option value="vol">Volume cao nhất</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="movers">
+          <thead><tr><th>#</th><th>Coin</th><th>Giá</th><th>24h %</th><th>Volume</th></tr></thead>
+          <tbody id="moversBody"></tbody>
+        </table>
+      </div>
+      <p class="hint">🔥 = volume rất cao · 💧 = volume cao · 📊 = volume khá. Bấm vào một hàng để mở trang phân tích coin.</p>
+    </section>
+
+    <!-- TradFi -->
+    <section class="panel">
+      <div class="panel-head"><h2>🏦 TradFi — Vàng · Bạc · Dầu</h2></div>
+      <div class="tradfi-row" id="tradfiRow"></div>
+      <p class="hint">XAU/XAG lấy giá realtime khi khả dụng; CL (WTI) &amp; BZ (Brent) hiển thị chỉ báo tham khảo khi nguồn realtime bị giới hạn.</p>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <span>Vdear · Dữ liệu: Binance · Bybit · OKX · Bitget</span>
+    <span class="muted">Chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</span>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/indicators.js"></script>
+  <script src="js/ticker.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
