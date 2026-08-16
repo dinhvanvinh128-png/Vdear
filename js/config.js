@@ -8,28 +8,30 @@ window.VDEAR_CONFIG = {
     tagline: 'Crypto Intelligence Terminal',
   },
 
-  // Public REST endpoints — tất cả đều hỗ trợ CORS gọi trực tiếp từ trình duyệt.
+  // Chế độ FUTURES (perpetual, USDT-margined). Tất cả endpoint đều hỗ trợ CORS.
+  market: 'futures',
   exchanges: {
     binance: {
       label: 'Binance',
       color: '#F0B90B',
-      ticker24h: 'https://api.binance.com/api/v3/ticker/24hr',
-      klines: 'https://api.binance.com/api/v3/klines', // ?symbol=BTCUSDT&interval=4h&limit=200
+      // Binance USDⓈ-M Futures
+      ticker24h: 'https://fapi.binance.com/fapi/v1/ticker/24hr',
+      klines: 'https://fapi.binance.com/fapi/v1/klines', // ?symbol=BTCUSDT&interval=4h&limit=200
     },
     bybit: {
       label: 'Bybit',
       color: '#F7A600',
-      tickers: 'https://api.bybit.com/v5/market/tickers?category=spot',
+      tickers: 'https://api.bybit.com/v5/market/tickers?category=linear',
     },
     okx: {
       label: 'OKX',
       color: '#20C997',
-      tickers: 'https://www.okx.com/api/v5/market/tickers?instType=SPOT',
+      tickers: 'https://www.okx.com/api/v5/market/tickers?instType=SWAP',
     },
     bitget: {
       label: 'Bitget',
       color: '#00E0C7',
-      tickers: 'https://api.bitget.com/api/v2/spot/market/tickers',
+      tickers: 'https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES',
     },
   },
 
@@ -78,13 +80,35 @@ window.VDEAR_CONFIG = {
 
   // Số coin quét & hiển thị
   scan: {
-    universeSize: 80,     // top coin theo volume để quét
+    universeSize: 50,     // TOP 50 FUTURES theo volume để quét
     concurrency: 6,       // số request klines song song
-    klineLimit: 120,      // số nến để tính chỉ báo
+    klineLimit: 150,      // số nến để tính chỉ báo
     initialShow: 12,      // hiển thị ban đầu, còn lại ẩn sau "Xem thêm"
     targetSignals: 30,    // mục tiêu ~30 coin gợi ý
     moversShow: 15,       // số coin ở bảng biến động
     tickerCount: 28,      // số coin chạy trên thanh ticker
+  },
+
+  // Chiến lược "thực chiến" (mô phỏng theo backtest confluence):
+  // RSI H4 đảo chiều -> hướng; hợp tụ S&R + xác nhận Price Action -> vào lệnh.
+  strategy: {
+    confirmTfs: ['4h', '1h', '15m'], // khung xác nhận S&R + PA
+    rsiTf: '4h',                     // khung RSI xác định hướng
+    swingWindow: 5,                  // cửa sổ tìm swing high/low
+    srTolerance: 0.006,              // % coi là "chạm" vùng S&R
+    rsiLookback: 5,                  // số nến nhìn lại để bắt đảo chiều RSI
+    minSRMatch: 2,                   // tối thiểu số khung khớp S&R
+    minPAMatch: 1,                   // tối thiểu số khung xác nhận PA
+  },
+
+  // Quản lý vốn (giống backtest): TP +100% margin, DCA khi -50%, sau DCA SL/TP mới.
+  money: {
+    leverage: 50,
+    tpMarginPct: 100,     // TP gốc = +100% margin
+    dcaTriggerPct: 50,    // DCA khi lỗ -50% margin
+    postDcaSlPct: 50,     // sau DCA: SL -50% trên tổng vốn
+    postDcaTpPct: 100,    // sau DCA: TP +100% trên tổng vốn
+    takerFeePct: 0.05,    // phí mỗi chiều
   },
 
   // Ngưỡng RSI

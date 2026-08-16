@@ -86,6 +86,56 @@
     renderSignal(candles);
     renderSR(sr, tf);
     renderTfScores();
+    renderCombat(candles);
+  }
+
+  /* -------------------- Chiến lược thực chiến (confluence) -------------- */
+  async function renderCombat(candles) {
+    const box = $('combatPanel');
+    const sig = TA.combatSignal(candles);
+    // vẽ kế hoạch lên chart
+    chart.setPlan(sig.plan);
+
+    if (sig.side === 'NEUTRAL' || !sig.plan) {
+      box.innerHTML = `<div class="panel-head"><h2>⚔️ Chiến lược thực chiến</h2>
+        <span class="gauge-side neutral">CHƯA CÓ TÍN HIỆU</span></div>
+        <p class="hint">Khung ${currentTf.toUpperCase()} chưa xuất hiện đảo chiều RSI rõ ràng. Chờ giá về vùng quá mua/quá bán rồi quay đầu.</p>`;
+      return;
+    }
+
+    const isLong = sig.side === 'LONG';
+    const p = sig.plan;
+    // Xác nhận hội tụ đa khung: kiểm S&R + PA trên các khung confirm
+    let srTf = 0, paTf = 0;
+    for (const t of CFG.strategy.confirmTfs) {
+      try {
+        const cs = await loadCandles(t);
+        const price = cs[cs.length - 1].close;
+        if (TA.nearLevel(price, TA.swingLevels(cs))) srTf++;
+        if (TA.priceAction(cs, cs.length - 1) === (isLong ? 'bullish' : 'bearish')) paTf++;
+      } catch (e) { /* skip */ }
+    }
+    const okSR = srTf >= CFG.strategy.minSRMatch;
+    const okPA = paTf >= CFG.strategy.minPAMatch;
+    const verdict = sig.valid && okSR && okPA;
+
+    box.innerHTML = `
+      <div class="panel-head"><h2>⚔️ Chiến lược thực chiến · ${currentTf.toUpperCase()}</h2>
+        <span class="gauge-side ${isLong ? 'long' : 'short'}">${verdict ? '✓ ' : ''}${sig.side} · Win ~${sig.winRate}%</span></div>
+      <div class="combat-conf">
+        <span class="cf-item ${sig.rsiNote ? 'on' : ''}">RSI đảo chiều: <b>${sig.rsiNote || '—'}</b></span>
+        <span class="cf-item ${okSR ? 'on' : ''}">Hợp tụ S&amp;R: <b>${srTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
+        <span class="cf-item ${okPA ? 'on' : ''}">Price Action: <b>${paTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
+      </div>
+      <div class="plan-grid">
+        <div class="plan-cell"><span>Vào lệnh (Entry)</span><b>$${fmt(p.entry)}</b></div>
+        <div class="plan-cell up"><span>TP gốc +100% margin</span><b>$${fmt(p.tp0)}</b></div>
+        <div class="plan-cell gold"><span>DCA khi −50% margin</span><b>$${fmt(p.dca)}</b></div>
+        <div class="plan-cell"><span>Giá TB sau DCA</span><b>$${fmt(p.avgAfterDca)}</b></div>
+        <div class="plan-cell up"><span>TP sau DCA</span><b>$${fmt(p.tpAfterDca)}</b></div>
+        <div class="plan-cell down"><span>SL sau DCA</span><b>$${fmt(p.slAfterDca)}</b></div>
+      </div>
+      <p class="hint">Đòn bẩy x${p.leverage} · TRƯỚC DCA không có SL (chỉ thắng +100% hoặc chạm ngưỡng DCA). Rủi ro thật nằm ở SAU DCA. Các mức trên đã vẽ lên chart. <b>Chỉ tham khảo, không phải lời khuyên đầu tư.</b></p>`;
   }
 
   /* ----------------------- signal + gauge + RSI note ------------------- */

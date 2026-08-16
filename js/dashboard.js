@@ -41,27 +41,28 @@
 
     const results = await API.pool(universe, async (coin) => {
       try {
-        const candles = await API.binanceKlines(coin.symbol, tf.binance, 90);
+        const candles = await API.binanceKlines(coin.symbol, tf.binance, CFG.scan.klineLimit);
         done++;
-        if (status) status.textContent = `Đang quét ${done}/${universe.length} coin (khung ${tf.label})…`;
+        if (status) status.textContent = `Đang quét ${done}/${universe.length} coin futures (chiến lược thực chiến · khung ${tf.label})…`;
         if (candles.length < 40) return null;
-        const sig = TA.signalScore(candles);
+        const sig = TA.combatSignal(candles); // RSI đảo chiều + S&R + Price Action
         return { coin, sig };
       } catch (e) { done++; return null; }
     }, CFG.scan.concurrency);
 
     scanResults = results.filter((r) => r && r.sig.side !== 'NEUTRAL');
-    // Ưu tiên coin có tín hiệu quá mua/quá bán (RSI cực trị) lên trên,
-    // sau đó theo conviction (độ lệch khỏi 50) và win-rate.
+    // Ưu tiên: tín hiệu thực chiến hợp lệ > coin quá mua/quá bán > độ hội tụ > win-rate.
     scanResults.forEach((r) => {
       const z = r.sig.zone.key;
       r.extreme = (z === 'ob_strong' || z === 'os_strong') ? 2 : (z === 'ob' || z === 'os') ? 1 : 0;
-      r.rank = r.extreme * 1000 + Math.abs(r.sig.score - 50) + r.sig.winRate * 0.2;
+      r.rank = (r.sig.valid ? 5000 : 0) + r.extreme * 1000 + r.sig.confluence * 300
+             + Math.abs(r.sig.score - 50) + r.sig.winRate * 0.2;
     });
     scanResults.sort((a, b) => b.rank - a.rank);
     scanResults = scanResults.slice(0, CFG.scan.targetSignals);
 
-    if (status) status.textContent = `Đã quét ${universe.length} coin · khung ${tf.label} · ${scanResults.length} tín hiệu`;
+    const validCount = scanResults.filter((r) => r.sig.valid).length;
+    if (status) status.textContent = `Đã quét ${universe.length} coin futures · khung ${tf.label} · ${scanResults.length} tín hiệu (${validCount} đạt hội tụ thực chiến)`;
     renderScan();
     renderSentiment();
   }
@@ -69,11 +70,18 @@
   function scanCard(r) {
     const c = r.coin, s = r.sig, z = s.zone;
     const isLong = s.side === 'LONG';
-    const extremeBadge = r.extreme === 2
-      ? `<span class="ex-flag strong">${isLong ? 'QUÁ BÁN MẠNH' : 'QUÁ MUA MẠNH'}</span>`
+    const extremeBadge = s.valid
+      ? '<span class="ex-flag strong">HỘI TỤ ✓</span>'
+      : r.extreme === 2
+      ? `<span class="ex-flag">${isLong ? 'QUÁ BÁN MẠNH' : 'QUÁ MUA MẠNH'}</span>`
       : r.extreme === 1
       ? `<span class="ex-flag">${isLong ? 'QUÁ BÁN' : 'QUÁ MUA'}</span>` : '';
-    return `<a class="scan-card ${isLong ? 'long' : 'short'}" href="${coinLink(c.base)}">
+    // chấm xác nhận: RSI đảo chiều · gần S&R · Price Action
+    const conf = `<div class="sc-conf">
+      <span class="cf ${s.rsiNote ? 'on' : ''}" title="RSI đảo chiều">RSI</span>
+      <span class="cf ${s.srNear ? 'on' : ''}" title="Gần vùng S&amp;R">S&amp;R</span>
+      <span class="cf ${s.paMatch ? 'on' : ''}" title="Xác nhận Price Action">PA</span></div>`;
+    return `<a class="scan-card ${isLong ? 'long' : 'short'} ${s.valid ? 'valid' : ''}" href="${coinLink(c.base)}">
       <div class="sc-top">
         <img class="sc-logo" alt="" data-logo="${c.base}">
         <div class="sc-id"><b>${c.base}</b><span>${'$' + fmt(c.price)}</span></div>
@@ -84,6 +92,7 @@
         <div class="sc-metric"><span>Win</span><b>${s.winRate}%</b></div>
         <div class="sc-metric"><span>24h</span><b class="${c.change>=0?'up':'down'}">${c.change.toFixed(1)}%</b></div>
       </div>
+      ${conf}
       <div class="sc-bar"><div class="sc-bar-fill ${isLong?'long':'short'}" style="width:${s.score}%"></div></div>
       ${extremeBadge}
     </a>`;

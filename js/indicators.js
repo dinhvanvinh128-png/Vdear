@@ -177,8 +177,111 @@
     return { rsi, zone, price, score, winRate, side, mom, ema20: e20, ema50: e50 };
   }
 
+  /* =====================================================================
+   * CHIẾN LƯỢC "THỰC CHIẾN" — mô phỏng theo backtest confluence
+   * RSI H4 đảo chiều -> hướng; hợp tụ S&R đa khung + Price Action -> vào lệnh.
+   * ===================================================================== */
+
+  // Price action: nến engulfing hoặc pin bar tại vị trí i.
+  function priceAction(candles, i) {
+    if (i < 1) return null;
+    const c = candles[i], p = candles[i - 1];
+    const body = Math.abs(c.close - c.open);
+    const rng = c.high - c.low;
+    if (rng === 0) return null;
+    // Bullish / bearish engulfing
+    if (p.close < p.open && c.close > c.open && c.close >= p.open && c.open <= p.close) return 'bullish';
+    if (p.close > p.open && c.close < c.open && c.close <= p.open && c.open >= p.close) return 'bearish';
+    // Pin bar (bóng nến dài)
+    const lowerWick = Math.min(c.open, c.close) - c.low;
+    const upperWick = c.high - Math.max(c.open, c.close);
+    if (lowerWick > body * 2 && lowerWick > rng * 0.5) return 'bullish';
+    if (upperWick > body * 2 && upperWick > rng * 0.5) return 'bearish';
+    return null;
+  }
+
+  // Bắt đảo chiều RSI trong "lookback" nến gần nhất (giống rsi_reversal_direction).
+  function rsiReversal(rsiSeries, idx, lookback) {
+    const R = CFG.rsi;
+    lookback = lookback || CFG.strategy.rsiLookback;
+    if (idx < R.period + lookback) return null;
+    let mn = Infinity, mx = -Infinity;
+    for (let k = idx - lookback; k <= idx; k++) {
+      const v = rsiSeries[k]; if (v == null) continue;
+      if (v < mn) mn = v; if (v > mx) mx = v;
+    }
+    const now = rsiSeries[idx];
+    if (now == null) return null;
+    if (mn <= R.oversold && now > R.oversold)
+      return { dir: 'bullish', note: mn < R.oversoldStrong ? 'quá bán mạnh (<20)' : 'quá bán (20–30)', rsi: now };
+    if (mx >= R.overbought && now < R.overbought)
+      return { dir: 'bearish', note: mx > R.overboughtStrong ? 'quá mua mạnh (>80)' : 'quá mua (70–80)', rsi: now };
+    return null;
+  }
+
+  // Mức swing high/low (danh sách giá) cho một khung.
+  function swingLevels(candles, window) {
+    const { highs, lows } = pivots(candles, window || CFG.strategy.swingWindow, window || CFG.strategy.swingWindow);
+    return [...highs.map((h) => h.price), ...lows.map((l) => l.price)];
+  }
+
+  function nearLevel(price, levels, tol) {
+    tol = tol || CFG.strategy.srTolerance;
+    return levels.some((lv) => Math.abs(price - lv) / lv <= tol);
+  }
+
+  // Kế hoạch vào lệnh theo quản lý vốn của backtest (TP/DCA/SL sau DCA).
+  function tradePlan(entry, dir, leverage) {
+    const M = CFG.money;
+    const L = leverage || M.leverage;
+    const moveTp = (M.tpMarginPct / 100) / L;
+    const moveDca = (M.dcaTriggerPct / 100) / L;
+    const long = dir === 'bullish' || dir === 'LONG';
+    const tp0 = long ? entry * (1 + moveTp) : entry * (1 - moveTp);
+    const dca = long ? entry * (1 - moveDca) : entry * (1 + moveDca);
+    // Sau DCA: vào 2 phần đều nhau -> giá TB
+    const units1 = L / entry, units2 = L / dca;
+    const avg = (units1 * entry + units2 * dca) / (units1 + units2);
+    const uT = units1 + units2, mT = 2;
+    const slNew = long ? avg - (M.postDcaSlPct / 100) * mT / uT : avg + (M.postDcaSlPct / 100) * mT / uT;
+    const tpNew = long ? avg + (M.postDcaTpPct / 100) * mT / uT : avg - (M.postDcaTpPct / 100) * mT / uT;
+    return { leverage: L, entry, tp0, dca, avgAfterDca: avg, slAfterDca: slNew, tpAfterDca: tpNew };
+  }
+
+  // Tín hiệu thực chiến trên 1 khung (dùng cho quét dashboard nhanh).
+  // candles = nến của khung phân tích (mặc định 4h).
+  function combatSignal(candles) {
+    const closes = candles.map((c) => c.close);
+    const rsi = rsiSeries(closes);
+    const last = candles.length - 1;
+    const rev = rsiReversal(rsi, last);
+    const price = closes[last];
+    const levels = swingLevels(candles);
+    const srNear = nearLevel(price, levels);
+    const pa = priceAction(candles, last);
+    const base = signalScore(candles); // điểm nền + winRate
+
+    // Hội tụ: RSI đảo chiều + PA cùng hướng + gần vùng S&R
+    let dir = rev ? rev.dir : (base.side === 'LONG' ? 'bullish' : base.side === 'SHORT' ? 'bearish' : null);
+    const paMatch = pa && dir && pa === dir;
+    const confluence = (rev ? 1 : 0) + (srNear ? 1 : 0) + (paMatch ? 1 : 0);
+    const valid = !!rev && confluence >= 2; // "thực chiến": cần RSI đảo chiều + ≥1 xác nhận khác
+
+    const side = dir === 'bullish' ? 'LONG' : dir === 'bearish' ? 'SHORT' : 'NEUTRAL';
+    // win-rate điều chỉnh theo số xác nhận
+    const winRate = Math.min(95, Math.round(base.winRate + confluence * 4 + (valid ? 6 : 0)));
+    const plan = side !== 'NEUTRAL' ? tradePlan(price, side) : null;
+
+    return {
+      side, valid, confluence, srNear, paMatch: !!paMatch,
+      rsi: base.rsi, rsiNote: rev ? rev.note : base.zone.label,
+      zone: base.zone, score: base.score, winRate, price, plan,
+    };
+  }
+
   window.VdearTA = {
     rsiSeries, lastRSI, rsiZone, emaSeries, supportResistance,
     averageTrueRange, signalScore, pivots,
+    priceAction, rsiReversal, swingLevels, nearLevel, tradePlan, combatSignal,
   };
 })();

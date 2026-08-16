@@ -50,6 +50,7 @@
     for (const t of data) {
       const s = t.symbol;
       if (!s.endsWith('USDT')) continue;
+      if (s.includes('_')) continue; // bỏ delivery futures (BTCUSDT_240927)
       if (/(UP|DOWN|BULL|BEAR)USDT$/.test(s)) continue; // bỏ token đòn bẩy
       const base = s.slice(0, -4);
       if (CFG.stableCoins.includes(base)) continue;
@@ -95,8 +96,9 @@
       const j = await getJSON(CFG.exchanges.okx.tickers);
       const out = {};
       (j.data || []).forEach((t) => {
-        if (!/-USDT$/.test(t.instId)) return;
-        out[baseFromSymbol(t.instId)] = num(t.last);
+        // instId perpetual: "BTC-USDT-SWAP"
+        if (!/-USDT-SWAP$/.test(t.instId)) return;
+        out[t.instId.split('-')[0]] = num(t.last);
       });
       return out;
     } catch (e) { return {}; }
@@ -108,7 +110,8 @@
       const out = {};
       (j.data || []).forEach((t) => {
         if (!/USDT$/.test(t.symbol)) return;
-        out[baseFromSymbol(t.symbol)] = num(t.lastPrice || t.close);
+        // Bitget mix v2: giá ở field lastPr
+        out[baseFromSymbol(t.symbol)] = num(t.lastPr || t.lastPrice || t.close || t.last);
       });
       return out;
     } catch (e) { return {}; }

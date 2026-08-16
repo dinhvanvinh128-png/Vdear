@@ -224,6 +224,28 @@ h1,h2,h3{margin:0;font-weight:700}
 .rsi-text{font-size:13.5px;color:var(--text)}
 .rsi-text b{font-weight:800}
 
+/* Scan card confluence dots */
+.scan-card.valid{border-color:rgba(0,224,199,.6);box-shadow:inset 3px 0 0 var(--accent-2),0 0 0 1px rgba(0,224,199,.25)}
+.sc-conf{display:flex;gap:6px;margin:2px 0 10px}
+.cf{flex:1;text-align:center;font-size:10px;font-weight:700;letter-spacing:.3px;padding:3px 0;border-radius:6px;
+  background:rgba(255,255,255,.05);color:var(--muted-2);border:1px solid transparent}
+.cf.on{background:rgba(0,224,199,.14);color:var(--accent-2);border-color:rgba(0,224,199,.4)}
+
+/* Combat strategy panel */
+.combat-panel .combat-conf{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.cf-item{font-size:12.5px;color:var(--muted);background:var(--panel-2);border:1px solid var(--line);
+  padding:7px 12px;border-radius:9px}
+.cf-item.on{border-color:rgba(0,224,199,.45);color:var(--text)}
+.cf-item b{color:var(--text);font-weight:700}
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:6px}
+.plan-cell{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
+  display:flex;flex-direction:column;gap:4px}
+.plan-cell span{font-size:11px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.4px}
+.plan-cell b{font-size:16px;font-variant-numeric:tabular-nums;font-family:'Chakra Petch',sans-serif}
+.plan-cell.up{box-shadow:inset 3px 0 0 var(--up)} .plan-cell.up b{color:var(--up)}
+.plan-cell.down{box-shadow:inset 3px 0 0 var(--down)} .plan-cell.down b{color:var(--down)}
+.plan-cell.gold{box-shadow:inset 3px 0 0 var(--gold)} .plan-cell.gold b{color:var(--gold)}
+
 /* Chart */
 .chart-wrap{position:relative;margin-top:12px}
 .price-area{height:400px;position:relative}

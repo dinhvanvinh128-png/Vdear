@@ -46,6 +46,7 @@
 
     setZones(sr) { this.sr = sr; this.render(); }
     setHighlight(zone) { this.highlightZone = zone; this.render(); }
+    setPlan(plan) { this.plan = plan; this.render(); }
 
     _bind() {
       const move = (e) => {
@@ -86,6 +87,13 @@
       if (this.sr) {
         [...(this.sr.supports || []), ...(this.sr.resistances || [])].forEach((z) => {
           if (z.distancePct < 8) { lo = Math.min(lo, z.low); hi = Math.max(hi, z.high); }
+        });
+      }
+      if (this.plan) {
+        [this.plan.tp0, this.plan.dca, this.plan.slAfterDca].forEach((p) => {
+          if (p != null && Math.abs(p - this.plan.entry) / this.plan.entry < 0.12) {
+            lo = Math.min(lo, p); hi = Math.max(hi, p);
+          }
         });
       }
       const pad = (hi - lo) * 0.06;
@@ -169,6 +177,27 @@
       };
       drawLine(this.ema20, COLORS.ema20);
       drawLine(this.ema50, COLORS.ema50);
+
+      // Kế hoạch thực chiến: Entry / TP / DCA / SL
+      if (this.plan) {
+        const P = this.plan;
+        const line = (price, color, label) => {
+          if (price == null) return;
+          const y = yFor(price);
+          if (y < this.padT || y > plotB) return;
+          ctx.strokeStyle = color; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(this.padL, y); ctx.lineTo(w - this.padR, y); ctx.stroke();
+          ctx.setLineDash([]); ctx.lineWidth = 1;
+          ctx.font = 'bold 9px Inter, Arial'; ctx.textAlign = 'right';
+          const tw = ctx.measureText(label).width + 8;
+          ctx.fillStyle = color; ctx.fillRect(w - this.padR - tw, y - 7, tw, 13);
+          ctx.fillStyle = '#04121a'; ctx.fillText(label, w - this.padR - 4, y + 2);
+        };
+        line(P.tp0, COLORS.up, 'TP +100%');
+        line(P.entry, '#e7ebf2', 'ENTRY');
+        line(P.dca, COLORS.gold || '#f0b90b', 'DCA −50%');
+        line(P.slAfterDca, COLORS.down, 'SL sau DCA');
+      }
 
       // giá hiện tại
       const last = this.candles[n - 1];

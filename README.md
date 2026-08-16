@@ -7,13 +7,18 @@ vẽ bằng canvas tự viết nên **không bị màn hình đen** khi deploy.
 
 ## ✨ Tính năng
 
+> **Chế độ FUTURES**: dữ liệu lấy từ hợp đồng vĩnh cửu (USDⓈ-M perpetual) của
+> Binance/Bybit/OKX/Bitget, quét **Top 50 coin futures** theo volume.
+
 ### Trang thị trường (`index.html`)
 - **Thanh ticker 50px**: nền đen, coin chạy ngang liên tục, logo + giá + %
   tăng/giảm màu xanh/đỏ, tốc độ ổn định, dừng khi rê chuột. Không có nút/link TradingView.
 - **Thang tâm lý thị trường 0–100** báo nên LONG hay SHORT.
-- **Gợi ý Long/Short khung 4H**: quét toàn bộ coin thanh khoản cao, xếp hạng theo
-  win-rate ước lượng. Coin đang **quá mua/quá bán** được ưu tiên lên đầu. Nút **Xem thêm**
-  để mở rộng (mặc định hiển thị 12, tối đa ~30 tín hiệu).
+- **Tín hiệu thực chiến · Top 50 Futures · khung 4H** — mô phỏng theo chiến lược
+  backtest confluence: **RSI H4 đảo chiều** (quá mua/bán rồi quay đầu) xác định hướng,
+  xác nhận thêm bằng **hỗ trợ/kháng cự** và **Price Action**. Mỗi thẻ có 3 chấm xác
+  nhận `RSI · S&R · PA`; coin đạt **hội tụ ✓** được ưu tiên lên đầu. Nút **Xem thêm**
+  mở rộng (mặc định 12, tối đa ~30 tín hiệu).
 - **Phân loại mảng coin (sector)**: Layer 1/2, DeFi, Meme, AI, Gaming, CEX, Payments, RWA, Privacy…
 - **Bảng biến động 24h**: sắp xếp theo +% / −% / Volume, kèm **icon volume** (🔥 rất cao,
   💧 cao, 📊 khá) cho ~15 coin.
@@ -32,7 +37,10 @@ vẽ bằng canvas tự viết nên **không bị màn hình đen** khi deploy.
 - **Vùng hỗ trợ / kháng cự**: mỗi vùng có **dải giá đảo chiều mạnh**, nhãn
   **LONG (khung xanh)** / **SHORT (đỏ)**, và **đánh giá 1–5 ★** độ an toàn vào lệnh.
   **Bấm vào một vùng** để highlight ngay trên chart.
-- **Giá đa sàn**: Binance · Bybit · OKX · Bitget.
+- **Chiến lược thực chiến (⚔️)**: bảng hội tụ đa khung (RSI + S&R + Price Action) và
+  **kế hoạch vào lệnh DCA** — Entry, TP +100% margin, mốc DCA −50%, giá TB sau DCA,
+  TP/SL sau DCA — đồng thời **vẽ các mức này lên chart**.
+- **Giá đa sàn (futures)**: Binance · Bybit · OKX · Bitget.
 
 ## 🔌 Nguồn dữ liệu (REST công khai, gọi trực tiếp từ trình duyệt)
 - **Binance** — ticker 24h + klines (nến): nguồn chính cho biểu đồ và quét.
