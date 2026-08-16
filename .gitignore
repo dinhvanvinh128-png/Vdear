@@ -3,3 +3,5 @@ node_modules/
 *.log
 .vercel
 vdear-crypto.zip
+__pycache__/
+*.pyc
