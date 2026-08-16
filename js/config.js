@@ -103,17 +103,23 @@ window.VDEAR_CONFIG = {
     minPAMatch: 1,                   // tối thiểu số khung xác nhận PA
   },
 
-  // Quản lý vốn (giống backtest): TP +100% margin, DCA khi -50%, sau DCA SL/TP mới.
+  // Quản lý vốn (giống hệt backtest): TP +100% margin, DCA khi -50%, sau DCA SL/TP mới.
   money: {
-    leverage: 50,
+    leverage: 50,         // đòn bẩy mặc định
+    minLeverage: 1,
+    maxLeverage: 100,
     tpMarginPct: 100,     // TP gốc = +100% margin
     dcaTriggerPct: 50,    // DCA khi lỗ -50% margin
     postDcaSlPct: 50,     // sau DCA: SL -50% trên tổng vốn
     postDcaTpPct: 100,    // sau DCA: TP +100% trên tổng vốn
     takerFeePct: 0.05,    // phí taker mỗi chiều
-    fundingIntervalsPerDay: 3, // funding thu 3 lần/ngày (mỗi 8h)
-    assumedHoldDays: 1,        // giả định thời gian giữ lệnh để ước tính phí funding
+    forwardScan: 1000,    // số nến quét tới khi mô phỏng 1 lệnh (giống backtest)
+    // các mức đòn bẩy để dò tìm win-rate cao nhất (đề xuất)
+    leverageSamples: [5, 10, 20, 25, 50, 75, 100],
   },
+
+  // Trang coin tải nhiều nến hơn để mô phỏng backtest có đủ mẫu.
+  coinKlineLimit: 400,
 
   // Ngưỡng RSI
   rsi: {

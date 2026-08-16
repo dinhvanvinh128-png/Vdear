@@ -26,7 +26,7 @@
   async function loadCandles(tf) {
     if (cacheCandles[tf]) return cacheCandles[tf];
     // Thử đa sàn (Binance -> Bybit -> OKX -> Bitget) để chart chạy cho mọi coin.
-    const c = await API.klinesMulti(coin || base, tf, CFG.scan.klineLimit);
+    const c = await API.klinesMulti(coin || base, tf, CFG.coinKlineLimit || 400);
     cacheCandles[tf] = c;
     return c;
   }
@@ -45,23 +45,6 @@
       $('statHigh').textContent = '$' + fmt(coin.high);
       $('statLow').textContent = '$' + fmt(coin.low);
       $('statVol').textContent = '$' + shortNum(coin.quoteVolume);
-      const fEl = $('statFunding');
-      if (coin.funding != null) {
-        const pos = coin.funding >= 0;
-        fEl.textContent = (pos ? '+' : '') + coin.funding.toFixed(4) + '%';
-        fEl.className = pos ? 'up' : 'down';
-      } else { fEl.textContent = '—'; fEl.className = ''; }
-
-      // giá đa sàn
-      const ex = coin.exchanges || {};
-      const rows = Object.entries(CFG.exchanges).map(([key, meta]) => {
-        const p = ex[key];
-        return `<div class="ex-chip ${p ? '' : 'off'}">
-          <span class="dot" style="background:${meta.color}"></span>
-          <span class="ex-name">${meta.label}</span>
-          <span class="ex-price">${p ? '$' + fmt(p) : '—'}</span></div>`;
-      }).join('');
-      $('exchangeRow').innerHTML = rows;
     }
   }
 
@@ -96,21 +79,22 @@
   }
 
   /* -------------------- Chiến lược thực chiến (confluence) -------------- */
+  let combatLev = CFG.money.leverage; // đòn bẩy đang chọn
+
   async function renderCombat(candles) {
     const box = $('combatPanel');
     const sig = TA.combatSignal(candles);
-    // vẽ kế hoạch lên chart
-    chart.setPlan(sig.plan);
 
-    if (sig.side === 'NEUTRAL' || !sig.plan) {
+    if (sig.side === 'NEUTRAL') {
+      chart.setPlan(null);
       box.innerHTML = `<div class="panel-head"><h2>⚔️ Chiến lược thực chiến</h2>
         <span class="gauge-side neutral">CHƯA CÓ TÍN HIỆU</span></div>
-        <p class="hint">Khung ${currentTf.toUpperCase()} chưa xuất hiện đảo chiều RSI rõ ràng. Chờ giá về vùng quá mua/quá bán rồi quay đầu.</p>`;
+        <p class="hint">Khung ${currentTf.toUpperCase()} chưa xuất hiện đảo chiều RSI rõ ràng. Chờ giá về vùng quá mua/quá bán rồi quay đầu.</p>
+        <p class="hint"><b>Chỉ tham khảo, không phải lời khuyên đầu tư.</b></p>`;
       return;
     }
 
     const isLong = sig.side === 'LONG';
-    const p = sig.plan;
     // Xác nhận hội tụ đa khung: kiểm S&R + PA trên các khung confirm
     let srTf = 0, paTf = 0;
     for (const t of CFG.strategy.confirmTfs) {
@@ -125,34 +109,50 @@
     const okPA = paTf >= CFG.strategy.minPAMatch;
     const verdict = sig.valid && okSR && okPA;
 
-    // Phí funding ước tính (nếu có dữ liệu từ market)
-    let fundingHtml = '';
-    if (coin && coin.funding != null) {
-      const cost = TA.fundingCost(coin.funding, sig.side, p.leverage, CFG.money.assumedHoldDays);
-      const pay = cost > 0;
-      const rateTxt = (coin.funding >= 0 ? '+' : '') + coin.funding.toFixed(4) + '%/8h';
-      fundingHtml = `<span class="cf-item on">Funding: <b class="${coin.funding>=0?'up':'down'}">${rateTxt}</b>
-        · ${pay ? 'PHẢI TRẢ' : 'ĐƯỢC NHẬN'} <b>~${Math.abs(cost).toFixed(2)}%</b> vốn/${CFG.money.assumedHoldDays} ngày (x${p.leverage})</span>`;
-    }
+    // Đề xuất đòn bẩy có win-rate cao nhất (chạy lại backtest DCA của bạn trên chart).
+    const best = TA.bestLeverage(candles);
+    if (best && best.winRate != null) combatLev = best.lev; // ưu tiên win cao khi vào
 
+    // khung layout cố định + vùng động cập nhật theo slider
     box.innerHTML = `
       <div class="panel-head"><h2>⚔️ Chiến lược thực chiến · ${currentTf.toUpperCase()}</h2>
-        <span class="gauge-side ${isLong ? 'long' : 'short'}">${verdict ? '✓ ' : ''}${sig.side} · Win ~${sig.winRate}%</span></div>
+        <span class="gauge-side ${isLong ? 'long' : 'short'}" id="cbVerdict"></span></div>
       <div class="combat-conf">
         <span class="cf-item ${sig.rsiNote ? 'on' : ''}">RSI đảo chiều: <b>${sig.rsiNote || '—'}</b></span>
         <span class="cf-item ${okSR ? 'on' : ''}">Hợp tụ S&amp;R: <b>${srTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
         <span class="cf-item ${okPA ? 'on' : ''}">Price Action: <b>${paTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
-        ${fundingHtml}
       </div>
-      <div class="plan-grid">
+      <div class="lev-box">
+        <div class="lev-head"><span>Đòn bẩy: <b id="levVal">x${combatLev}</b></span>
+          <span class="lev-best" id="levBest"></span></div>
+        <input type="range" id="levSlider" min="${CFG.money.minLeverage}" max="${CFG.money.maxLeverage}" value="${combatLev}" step="1">
+        <div class="lev-scale"><span>x1</span><span>x25</span><span>x50</span><span>x75</span><span>x100</span></div>
+      </div>
+      <div class="plan-grid" id="planGrid"></div>
+      <p class="hint"><b>Chỉ tham khảo, không phải lời khuyên đầu tư.</b></p>`;
+
+    const slider = $('levSlider');
+    const update = () => {
+      combatLev = +slider.value;
+      $('levVal').textContent = 'x' + combatLev;
+      const p = TA.tradePlan(sig.price, sig.side, combatLev);
+      chart.setPlan(p); // các mức đổi theo đòn bẩy, vẽ lên chart
+      const bt = TA.miniBacktest(candles, combatLev); // win-rate THẬT theo đòn bẩy
+      const winTxt = bt.winRate != null ? `${bt.winRate}% (${bt.trades} lệnh backtest)` : 'chưa đủ mẫu';
+      $('cbVerdict').textContent = `${verdict ? '✓ ' : ''}${sig.side} · Win ${winTxt}`;
+      $('cbVerdict').className = 'gauge-side ' + (isLong ? 'long' : 'short');
+      if (best && best.winRate != null)
+        $('levBest').innerHTML = `Đề xuất <b>x${best.lev}</b> · win cao nhất ${best.winRate}%`;
+      $('planGrid').innerHTML = `
         <div class="plan-cell"><span>Vào lệnh (Entry)</span><b>$${fmt(p.entry)}</b></div>
         <div class="plan-cell up"><span>TP gốc +100% margin</span><b>$${fmt(p.tp0)}</b></div>
         <div class="plan-cell gold"><span>DCA khi −50% margin</span><b>$${fmt(p.dca)}</b></div>
         <div class="plan-cell"><span>Giá TB sau DCA</span><b>$${fmt(p.avgAfterDca)}</b></div>
         <div class="plan-cell up"><span>TP sau DCA</span><b>$${fmt(p.tpAfterDca)}</b></div>
-        <div class="plan-cell down"><span>SL sau DCA</span><b>$${fmt(p.slAfterDca)}</b></div>
-      </div>
-      <p class="hint">Đòn bẩy x${p.leverage} · TRƯỚC DCA không có SL (chỉ thắng +100% hoặc chạm ngưỡng DCA). Rủi ro thật nằm ở SAU DCA. Các mức trên đã vẽ lên chart. <b>Chỉ tham khảo, không phải lời khuyên đầu tư.</b></p>`;
+        <div class="plan-cell down"><span>SL sau DCA</span><b>$${fmt(p.slAfterDca)}</b></div>`;
+    };
+    slider.addEventListener('input', update);
+    update();
   }
 
   /* ----------------------- signal + gauge + RSI note ------------------- */
@@ -230,12 +230,18 @@
     results.sort((a, b) => b.rate - a.rate);
     box.innerHTML = results.map((r, i) => {
       const s = r.sig.side;
-      return `<button class="tfs-chip ${s.toLowerCase()} ${i === 0 ? 'top' : ''}" data-tf="${r.tf.id}">
+      const isSel = r.tf.id === currentTf; // khung đang xem
+      return `<button class="tfs-chip ${s.toLowerCase()} ${i === 0 ? 'top' : ''} ${isSel ? 'sel' : ''}" data-tf="${r.tf.id}">
         ${i === 0 ? '⭐ ' : ''}${r.tf.label}
         <b>${s === 'LONG' ? 'LONG' : s === 'SHORT' ? 'SHORT' : '—'}</b>
         <span class="tfs-score">${r.sig.score}</span></button>`;
     }).join('');
-    box.querySelectorAll('.tfs-chip').forEach((b) => b.addEventListener('click', () => selectTf(b.dataset.tf)));
+    box.querySelectorAll('.tfs-chip').forEach((b) => b.addEventListener('click', () => {
+      // phản hồi tức thì: đánh dấu viền xanh chip vừa bấm
+      box.querySelectorAll('.tfs-chip').forEach((x) => x.classList.remove('sel'));
+      b.classList.add('sel');
+      selectTf(b.dataset.tf);
+    }));
   }
 
   /* ------------------------------- init -------------------------------- */

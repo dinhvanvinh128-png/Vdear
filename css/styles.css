@@ -285,6 +285,20 @@ h1,h2,h3{margin:0;font-weight:700}
 .plan-cell.down{box-shadow:inset 3px 0 0 var(--down)} .plan-cell.down b{color:var(--down)}
 .plan-cell.gold{box-shadow:inset 3px 0 0 var(--gold)} .plan-cell.gold b{color:var(--gold)}
 
+/* Leverage slider */
+.lev-box{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:6px 0 12px}
+.lev-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.lev-head span{font-size:13px;color:var(--muted)}
+.lev-head b{color:var(--text);font-family:'Chakra Petch',sans-serif;font-size:16px}
+.lev-best{color:var(--accent-2);font-size:12.5px}
+.lev-best b{color:var(--accent-2)}
+#levSlider{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:8px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));outline:none;cursor:pointer}
+#levSlider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;
+  background:#fff;border:3px solid var(--accent-2);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+#levSlider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--accent-2);cursor:pointer}
+.lev-scale{display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;color:var(--muted-2)}
+
 /* Chart */
 .chart-wrap{position:relative;margin-top:12px}
 .zoom-ctrl{position:absolute;top:8px;right:78px;z-index:5;display:flex;flex-direction:column;gap:5px}
@@ -316,6 +330,8 @@ h1,h2,h3{margin:0;font-weight:700}
 .tfs-chip b{font-weight:800}
 .tfs-chip.long b{color:var(--up)} .tfs-chip.short b{color:var(--down)}
 .tfs-chip.top{border-color:var(--gold);box-shadow:0 0 0 1px rgba(240,185,11,.3)}
+.tfs-chip.sel{border-color:var(--accent-2);box-shadow:0 0 0 2px rgba(0,224,199,.45)}
+.tfs-chip.sel.top{box-shadow:0 0 0 2px rgba(0,224,199,.45),0 0 0 4px rgba(240,185,11,.25)}
 .tfs-score{background:rgba(255,255,255,.08);padding:2px 7px;border-radius:6px;font-variant-numeric:tabular-nums}
 
 /* Support / Resistance list */

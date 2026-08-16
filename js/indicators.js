@@ -279,6 +279,76 @@
     };
   }
 
+  /* ===== Mô phỏng 1 lệnh theo ĐÚNG money-management của backtest ========
+   * TP gốc +100% margin; nếu chạm -50% margin trước -> DCA 1 lần;
+   * sau DCA: SL -50% / TP +100% trên TỔNG vốn. Trả win/loss (hoặc null nếu chưa dứt).
+   */
+  function simulateDCA(candles, entryIdx, direction, leverage) {
+    const M = CFG.money, L = leverage;
+    const E1 = candles[entryIdx].close;
+    const moveTp = (M.tpMarginPct / 100) / L, moveDca = (M.dcaTriggerPct / 100) / L;
+    const long = direction === 'bullish' || direction === 'LONG';
+    const Ptp0 = long ? E1 * (1 + moveTp) : E1 * (1 - moveTp);
+    const Pdca = long ? E1 * (1 - moveDca) : E1 * (1 + moveDca);
+    let dcaDone = false, Psl = null, Ptp = null;
+    const end = Math.min(entryIdx + (M.forwardScan || 1000), candles.length);
+    for (let j = entryIdx + 1; j < end; j++) {
+      const hi = candles[j].high, lo = candles[j].low;
+      if (!dcaDone) {
+        const hitDca = long ? lo <= Pdca : hi >= Pdca;
+        const hitTp0 = long ? hi >= Ptp0 : lo <= Ptp0;
+        if (hitDca) {
+          const units1 = L / E1, units2 = L / Pdca;
+          const unitsTot = units1 + units2, avg = (units1 * E1 + units2 * Pdca) / unitsTot, mT = 2;
+          Psl = long ? avg - (M.postDcaSlPct / 100) * mT / unitsTot : avg + (M.postDcaSlPct / 100) * mT / unitsTot;
+          Ptp = long ? avg + (M.postDcaTpPct / 100) * mT / unitsTot : avg - (M.postDcaTpPct / 100) * mT / unitsTot;
+          dcaDone = true; continue;
+        }
+        if (hitTp0) return { win: true, outcome: 'win_no_dca', resolveIdx: j };
+      } else {
+        const hitSl = long ? lo <= Psl : hi >= Psl;
+        const hitTp = long ? hi >= Ptp : lo <= Ptp;
+        if (hitSl) return { win: false, outcome: 'loss_after_dca', resolveIdx: j };
+        if (hitTp) return { win: true, outcome: 'win_after_dca', resolveIdx: j };
+      }
+    }
+    return null;
+  }
+
+  // Backtest nhanh trên chuỗi nến 1 khung: bắt tín hiệu (RSI đảo chiều + gần S&R + PA)
+  // rồi mô phỏng DCA với đòn bẩy cho trước -> win-rate THẬT theo phương pháp của bạn.
+  function miniBacktest(candles, leverage) {
+    if (!candles || candles.length < 60) return { trades: 0, wins: 0, winRate: null };
+    const closes = candles.map((c) => c.close);
+    const rsi = rsiSeries(closes);
+    const levels = swingLevels(candles);
+    const warmup = CFG.rsi.period + CFG.strategy.rsiLookback + CFG.strategy.swingWindow;
+    let trades = 0, wins = 0, nextIdx = 0;
+    for (let i = warmup; i < candles.length - 2; i++) {
+      if (i < nextIdx) continue;
+      const rev = rsiReversal(rsi, i);
+      if (!rev) continue;
+      if (!nearLevel(closes[i], levels)) continue;
+      if (priceAction(candles, i) !== rev.dir) continue;
+      const r = simulateDCA(candles, i, rev.dir, leverage);
+      if (r) { trades++; if (r.win) wins++; nextIdx = r.resolveIdx + 1; }
+    }
+    return { trades, wins, winRate: trades ? Math.round((wins / trades) * 100) : null };
+  }
+
+  // Dò các mức đòn bẩy, chọn mức có win-rate cao nhất (đủ mẫu) — "ưu tiên win cao".
+  function bestLeverage(candles) {
+    let best = null;
+    for (const L of CFG.money.leverageSamples) {
+      const bt = miniBacktest(candles, L);
+      if (bt.winRate == null) continue;
+      const score = bt.winRate + Math.min(bt.trades, 20) * 0.2; // ưu tiên win cao + đủ mẫu
+      if (!best || score > best.score || (score === best.score && L < best.lev))
+        best = { lev: L, winRate: bt.winRate, trades: bt.trades, score };
+    }
+    return best || { lev: CFG.money.leverage, winRate: null, trades: 0 };
+  }
+
   // Ước tính chi phí funding theo % vốn (margin). rate = %/8h.
   // Dương = mình PHẢI TRẢ funding; âm = mình ĐƯỢC NHẬN funding.
   function fundingCost(ratePct, side, leverage, holdDays) {
@@ -294,6 +364,6 @@
     rsiSeries, lastRSI, rsiZone, emaSeries, supportResistance,
     averageTrueRange, signalScore, pivots,
     priceAction, rsiReversal, swingLevels, nearLevel, tradePlan, combatSignal,
-    fundingCost,
+    fundingCost, simulateDCA, miniBacktest, bestLeverage,
   };
 })();
