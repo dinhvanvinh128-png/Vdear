@@ -25,8 +25,8 @@
 
   async function loadCandles(tf) {
     if (cacheCandles[tf]) return cacheCandles[tf];
-    const t = CFG.timeframes.find((x) => x.id === tf) || CFG.timeframes[5];
-    const c = await API.binanceKlines(symbol, t.binance, CFG.scan.klineLimit);
+    // Thử đa sàn (Binance -> Bybit -> OKX -> Bitget) để chart chạy cho mọi coin.
+    const c = await API.klinesMulti(coin || base, tf, CFG.scan.klineLimit);
     cacheCandles[tf] = c;
     return c;
   }
@@ -242,6 +242,23 @@
   async function init() {
     document.title = base + '/USDT — Vdear';
     chart = new window.VdearChart($('priceCanvas'), $('rsiCanvas'));
+    // nút zoom (cho cảm ứng / mobile)
+    $('zoomIn').addEventListener('click', () => chart.zoomBy(0.7));
+    $('zoomOut').addEventListener('click', () => chart.zoomBy(1.4));
+    $('zoomReset').addEventListener('click', () => chart.resetView());
+    // pinch-zoom cảm ứng
+    let pinch = null;
+    const pc = $('priceCanvas');
+    pc.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) pinch = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }, { passive: true });
+    pc.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && pinch) {
+        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        chart.zoomBy(pinch / d); pinch = d;
+      }
+    }, { passive: true });
+    pc.addEventListener('touchend', () => { pinch = null; });
     renderTfTabs();
     try {
       await renderHeader();

@@ -43,7 +43,7 @@
 
     const results = await API.pool(universe, async (coin) => {
       try {
-        const candles = await API.binanceKlines(coin.symbol, tf.binance, CFG.scan.klineLimit);
+        const candles = await API.klinesMulti(coin, tf.id, CFG.scan.klineLimit);
         done++;
         if (status) status.textContent = `Đang quét ${done}/${universe.length} coin futures (toàn bộ · chiến lược thực chiến · khung ${tf.label})…`;
         if (candles.length < 40) return null;
@@ -158,14 +158,16 @@
       return `<tr onclick="location.href='${coinLink(c.base)}'">
         <td class="mv-rank">${i + 1}</td>
         <td class="mv-coin"><img class="mv-logo" alt="" data-logo="${c.base}">
-          <span class="mv-sym">${c.base}<small>/USDT</small></span> ${volIcon(c, volRank[c.base])}</td>
+          <span class="mv-cell">
+            <span class="mv-sym">${c.base}<small>USDT</small> ${volIcon(c, volRank[c.base])}</span>
+            <small class="mv-subvol">${shortNum(c.quoteVolume)} USDT</small>
+          </span></td>
         <td class="mv-price">$${fmt(c.price)}</td>
-        <td class="mv-chg ${up ? 'up' : 'down'}">${up ? '+' : ''}${c.change.toFixed(2)}%</td>
-        <td class="mv-vol">$${shortNum(c.quoteVolume)}</td>
+        <td><span class="mv-pill ${up ? 'up' : 'down'}">${up ? '+' : ''}${c.change.toFixed(2)}%</span></td>
         <td class="mv-fund">${fund}</td>
       </tr>`;
     }).join('');
-    $('moversBody').innerHTML = rows || '<tr><td colspan="6" class="muted">Không có coin trong nhóm này.</td></tr>';
+    $('moversBody').innerHTML = rows || '<tr><td colspan="5" class="muted">Không có coin trong nhóm này.</td></tr>';
     $('moversBody').querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
   }
 
