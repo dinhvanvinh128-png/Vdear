@@ -1,11 +1,12 @@
 """
-BACKTEST: S&R (đa khung) + Price Action (đa khung) + RSI (H4) + DCA — 10 COIN
+BACKTEST (FUTURES / PERPETUAL SWAP): S&R (đa khung) + Price Action (đa khung) + RSI (H4) + DCA — 10 COIN
 
 RSI H4  -> xác định HƯỚNG lệnh (quá mua/quá bán rồi quay đầu)
 S&R đa khung -> xác nhận VÙNG GIÁ MẠNH (kiểm tra trên H4, H1, M15, M5)
 PA đa khung  -> xác nhận NẾN ĐẢO CHIỀU (kiểm tra trên H4, H1, M15, M5)
 Thực thi lệnh trên khung M5.
-Chạy lần lượt qua 10 coin: WLD, HYPE, BCH, AVAX, TRX, ZEC, DOGE, NEAR, UNI, TAO.
+Chạy lần lượt qua 10 coin FUTURES (USDT-margined perpetual): WLD, HYPE, BCH,
+AVAX, TRX, ZEC, DOGE, NEAR, UNI, TAO.
 
 QUẢN LÝ VỐN (không đổi so với bản trước):
 • TP gốc: +100% margin
@@ -23,12 +24,18 @@ CHẠY:
 
 LƯU Ý VỀ THỜI GIAN CHẠY: 10 coin × 4 khung dữ liệu là khối lượng lớn. Script đã
 giảm BACKTEST_DAYS xuống 60 ngày (thay vì 180) để tổng thời gian chạy còn khả thi
-trên Colab. Nếu 1 coin nào đó fetch lỗi (không có cặp SPOT trên OKX, tên symbol
-khác...), script tự bỏ qua và chạy tiếp coin khác — không làm hỏng cả lần chạy.
+trên Colab. Nếu 1 coin nào đó fetch lỗi (không có hợp đồng perpetual trên OKX,
+tên symbol khác...), script tự bỏ qua và chạy tiếp coin khác — không hỏng cả lần chạy.
 
-LƯU Ý VỀ SÀN: HYPE (Hyperliquid) và TAO (Bittensor) có thể KHÔNG có cặp SPOT trên
-OKX. Nếu bị bỏ qua, đổi EXCHANGE_ID sang "binance" hoặc "bybit", hoặc chuyển sang
-cặp phái sinh (vd "HYPE/USDT:USDT") tuỳ sàn.
+CHẾ ĐỘ FUTURES:
+- Dùng hợp đồng vĩnh cửu USDT-margined (linear perpetual swap).
+- Ký hiệu ccxt chuẩn: "BASE/USDT:USDT" (vd "BTC/USDT:USDT").
+- Bật bằng exchange.options['defaultType'] = 'swap' (xem MARKET_TYPE bên dưới).
+- Backtest CHỈ dùng OHLCV của hợp đồng perpetual; KHÔNG mô phỏng funding fee.
+  (Nếu muốn sát thực tế hơn, có thể cộng thêm funding vào chi phí — hiện bỏ qua.)
+
+LƯU Ý VỀ SÀN: nếu OKX không có perpetual cho coin nào đó (vd HYPE/TAO tuỳ thời
+điểm), đổi EXCHANGE_ID sang "binance" hoặc "bybit" — các sàn này thường có đủ hơn.
 """
 
 import ccxt
@@ -38,11 +45,13 @@ import numpy as np
 # ============================================================
 # CONFIG
 # ============================================================
-EXCHANGE_ID = "okx"  # đổi "binance"/"bybit" nếu bị chặn IP (lỗi 451)
+EXCHANGE_ID = "okx"    # đổi "binance"/"bybit" nếu bị chặn IP (lỗi 451)
+MARKET_TYPE = "swap"   # "swap" = FUTURES perpetual (USDT-margined). Đổi "spot" nếu muốn spot.
 
+# FUTURES (perpetual): ký hiệu ccxt là "BASE/USDT:USDT".
 SYMBOLS = [
-    "WLD/USDT", "HYPE/USDT", "BCH/USDT", "AVAX/USDT", "TRX/USDT",
-    "ZEC/USDT", "DOGE/USDT", "NEAR/USDT", "UNI/USDT", "TAO/USDT",
+    "WLD/USDT:USDT", "HYPE/USDT:USDT", "BCH/USDT:USDT", "AVAX/USDT:USDT", "TRX/USDT:USDT",
+    "ZEC/USDT:USDT", "DOGE/USDT:USDT", "NEAR/USDT:USDT", "UNI/USDT:USDT", "TAO/USDT:USDT",
 ]
 
 TFS = ["4h", "1h", "15m", "5m"]  # các khung dùng để xác nhận S&R + Price Action
@@ -350,7 +359,11 @@ def summarize(trades, leverage, symbol):
 # MAIN — CHẠY LẦN LƯỢT QUA 10 COIN
 # ============================================================
 if __name__ == "__main__":
-    exchange = getattr(ccxt, EXCHANGE_ID)()
+    exchange = getattr(ccxt, EXCHANGE_ID)({
+        "enableRateLimit": True,
+        "options": {"defaultType": MARKET_TYPE},  # 'swap' = futures perpetual
+    })
+    exchange.load_markets()
     since_str = (pd.Timestamp(BACKTEST_UNTIL, tz="UTC") - pd.Timedelta(days=BACKTEST_DAYS)).strftime("%Y-%m-%d")
 
     all_summary = []
@@ -362,7 +375,7 @@ if __name__ == "__main__":
             for tf in TFS:
                 tf_dfs[tf] = fetch_ohlcv_range(exchange, symbol, tf, since_str, BACKTEST_UNTIL)
             if any(len(tf_dfs[tf]) < 100 for tf in TFS):
-                print(f"   ⚠️ Dữ liệu quá ít cho {symbol} (có thể chưa niêm yết dạng SPOT trên {EXCHANGE_ID}), bỏ qua.")
+                print(f"   ⚠️ Dữ liệu quá ít cho {symbol} (có thể không có perpetual '{MARKET_TYPE}' trên {EXCHANGE_ID}), bỏ qua.")
                 continue
             print("   Đã tải: " + ", ".join(f"{tf}={len(tf_dfs[tf])} nến" for tf in TFS))
 
