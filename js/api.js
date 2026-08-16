@@ -275,13 +275,16 @@
 
   /* ------------------------------ LOGO ---------------------------------- */
   // Nhiều nguồn logo (thử lần lượt) để giảm thiếu logo.
+  // Chuẩn hoá base cho nguồn logo: bỏ tiền tố bội số (1000PEPE -> pepe).
+  function logoKey(base) {
+    return String(base).toLowerCase().replace(/^(1000000|100000|10000|1000)/, '');
+  }
   function logoSources(base) {
-    const l = String(base).toLowerCase();
+    const l = logoKey(base);
     return [
       'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + l + '.png',
       'https://assets.coincap.io/assets/icons/' + l + '@2x.png',
       CFG.logoBase + l + '.png',
-      'https://cryptofonts.com/img/icons/' + l + '.svg',
     ];
   }
   function logoUrl(base) { return logoSources(base)[0]; }
@@ -298,16 +301,25 @@
     return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
   }
   // Gắn logo vào <img>, thử lần lượt các nguồn rồi fallback avatar chữ.
+  // Kiểm cả onload (ảnh rỗng 0px) để không bị "logo trắng".
   function applyLogo(img, base) {
     base = String(base).toUpperCase();
     img.alt = base;
     const sources = logoSources(base);
-    let i = 0;
+    let i = 0, done = false;
+    const finishAvatar = () => { if (done) return; done = true; img.onerror = null; img.onload = null; img.src = letterAvatar(base); };
     const tryNext = () => {
-      if (i >= sources.length) { img.onerror = null; img.src = letterAvatar(base); return; }
+      if (done) return;
+      if (i >= sources.length) { finishAvatar(); return; }
       img.src = sources[i++];
     };
     img.onerror = tryNext;
+    img.onload = () => {
+      if (done) return;
+      // ảnh hợp lệ phải có kích thước > 0; nếu không, thử nguồn kế
+      if (img.naturalWidth > 1 && img.naturalHeight > 1) { done = true; img.onerror = null; }
+      else tryNext();
+    };
     tryNext();
   }
 

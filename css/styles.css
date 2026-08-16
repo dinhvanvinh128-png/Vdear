@@ -97,6 +97,36 @@ h1,h2,h3{margin:0;font-weight:700}
 .select{background:var(--panel-2);color:var(--text);border:1px solid var(--line-2);
   border-radius:9px;padding:7px 10px;font-size:13px;font-weight:600;cursor:pointer}
 
+/* -------------------------- Market tabs -------------------------- */
+.market-tabs{max-width:1200px;margin:14px auto 0;padding:0 18px;display:flex;gap:6px;
+  border-bottom:1px solid var(--line)}
+.mtab{background:none;border:none;color:var(--muted);font-size:16px;font-weight:700;
+  padding:12px 14px;cursor:pointer;position:relative;font-family:'Chakra Petch',sans-serif;
+  display:inline-flex;align-items:center;gap:7px}
+.mtab:hover{color:var(--text)}
+.mtab.active{color:var(--text)}
+.mtab.active::after{content:'';position:absolute;left:14px;right:14px;bottom:-1px;height:3px;
+  border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.fav-count{font-size:11px;background:var(--panel-2);border:1px solid var(--line-2);
+  color:var(--muted);border-radius:20px;padding:1px 7px;font-family:'Inter'}
+
+/* --------------------- Sector scroll (kéo ngang) ------------------ */
+.sector-scroll{display:flex;gap:9px;overflow-x:auto;padding:4px 2px 12px;margin-top:8px;
+  scrollbar-width:thin;cursor:grab;-webkit-overflow-scrolling:touch}
+.sector-scroll::-webkit-scrollbar{height:6px}
+.sector-scroll::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px}
+.sector-scroll .sector-chip{flex:0 0 auto;white-space:nowrap;user-select:none}
+
+/* ----------------------------- Pager ----------------------------- */
+.pager{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px;justify-content:center}
+.pg-btn{min-width:34px;height:34px;padding:0 8px;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel-2);color:var(--text);font-weight:600;font-size:13px;cursor:pointer;transition:all .12s}
+.pg-btn:hover:not(:disabled){border-color:var(--line-2)}
+.pg-btn.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#04121a;border-color:transparent}
+.pg-btn:disabled{opacity:.4;cursor:default}
+.pg-dots{color:var(--muted-2);padding:0 2px}
+.pager-info{color:var(--muted-2);font-size:12px;margin-left:8px}
+
 /* -------------------------- Gauge 0-100 -------------------------- */
 .gauge{display:flex;align-items:center;gap:16px;margin-top:6px}
 .gauge-track{position:relative;flex:1;height:14px;border-radius:20px;
@@ -164,7 +194,12 @@ h1,h2,h3{margin:0;font-weight:700}
 .movers tbody tr{cursor:pointer;transition:background .12s}
 .movers tbody tr:hover{background:var(--panel-2)}
 .movers td{padding:11px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
-.mv-rank{color:var(--muted-2);width:30px}
+.mv-rank{color:var(--muted-2);white-space:nowrap}
+.mv-rank>span{margin-left:2px}
+.fav-star{background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted-2);
+  padding:0 2px;line-height:1;transition:color .12s;vertical-align:middle}
+.fav-star:hover{color:var(--gold)}
+.fav-star.on{color:var(--gold)}
 .mv-coin{display:flex;align-items:center;gap:10px}
 .mv-logo{width:30px;height:30px;border-radius:50%;background:#12161f}
 .mv-cell{display:flex;flex-direction:column;gap:2px;line-height:1.25}

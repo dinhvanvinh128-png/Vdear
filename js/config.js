@@ -84,9 +84,10 @@ window.VDEAR_CONFIG = {
     maxUniverse: 600,      // trần an toàn (tránh quá tải nếu sàn trả quá nhiều symbol)
     concurrency: 10,       // số request klines song song
     klineLimit: 120,       // số nến để tính chỉ báo
-    initialShow: 12,       // hiển thị ban đầu, còn lại ẩn sau "Xem thêm"
+    initialShow: 4,        // chỉ hiện 4 tín hiệu, còn lại ẩn sau "Xem thêm"
     targetSignals: 30,     // mục tiêu ~30 coin gợi ý
-    moversShow: 15,        // số coin ở bảng biến động
+    volIconTop: 15,        // 15 coin volume cao nhất được gắn icon 🔥
+    moversPageSize: 16,    // số coin mỗi trang ở bảng biến động (phân trang)
     tickerCount: 28,       // số coin chạy trên thanh ticker
   },
 

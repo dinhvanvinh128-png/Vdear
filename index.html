@@ -35,63 +35,86 @@
     </div>
   </header>
 
+  <!-- Tab cấp cao: Yêu thích / Crypto / TradFi -->
+  <div class="market-tabs">
+    <button class="mtab" data-view="fav">⭐ Yêu thích <span class="fav-count" id="favCount">0</span></button>
+    <button class="mtab active" data-view="crypto">Crypto</button>
+    <button class="mtab" data-view="tradfi">TradFi</button>
+  </div>
+
   <main class="container">
-    <!-- Thang tâm lý thị trường 0-100 -->
-    <section class="panel sentiment">
-      <div class="panel-head">
-        <h2>Tâm lý thị trường — nên LONG hay SHORT?</h2>
-        <span class="gauge-side neutral" id="sentLabel">Đang tính…</span>
-      </div>
-      <div class="gauge">
-        <div class="gauge-track"><div class="gauge-fill neutral" id="sentFill" style="width:50%"></div>
-          <div class="gauge-ticks"><span>0 · SHORT</span><span>50</span><span>100 · LONG</span></div>
+    <!-- ============ VIEW: CRYPTO ============ -->
+    <div id="view-crypto">
+      <!-- Thang tâm lý thị trường 0-100 -->
+      <section class="panel sentiment">
+        <div class="panel-head">
+          <h2>Tâm lý thị trường — nên LONG hay SHORT?</h2>
+          <span class="gauge-side neutral" id="sentLabel">Đang tính…</span>
         </div>
-        <div class="gauge-val" id="sentValue">—</div>
-      </div>
-    </section>
+        <div class="gauge">
+          <div class="gauge-track"><div class="gauge-fill neutral" id="sentFill" style="width:50%"></div>
+            <div class="gauge-ticks"><span>0 · SHORT</span><span>50</span><span>100 · LONG</span></div>
+          </div>
+          <div class="gauge-val" id="sentValue">—</div>
+        </div>
+      </section>
 
-    <!-- Gợi ý Long/Short (quét 4h) -->
-    <section class="panel">
-      <div class="panel-head">
-        <h2>🎯 Tín hiệu thực chiến · Top 50 Futures · khung 4H <span class="tag">Confluence</span></h2>
-        <span class="muted small" id="scanStatus">Đang khởi tạo quét Top 50 Futures…</span>
-      </div>
-      <p class="hint">Chiến lược <b>thực chiến</b>: RSI H4 đảo chiều (quá mua/bán rồi quay đầu) → hướng lệnh; xác nhận thêm bằng vùng <b>hỗ trợ/kháng cự</b> và <b>Price Action</b>. Coin đạt <b>hội tụ ✓</b> (RSI + S&amp;R + PA) được ưu tiên lên đầu.</p>
-      <div class="scan-grid" id="scanGrid"></div>
-      <div class="center"><button class="more-btn" id="scanMore" style="display:none">▼ Xem thêm</button></div>
-    </section>
+      <!-- Gợi ý Long/Short (quét 4h) — chỉ hiện 4, còn lại "Xem thêm" -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>🎯 Tín hiệu thực chiến · Futures · khung 4H <span class="tag">Confluence</span></h2>
+          <span class="muted small" id="scanStatus">Đang khởi tạo quét Futures…</span>
+        </div>
+        <p class="hint">Chiến lược <b>thực chiến</b>: RSI H4 đảo chiều (quá mua/bán rồi quay đầu) → hướng lệnh; xác nhận thêm bằng vùng <b>hỗ trợ/kháng cự</b> và <b>Price Action</b>. Coin đạt <b>hội tụ ✓</b> (RSI + S&amp;R + PA) được ưu tiên lên đầu.</p>
+        <div class="scan-grid" id="scanGrid"></div>
+        <div class="center"><button class="more-btn" id="scanMore" style="display:none">▼ Xem thêm</button></div>
+      </section>
 
-    <!-- Phân loại sector -->
-    <section class="panel">
-      <div class="panel-head"><h2>🧭 Phân loại mảng coin</h2></div>
-      <div class="sector-bar" id="sectorBar"></div>
-    </section>
+      <!-- Bảng biến động: sector bar (kéo ngang) NẰM TRÊN, rồi bảng phân trang -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>📊 Biến động 24h · Volume &amp; Giá</h2>
+          <select id="moverSort" class="select">
+            <option value="gain">Tăng nhiều nhất (+%)</option>
+            <option value="lose">Giảm nhiều nhất (−%)</option>
+            <option value="vol">Volume cao nhất</option>
+          </select>
+        </div>
+        <!-- Thanh phân loại mảng coin: cuộn/kéo ngang -->
+        <div class="sector-scroll" id="sectorBar"></div>
+        <div class="table-wrap">
+          <table class="movers">
+            <thead><tr><th>#</th><th>Cặp / Vol</th><th>Giá</th><th>24H %</th><th>Funding/8h</th></tr></thead>
+            <tbody id="moversBody"></tbody>
+          </table>
+        </div>
+        <div class="pager" id="moversPager"></div>
+        <p class="hint">🔥 = 15 coin volume cao nhất · 💧 · 📊. Cột <b>Funding/8h</b>: dương → LONG trả phí, âm → SHORT trả phí. Bấm ⭐ để thêm Yêu thích · bấm hàng để mở trang coin.</p>
+      </section>
+    </div>
 
-    <!-- Bảng biến động 24h -->
-    <section class="panel">
-      <div class="panel-head">
-        <h2>📊 Biến động 24h · Volume &amp; Giá</h2>
-        <select id="moverSort" class="select">
-          <option value="gain">Tăng nhiều nhất (+%)</option>
-          <option value="lose">Giảm nhiều nhất (−%)</option>
-          <option value="vol">Volume cao nhất</option>
-        </select>
-      </div>
-      <div class="table-wrap">
-        <table class="movers">
-          <thead><tr><th>#</th><th>Cặp / Vol</th><th>Giá</th><th>24H %</th><th>Funding/8h</th></tr></thead>
-          <tbody id="moversBody"></tbody>
-        </table>
-      </div>
-      <p class="hint">🔥 = volume rất cao · 💧 = volume cao · 📊 = volume khá. Cột <b>Funding/8h</b>: dương → LONG trả phí, âm → SHORT trả phí. Bấm vào một hàng để mở trang phân tích coin.</p>
-    </section>
+    <!-- ============ VIEW: TRADFI ============ -->
+    <div id="view-tradfi" hidden>
+      <section class="panel">
+        <div class="panel-head"><h2>🏦 TradFi — Vàng · Bạc · Dầu</h2></div>
+        <div class="tradfi-row" id="tradfiRow"></div>
+        <p class="hint">XAU/XAG lấy giá realtime khi khả dụng; CL (WTI) &amp; BZ (Brent) hiển thị chỉ báo tham khảo khi nguồn realtime bị giới hạn.</p>
+      </section>
+    </div>
 
-    <!-- TradFi -->
-    <section class="panel">
-      <div class="panel-head"><h2>🏦 TradFi — Vàng · Bạc · Dầu</h2></div>
-      <div class="tradfi-row" id="tradfiRow"></div>
-      <p class="hint">XAU/XAG lấy giá realtime khi khả dụng; CL (WTI) &amp; BZ (Brent) hiển thị chỉ báo tham khảo khi nguồn realtime bị giới hạn.</p>
-    </section>
+    <!-- ============ VIEW: YÊU THÍCH ============ -->
+    <div id="view-fav" hidden>
+      <section class="panel">
+        <div class="panel-head"><h2>⭐ Coin yêu thích</h2></div>
+        <div class="table-wrap">
+          <table class="movers">
+            <thead><tr><th>#</th><th>Cặp / Vol</th><th>Giá</th><th>24H %</th><th>Funding/8h</th></tr></thead>
+            <tbody id="favBody"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="favEmpty">Chưa có coin yêu thích. Vào tab Crypto, bấm ⭐ ở cột đầu để thêm.</p>
+      </section>
+    </div>
   </main>
 
   <footer class="site-foot">
