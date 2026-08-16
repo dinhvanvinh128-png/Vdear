@@ -45,6 +45,12 @@
       $('statHigh').textContent = '$' + fmt(coin.high);
       $('statLow').textContent = '$' + fmt(coin.low);
       $('statVol').textContent = '$' + shortNum(coin.quoteVolume);
+      const fEl = $('statFunding');
+      if (coin.funding != null) {
+        const pos = coin.funding >= 0;
+        fEl.textContent = (pos ? '+' : '') + coin.funding.toFixed(4) + '%';
+        fEl.className = pos ? 'up' : 'down';
+      } else { fEl.textContent = '—'; fEl.className = ''; }
 
       // giá đa sàn
       const ex = coin.exchanges || {};
@@ -119,6 +125,16 @@
     const okPA = paTf >= CFG.strategy.minPAMatch;
     const verdict = sig.valid && okSR && okPA;
 
+    // Phí funding ước tính (nếu có dữ liệu từ market)
+    let fundingHtml = '';
+    if (coin && coin.funding != null) {
+      const cost = TA.fundingCost(coin.funding, sig.side, p.leverage, CFG.money.assumedHoldDays);
+      const pay = cost > 0;
+      const rateTxt = (coin.funding >= 0 ? '+' : '') + coin.funding.toFixed(4) + '%/8h';
+      fundingHtml = `<span class="cf-item on">Funding: <b class="${coin.funding>=0?'up':'down'}">${rateTxt}</b>
+        · ${pay ? 'PHẢI TRẢ' : 'ĐƯỢC NHẬN'} <b>~${Math.abs(cost).toFixed(2)}%</b> vốn/${CFG.money.assumedHoldDays} ngày (x${p.leverage})</span>`;
+    }
+
     box.innerHTML = `
       <div class="panel-head"><h2>⚔️ Chiến lược thực chiến · ${currentTf.toUpperCase()}</h2>
         <span class="gauge-side ${isLong ? 'long' : 'short'}">${verdict ? '✓ ' : ''}${sig.side} · Win ~${sig.winRate}%</span></div>
@@ -126,6 +142,7 @@
         <span class="cf-item ${sig.rsiNote ? 'on' : ''}">RSI đảo chiều: <b>${sig.rsiNote || '—'}</b></span>
         <span class="cf-item ${okSR ? 'on' : ''}">Hợp tụ S&amp;R: <b>${srTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
         <span class="cf-item ${okPA ? 'on' : ''}">Price Action: <b>${paTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
+        ${fundingHtml}
       </div>
       <div class="plan-grid">
         <div class="plan-cell"><span>Vào lệnh (Entry)</span><b>$${fmt(p.entry)}</b></div>

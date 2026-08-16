@@ -69,6 +69,25 @@
     return map;
   }
 
+  // Funding rate hiện tại + mark price (Binance USDⓈ-M Futures).
+  // premiumIndex trả mảng {symbol, markPrice, lastFundingRate, nextFundingTime}.
+  async function binanceFunding() {
+    try {
+      const data = await getJSON('https://fapi.binance.com/fapi/v1/premiumIndex');
+      const map = {};
+      (Array.isArray(data) ? data : []).forEach((t) => {
+        const s = t.symbol;
+        if (!s || !s.endsWith('USDT') || s.includes('_')) return;
+        map[s.slice(0, -4)] = {
+          rate: num(t.lastFundingRate) * 100,       // %/8h
+          markPrice: num(t.markPrice),
+          nextTime: num(t.nextFundingTime),
+        };
+      });
+      return map;
+    } catch (e) { return {}; }
+  }
+
   async function binanceKlines(symbol, interval, limit) {
     const url = `${CFG.exchanges.binance.klines}?symbol=${symbol}&interval=${interval}&limit=${limit || 200}`;
     const raw = await getJSON(url);
@@ -126,11 +145,12 @@
     const now = Date.now();
     if (!force && _marketCache && now - _marketAt < 15000) return _marketCache;
 
-    const [bnb, bybit, okx, bitget] = await Promise.all([
+    const [bnb, bybit, okx, bitget, funding] = await Promise.all([
       binance24h(),
       bybitPrices(),
       okxPrices(),
       bitgetPrices(),
+      binanceFunding(),
     ]);
 
     const list = Object.values(bnb);
@@ -138,6 +158,12 @@
       if (bybit[c.base]) c.exchanges.bybit = bybit[c.base];
       if (okx[c.base]) c.exchanges.okx = okx[c.base];
       if (bitget[c.base]) c.exchanges.bitget = bitget[c.base];
+      // Funding rate (%/8h) + mark price
+      if (funding[c.base]) {
+        c.funding = funding[c.base].rate;
+        c.markPrice = funding[c.base].markPrice;
+        c.nextFunding = funding[c.base].nextTime;
+      } else { c.funding = null; }
       // Giá trung bình các sàn có mặt (để hiển thị "consensus")
       const vals = Object.values(c.exchanges).filter((v) => v > 0);
       c.avgPrice = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : c.price;

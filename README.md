@@ -8,13 +8,15 @@ vẽ bằng canvas tự viết nên **không bị màn hình đen** khi deploy.
 ## ✨ Tính năng
 
 > **Chế độ FUTURES**: dữ liệu lấy từ hợp đồng vĩnh cửu (USDⓈ-M perpetual) của
-> Binance/Bybit/OKX/Bitget, quét **Top 50 coin futures** theo volume.
+> Binance/Bybit/OKX/Bitget, quét **TOÀN BỘ coin futures** (không giới hạn top 50).
+> Có **funding rate**: hiển thị ở bảng biến động, trang coin, và ước tính **chi phí
+> funding** cho lệnh trong panel chiến lược.
 
 ### Trang thị trường (`index.html`)
 - **Thanh ticker 50px**: nền đen, coin chạy ngang liên tục, logo + giá + %
   tăng/giảm màu xanh/đỏ, tốc độ ổn định, dừng khi rê chuột. Không có nút/link TradingView.
 - **Thang tâm lý thị trường 0–100** báo nên LONG hay SHORT.
-- **Tín hiệu thực chiến · Top 50 Futures · khung 4H** — mô phỏng theo chiến lược
+- **Tín hiệu thực chiến · toàn bộ Futures · khung 4H** — mô phỏng theo chiến lược
   backtest confluence: **RSI H4 đảo chiều** (quá mua/bán rồi quay đầu) xác định hướng,
   xác nhận thêm bằng **hỗ trợ/kháng cự** và **Price Action**. Mỗi thẻ có 3 chấm xác
   nhận `RSI · S&R · PA`; coin đạt **hội tụ ✓** được ưu tiên lên đầu. Nút **Xem thêm**

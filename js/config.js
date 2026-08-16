@@ -80,13 +80,14 @@ window.VDEAR_CONFIG = {
 
   // Số coin quét & hiển thị
   scan: {
-    universeSize: 50,     // TOP 50 FUTURES theo volume để quét
-    concurrency: 6,       // số request klines song song
-    klineLimit: 150,      // số nến để tính chỉ báo
-    initialShow: 12,      // hiển thị ban đầu, còn lại ẩn sau "Xem thêm"
-    targetSignals: 30,    // mục tiêu ~30 coin gợi ý
-    moversShow: 15,       // số coin ở bảng biến động
-    tickerCount: 28,      // số coin chạy trên thanh ticker
+    universeSize: 'all',  // 'all' = quét TOÀN BỘ coin futures; hoặc đặt 1 số để giới hạn
+    maxUniverse: 600,      // trần an toàn (tránh quá tải nếu sàn trả quá nhiều symbol)
+    concurrency: 10,       // số request klines song song
+    klineLimit: 120,       // số nến để tính chỉ báo
+    initialShow: 12,       // hiển thị ban đầu, còn lại ẩn sau "Xem thêm"
+    targetSignals: 30,     // mục tiêu ~30 coin gợi ý
+    moversShow: 15,        // số coin ở bảng biến động
+    tickerCount: 28,       // số coin chạy trên thanh ticker
   },
 
   // Chiến lược "thực chiến" (mô phỏng theo backtest confluence):
@@ -108,7 +109,9 @@ window.VDEAR_CONFIG = {
     dcaTriggerPct: 50,    // DCA khi lỗ -50% margin
     postDcaSlPct: 50,     // sau DCA: SL -50% trên tổng vốn
     postDcaTpPct: 100,    // sau DCA: TP +100% trên tổng vốn
-    takerFeePct: 0.05,    // phí mỗi chiều
+    takerFeePct: 0.05,    // phí taker mỗi chiều
+    fundingIntervalsPerDay: 3, // funding thu 3 lần/ngày (mỗi 8h)
+    assumedHoldDays: 1,        // giả định thời gian giữ lệnh để ước tính phí funding
   },
 
   // Ngưỡng RSI

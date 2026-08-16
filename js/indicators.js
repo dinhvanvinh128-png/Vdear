@@ -279,9 +279,21 @@
     };
   }
 
+  // Ước tính chi phí funding theo % vốn (margin). rate = %/8h.
+  // Dương = mình PHẢI TRẢ funding; âm = mình ĐƯỢC NHẬN funding.
+  function fundingCost(ratePct, side, leverage, holdDays) {
+    if (ratePct == null || !isFinite(ratePct)) return null;
+    const M = CFG.money;
+    const L = leverage || M.leverage;
+    const intervals = (M.fundingIntervalsPerDay || 3) * (holdDays || M.assumedHoldDays || 1);
+    const sign = (side === 'LONG' || side === 'bullish') ? 1 : -1; // long trả khi rate>0
+    return ratePct * L * intervals * sign; // % trên vốn margin
+  }
+
   window.VdearTA = {
     rsiSeries, lastRSI, rsiZone, emaSeries, supportResistance,
     averageTrueRange, signalScore, pivots,
     priceAction, rsiReversal, swingLevels, nearLevel, tradePlan, combatSignal,
+    fundingCost,
   };
 })();

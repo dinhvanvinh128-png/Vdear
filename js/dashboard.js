@@ -35,7 +35,9 @@
   /* -------------------- Gợi ý Long/Short (quét 4h) --------------------- */
   async function runScan() {
     const status = $('scanStatus');
-    const universe = market.slice(0, CFG.scan.universeSize);
+    // 'all' = quét toàn bộ coin futures (giới hạn bởi maxUniverse để an toàn).
+    const cap = CFG.scan.universeSize === 'all' ? CFG.scan.maxUniverse : CFG.scan.universeSize;
+    const universe = market.slice(0, cap);
     const tf = CFG.timeframes.find((t) => t.id === CFG.scanTimeframe);
     let done = 0;
 
@@ -43,7 +45,7 @@
       try {
         const candles = await API.binanceKlines(coin.symbol, tf.binance, CFG.scan.klineLimit);
         done++;
-        if (status) status.textContent = `Đang quét ${done}/${universe.length} coin futures (chiến lược thực chiến · khung ${tf.label})…`;
+        if (status) status.textContent = `Đang quét ${done}/${universe.length} coin futures (toàn bộ · chiến lược thực chiến · khung ${tf.label})…`;
         if (candles.length < 40) return null;
         const sig = TA.combatSignal(candles); // RSI đảo chiều + S&R + Price Action
         return { coin, sig };
@@ -62,7 +64,7 @@
     scanResults = scanResults.slice(0, CFG.scan.targetSignals);
 
     const validCount = scanResults.filter((r) => r.sig.valid).length;
-    if (status) status.textContent = `Đã quét ${universe.length} coin futures · khung ${tf.label} · ${scanResults.length} tín hiệu (${validCount} đạt hội tụ thực chiến)`;
+    if (status) status.textContent = `Đã quét TOÀN BỘ ${universe.length} coin futures · khung ${tf.label} · ${scanResults.length} tín hiệu (${validCount} đạt hội tụ thực chiến)`;
     renderScan();
     renderSentiment();
   }
@@ -150,6 +152,9 @@
 
     const rows = sorted.map((c, i) => {
       const up = c.change >= 0;
+      const fund = c.funding != null
+        ? `<span class="${c.funding >= 0 ? 'up' : 'down'}">${c.funding >= 0 ? '+' : ''}${c.funding.toFixed(4)}%</span>`
+        : '<span class="muted">—</span>';
       return `<tr onclick="location.href='${coinLink(c.base)}'">
         <td class="mv-rank">${i + 1}</td>
         <td class="mv-coin"><img class="mv-logo" alt="" data-logo="${c.base}">
@@ -157,9 +162,10 @@
         <td class="mv-price">$${fmt(c.price)}</td>
         <td class="mv-chg ${up ? 'up' : 'down'}">${up ? '+' : ''}${c.change.toFixed(2)}%</td>
         <td class="mv-vol">$${shortNum(c.quoteVolume)}</td>
+        <td class="mv-fund">${fund}</td>
       </tr>`;
     }).join('');
-    $('moversBody').innerHTML = rows || '<tr><td colspan="5" class="muted">Không có coin trong nhóm này.</td></tr>';
+    $('moversBody').innerHTML = rows || '<tr><td colspan="6" class="muted">Không có coin trong nhóm này.</td></tr>';
     $('moversBody').querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
   }
 
