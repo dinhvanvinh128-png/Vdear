@@ -99,7 +99,7 @@
 
   <div class="tabs" id="tabs">
     <div class="tab active" data-cur="usd">🇺🇸 USD <span class="small">giá × hệ số + thêm</span></div>
-    <div class="tab" data-cur="jpy">🇯🇵 Yên <span class="small">giá × 18,5 + 20.000</span></div>
+    <div class="tab" data-cur="jpy">🇯🇵 Yên <span class="small">giá × 185 + 200.000</span></div>
     <div class="tab" data-cur="krw">🇰🇷 Won <span class="small">USD→Won × 19,5 + 200.000</span></div>
   </div>
 
@@ -129,6 +129,13 @@
 
   <div class="formula" id="formula"></div>
 
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--muted)">
+    🔢 Làm tròn lấy
+    <input id="cfgSig" type="number" min="1" max="9" value="5"
+      style="width:60px;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:6px 8px;font-size:14px;text-align:center" />
+    chữ số đầu (bỏ phần đuôi, vd 16.332.185 → 16.332.000)
+  </div>
+
   <div class="tablewrap">
     <table>
       <thead>
@@ -156,7 +163,7 @@
   </div>
 
   <footer>
-    Làm tròn = lấy 4 số đầu, bỏ phần đuôi (vd 1.633.200 → 1.633.000). Dữ liệu lưu trên trình duyệt.<br/>
+    Làm tròn = lấy N số đầu (chỉnh ở ô 🔢), bỏ phần đuôi (vd 16.332.185 → 16.332.000). Dữ liệu lưu trên trình duyệt.<br/>
     Tỷ giá từ nguồn mở, cập nhật hằng ngày. Gộp 1 file — kéo <b>index.html</b> lên vercel.com là chạy.
   </footer>
 </div>
@@ -173,27 +180,31 @@ const fmtInt=new Intl.NumberFormat("vi-VN",{maximumFractionDigits:0});
 const fmtDec=new Intl.NumberFormat("vi-VN",{maximumFractionDigits:4});
 function money(n){return fmtInt.format(Math.round(n))+" ₫";}
 
-/* ---------- Làm tròn "lấy 4 số đầu" ---------- */
-function round4(n){
+/* ---------- Làm tròn "lấy N số đầu" ---------- */
+let sigDigits=5;
+try{const s=parseInt(localStorage.getItem("sales_sig")); if(s>=1&&s<=9)sigDigits=s;}catch(e){}
+function roundSig(n){
   n=Math.round(n);
   const a=Math.abs(n);
-  if(a<10000) return n;
-  const d=Math.floor(Math.log10(a))+1;
-  const f=Math.pow(10,d-4);
-  return Math.sign(n)*Math.floor(a/f)*f;
+  if(a===0) return 0;
+  const N=sigDigits;
+  const d=Math.floor(Math.log10(a))+1;   // số chữ số
+  if(d<=N) return n;                      // ít hơn N chữ số thì giữ nguyên
+  const f=Math.pow(10,d-N);
+  return Math.sign(n)*Math.floor(a/f)*f;  // lấy N chữ số đầu, bỏ phần đuôi
 }
 
 /* ---------- Cấu hình 3 đồng ---------- */
 const CUR={
   usd:{flag:"🇺🇸",name:"USD",priceUnit:"USD",mul:26000,add:100000,auto:true,sample:25},
-  jpy:{flag:"🇯🇵",name:"Yên",priceUnit:"¥",mul:18.5,add:20000,auto:false,sample:87200},
+  jpy:{flag:"🇯🇵",name:"Yên",priceUnit:"¥",mul:185,add:200000,auto:false,sample:87200},
   krw:{flag:"🇰🇷",name:"Won",priceUnit:"USD",mul:19.5,add:200000,auto:false,convert:true,usdkrw:1408,sample:29.63},
 };
 let cur="usd";
 let rates={usd:null,jpy:null,krw:null,usdkrw:null};
 
 function keyRows(c){return "sales_rows_"+c;}
-function keyCfg(c){return "sales_cfg_"+c;}
+function keyCfg(c){return "sales_cfg2_"+c;}
 function loadRows(c){try{return JSON.parse(localStorage.getItem(keyRows(c)))||null;}catch(e){return null;}}
 const dataRows={
   usd:loadRows("usd")||[{name:"Sản phẩm 1",price:25}],
@@ -275,7 +286,7 @@ function calc(cfg,price){
   let won=null, base=parseVN(price);
   if(cfg.convert){ won=base*cfg.usdkrw; base=won; }
   const raw=base*cfg.mul+cfg.add;
-  return {won, raw, rounded:round4(raw)};
+  return {won, raw, rounded:roundSig(raw)};
 }
 
 /* ---------- Render ---------- */
@@ -373,6 +384,14 @@ async function loadRates(){
   document.getElementById("rateMeta").textContent="Không tải được tỷ giá (kiểm tra mạng). Vẫn tính bằng hệ số/tỷ giá thủ công.";
 }
 document.getElementById("btnRefresh").onclick=loadRates;
+
+/* ---------- Số chữ số làm tròn ---------- */
+const elSig=document.getElementById("cfgSig");
+elSig.value=sigDigits;
+elSig.addEventListener("input",()=>{
+  const v=parseInt(elSig.value);
+  if(v>=1&&v<=9){ sigDigits=v; localStorage.setItem("sales_sig",v); render(); }
+});
 
 /* ---------- Khởi động ---------- */
 syncConfigInputs(); render(); loadRates();
