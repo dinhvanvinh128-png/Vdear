@@ -16,21 +16,17 @@
     background:radial-gradient(1200px 600px at 80% -10%,#1c2444,transparent),var(--bg);
     color:var(--text); min-height:100vh; padding:20px;
   }
-  .wrap{max-width:960px;margin:0 auto}
+  .wrap{max-width:980px;margin:0 auto}
   h1{font-size:22px;margin:0 0 4px}
   .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
 
-  /* Bảng tỷ giá 3 đồng */
   .rates{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px}
-  .rate{
-    background:linear-gradient(135deg,#20284d,#161a2e);
-    border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);
-  }
+  .rate{background:linear-gradient(135deg,#20284d,#161a2e);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
   .rate .top{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
   .rate .flag{font-size:20px}
-  .rate .v{font-size:20px;font-weight:800;margin-top:6px}
+  .rate .v{font-size:19px;font-weight:800;margin-top:6px}
   .rate .v span{color:var(--green)}
-  .rate .u{font-size:12px;color:var(--muted)}
+  .rate .u{font-size:12px;color:var(--muted);margin-top:2px}
   .ratebar{display:flex;justify-content:space-between;align-items:center;margin:6px 0 18px}
   .ratebar .meta{font-size:12px;color:var(--muted)}
   .btn{background:var(--accent2);color:#fff;border:0;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
@@ -38,34 +34,31 @@
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
   .btn.sm{padding:7px 10px;font-size:12px}
 
-  /* Tabs */
   .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-  .tab{
-    flex:1;min-width:120px;text-align:center;cursor:pointer;user-select:none;
-    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font-weight:700;transition:.15s;
-  }
+  .tab{flex:1;min-width:120px;text-align:center;cursor:pointer;user-select:none;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font-weight:700;transition:.15s}
   .tab .small{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
   .tab.active{border-color:var(--accent2);background:var(--card2);box-shadow:0 0 0 2px rgba(79,140,255,.25) inset}
 
-  .config{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .config{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
   .field .row{display:flex;gap:8px}
   .field input{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px 12px;font-size:15px}
   .field input:focus{outline:2px solid var(--accent2);border-color:transparent}
   .hint{font-size:11px;color:var(--muted);margin-top:5px}
 
-  .formula{background:var(--card2);border:1px dashed var(--line);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--muted);margin-bottom:16px}
+  .formula{background:var(--card2);border:1px dashed var(--line);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6}
   .formula b{color:var(--text)}
   .formula .g{color:var(--gold)}
 
-  table{width:100%;border-collapse:collapse;background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);min-width:560px}
   th,td{padding:11px 12px;text-align:right;font-size:14px;border-bottom:1px solid var(--line)}
   th{background:var(--card2);color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
   th:first-child,td:first-child{text-align:left}
   tbody input{width:100%;background:transparent;border:1px solid transparent;color:var(--text);text-align:right;border-radius:8px;padding:7px 8px;font-size:14px}
   tbody input:hover{border-color:var(--line)}
   tbody input:focus{outline:none;border-color:var(--accent2);background:var(--card2)}
-  td.raw{color:var(--muted);font-size:12px}
+  td.mid{color:var(--muted);font-size:12px}
   td.total{color:var(--green);font-weight:700}
   .del{background:transparent;border:0;color:var(--accent);cursor:pointer;font-size:16px;line-height:1}
 
@@ -74,11 +67,7 @@
   .grand .label{color:var(--muted);font-size:13px}
   .grand .val{font-size:26px;font-weight:800;color:var(--accent)}
   footer{color:var(--muted);font-size:12px;text-align:center;margin-top:24px;line-height:1.6}
-  @media(max-width:680px){
-    .rates{grid-template-columns:1fr}
-    .config{grid-template-columns:1fr}
-    th,td{padding:8px 6px;font-size:13px}
-  }
+  @media(max-width:680px){.rates{grid-template-columns:1fr}.config{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -86,7 +75,6 @@
   <h1>🧮 Tính Giá Bán Sản Phẩm</h1>
   <div class="sub">3 đồng tiền · tỷ giá thị trường tự cập nhật mỗi ngày · làm tròn “lấy 4 số đầu”.</div>
 
-  <!-- Tỷ giá 3 đồng -->
   <div class="rates">
     <div class="rate">
       <div class="top"><span class="flag">🇺🇸</span> USD → VNĐ</div>
@@ -99,9 +87,9 @@
       <div class="u">Tham khảo thị trường</div>
     </div>
     <div class="rate">
-      <div class="top"><span class="flag">🇰🇷</span> Won → VNĐ</div>
-      <div class="v">1 ₩ = <span id="rKRW">…</span></div>
-      <div class="u">Tham khảo thị trường</div>
+      <div class="top"><span class="flag">🇰🇷</span> USD → Won</div>
+      <div class="v">1 $ = <span id="rUSDKRW">…</span></div>
+      <div class="u">1 ₩ = <b id="rKRW">…</b> VNĐ (tham khảo)</div>
     </div>
   </div>
   <div class="ratebar">
@@ -109,15 +97,21 @@
     <button class="btn ghost sm" id="btnRefresh">↻ Cập nhật tỷ giá</button>
   </div>
 
-  <!-- Tabs chọn đồng tiền -->
   <div class="tabs" id="tabs">
     <div class="tab active" data-cur="usd">🇺🇸 USD <span class="small">giá × hệ số + thêm</span></div>
-    <div class="tab" data-cur="jpy">🇯🇵 Yên <span class="small">giá × 18,5 + thêm</span></div>
-    <div class="tab" data-cur="krw">🇰🇷 Won <span class="small">giá × 19,5 + thêm</span></div>
+    <div class="tab" data-cur="jpy">🇯🇵 Yên <span class="small">giá × 18,5 + 20.000</span></div>
+    <div class="tab" data-cur="krw">🇰🇷 Won <span class="small">USD→Won × 19,5 + 200.000</span></div>
   </div>
 
-  <!-- Cấu hình công thức của đồng đang chọn -->
   <div class="config">
+    <div class="field" id="fConv" style="display:none">
+      <label>Tỷ giá USD → Won (hôm nay)</label>
+      <div class="row">
+        <input id="cfgConv" type="text" inputmode="decimal" value="1408" />
+        <button class="btn ghost sm" id="btnAutoConv" style="white-space:nowrap">Lấy hôm nay</button>
+      </div>
+      <div class="hint">Giá nhập bằng USD sẽ tự đổi ra Won theo tỷ giá này.</div>
+    </div>
     <div class="field">
       <label id="mulLabel">Hệ số nhân (×)</label>
       <div class="row">
@@ -135,18 +129,21 @@
 
   <div class="formula" id="formula"></div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Tên sản phẩm</th>
-        <th id="thPrice">Giá</th>
-        <th>Thành tiền thô</th>
-        <th>Làm tròn (₫)</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-  </table>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr id="thead">
+          <th>Tên sản phẩm</th>
+          <th id="thPrice">Giá</th>
+          <th id="thWon" style="display:none">→ Won</th>
+          <th>Thành tiền thô</th>
+          <th>Làm tròn (₫)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
 
   <div class="actions">
     <button class="btn" id="btnAdd">＋ Thêm sản phẩm</button>
@@ -165,7 +162,7 @@
 </div>
 
 <script>
-/* ---------- Số kiểu VN: "18,5"=18.5 ; "200.000"=200000 ---------- */
+/* ---------- Số kiểu VN ---------- */
 function parseVN(str){
   if(typeof str==="number") return str;
   if(!str) return 0;
@@ -180,103 +177,120 @@ function money(n){return fmtInt.format(Math.round(n))+" ₫";}
 function round4(n){
   n=Math.round(n);
   const a=Math.abs(n);
-  if(a<10000) return n;                 // <5 chữ số thì giữ nguyên
-  const d=Math.floor(Math.log10(a))+1;  // số chữ số
+  if(a<10000) return n;
+  const d=Math.floor(Math.log10(a))+1;
   const f=Math.pow(10,d-4);
-  return Math.sign(n)*Math.floor(a/f)*f; // cắt phần đuôi
+  return Math.sign(n)*Math.floor(a/f)*f;
 }
 
-/* ---------- Cấu hình 3 đồng tiền ---------- */
+/* ---------- Cấu hình 3 đồng ---------- */
 const CUR={
-  usd:{flag:"🇺🇸",name:"USD",unit:"$",mul:26000,add:100000,auto:true,sample:25},
-  jpy:{flag:"🇯🇵",name:"Yên",unit:"¥",mul:18.5,add:200000,auto:false,sample:87200},
-  krw:{flag:"🇰🇷",name:"Won",unit:"₩",mul:19.5,add:200000,auto:false,sample:1408},
+  usd:{flag:"🇺🇸",name:"USD",priceUnit:"USD",mul:26000,add:100000,auto:true,sample:25},
+  jpy:{flag:"🇯🇵",name:"Yên",priceUnit:"¥",mul:18.5,add:20000,auto:false,sample:87200},
+  krw:{flag:"🇰🇷",name:"Won",priceUnit:"USD",mul:19.5,add:200000,auto:false,convert:true,usdkrw:1408,sample:29.63},
 };
-let cur="usd";                          // đồng đang chọn
-let rates={usd:null,jpy:null,krw:null}; // tỷ giá VND/1 đơn vị
+let cur="usd";
+let rates={usd:null,jpy:null,krw:null,usdkrw:null};
 
-/* dữ liệu bảng theo từng đồng */
 function keyRows(c){return "sales_rows_"+c;}
 function keyCfg(c){return "sales_cfg_"+c;}
 function loadRows(c){try{return JSON.parse(localStorage.getItem(keyRows(c)))||null;}catch(e){return null;}}
 const dataRows={
   usd:loadRows("usd")||[{name:"Sản phẩm 1",price:25}],
   jpy:loadRows("jpy")||[{name:"Sản phẩm 1",price:87200}],
-  krw:loadRows("krw")||[{name:"Sản phẩm 1",price:1408}],
+  krw:loadRows("krw")||[{name:"Sản phẩm 1",price:29.63}],
 };
-/* nạp cấu hình đã lưu (nếu có) */
 ["usd","jpy","krw"].forEach(c=>{
   try{const s=JSON.parse(localStorage.getItem(keyCfg(c)));
-    if(s){ if(s.mul!=null)CUR[c].mul=s.mul; if(s.add!=null)CUR[c].add=s.add; }
+    if(s){ if(s.mul!=null)CUR[c].mul=s.mul; if(s.add!=null)CUR[c].add=s.add; if(s.usdkrw!=null)CUR[c].usdkrw=s.usdkrw; }
   }catch(e){}
 });
 
 /* ---------- Elements ---------- */
 const elMul=document.getElementById("cfgMul");
 const elAdd=document.getElementById("cfgAdd");
+const elConv=document.getElementById("cfgConv");
+const elFConv=document.getElementById("fConv");
 const elMulLabel=document.getElementById("mulLabel");
 const elMulHint=document.getElementById("mulHint");
 const elBtnAuto=document.getElementById("btnAuto");
 const elThPrice=document.getElementById("thPrice");
+const elThWon=document.getElementById("thWon");
 const tbody=document.getElementById("rows");
 const elFormula=document.getElementById("formula");
 
-/* ---------- Chuyển tab ---------- */
+/* ---------- Tabs ---------- */
 document.getElementById("tabs").addEventListener("click",e=>{
   const t=e.target.closest(".tab"); if(!t)return;
   cur=t.dataset.cur;
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===t));
-  syncConfigInputs();
-  render();
+  syncConfigInputs(); render();
 });
 
-/* đổ cấu hình đồng hiện tại lên input */
+function fmtMul(m){return Number.isInteger(m)?fmtInt.format(m):(""+m).replace(".",",");}
 function syncConfigInputs(){
   const cfg=CUR[cur];
-  elMul.value = Number.isInteger(cfg.mul)? fmtInt.format(cfg.mul) : (""+cfg.mul).replace(".",",");
-  elAdd.value = fmtInt.format(cfg.add);
-  elThPrice.textContent = "Giá ("+cfg.unit+")";
-  if(cur==="usd"){
-    elMulLabel.textContent="Hệ số USD (× tỷ giá làm tròn nghìn)";
-    elMulHint.textContent="Tự lấy từ tỷ giá đô hôm nay, làm tròn xuống nghìn (vd 26.293 → 26.000).";
-    elBtnAuto.style.display="";
-  }else{
-    elMulLabel.textContent="Hệ số nhân (×)";
-    elMulHint.textContent="Hệ số cố định theo công thức của bạn ("+((""+cfg.mul).replace(".",","))+").";
+  elMul.value=fmtMul(cfg.mul);
+  elAdd.value=fmtInt.format(cfg.add);
+  elThPrice.textContent="Giá ("+cfg.priceUnit+")";
+  if(cfg.convert){
+    elFConv.style.display=""; elThWon.style.display="";
+    elConv.value=fmtMul(cfg.usdkrw);
+    elMulLabel.textContent="Hệ số (× Won)";
+    elMulHint.textContent="Won × "+fmtMul(cfg.mul)+" theo công thức của bạn.";
     elBtnAuto.style.display="none";
+  }else{
+    elFConv.style.display="none"; elThWon.style.display="none";
+    if(cur==="usd"){
+      elMulLabel.textContent="Hệ số USD (× tỷ giá làm tròn nghìn)";
+      elMulHint.textContent="Tự lấy tỷ giá đô hôm nay, làm tròn xuống nghìn (vd 26.293 → 26.000).";
+      elBtnAuto.style.display="";
+    }else{
+      elMulLabel.textContent="Hệ số nhân (×)";
+      elMulHint.textContent="Hệ số cố định theo công thức của bạn ("+fmtMul(cfg.mul)+").";
+      elBtnAuto.style.display="none";
+    }
   }
 }
-
-/* input cấu hình -> lưu theo đồng */
 function readConfigInputs(){
   CUR[cur].mul=parseVN(elMul.value);
   CUR[cur].add=parseVN(elAdd.value);
-  localStorage.setItem(keyCfg(cur),JSON.stringify({mul:CUR[cur].mul,add:CUR[cur].add}));
+  if(CUR[cur].convert)CUR[cur].usdkrw=parseVN(elConv.value);
+  const s={mul:CUR[cur].mul,add:CUR[cur].add}; if(CUR[cur].convert)s.usdkrw=CUR[cur].usdkrw;
+  localStorage.setItem(keyCfg(cur),JSON.stringify(s));
 }
-[elMul,elAdd].forEach(el=>el.addEventListener("input",()=>{readConfigInputs();render();}));
+[elMul,elAdd,elConv].forEach(el=>el.addEventListener("input",()=>{readConfigInputs();render();}));
 
 elBtnAuto.onclick=()=>{
-  if(rates.usd){
-    const k=Math.floor(rates.usd/1000)*1000;
-    CUR.usd.mul=k; syncConfigInputs(); readConfigInputs(); render();
-  }else alert("Chưa có tỷ giá USD. Bấm ↻ Cập nhật tỷ giá trước.");
+  if(rates.usd){const k=Math.floor(rates.usd/1000)*1000;CUR.usd.mul=k;syncConfigInputs();readConfigInputs();render();}
+  else alert("Chưa có tỷ giá USD. Bấm ↻ Cập nhật tỷ giá trước.");
+};
+document.getElementById("btnAutoConv").onclick=()=>{
+  if(rates.usdkrw){CUR.krw.usdkrw=Math.round(rates.usdkrw);syncConfigInputs();readConfigInputs();render();}
+  else alert("Chưa có tỷ giá USD→Won. Bấm ↻ Cập nhật tỷ giá trước.");
 };
 
-/* ---------- Render bảng ---------- */
+/* ---------- Tính ---------- */
+function calc(cfg,price){
+  let won=null, base=parseVN(price);
+  if(cfg.convert){ won=base*cfg.usdkrw; base=won; }
+  const raw=base*cfg.mul+cfg.add;
+  return {won, raw, rounded:round4(raw)};
+}
+
+/* ---------- Render ---------- */
 function render(){
   const cfg=CUR[cur], rowsArr=dataRows[cur];
-  const mul=cfg.mul, add=cfg.add;
-  tbody.innerHTML="";
-  let grand=0;
+  tbody.innerHTML=""; let grand=0;
   rowsArr.forEach((r,i)=>{
-    const rawv=parseVN(r.price)*mul+add;
-    const rounded=round4(rawv);
-    grand+=rounded;
+    const {won,raw,rounded}=calc(cfg,r.price); grand+=rounded;
+    const wonCell=cfg.convert?`<td class="mid">${fmtInt.format(Math.round(won))} ₩</td>`:"";
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td><input data-i="${i}" data-f="name" value="${(r.name||"").replace(/"/g,'&quot;')}" placeholder="Tên..." style="text-align:left"/></td>
       <td><input data-i="${i}" data-f="price" inputmode="decimal" value="${r.price??""}" placeholder="0"/></td>
-      <td class="raw">${money(rawv)}</td>
+      ${wonCell}
+      <td class="mid">${money(raw)}</td>
       <td class="total">${money(rounded)}</td>
       <td><button class="del" data-del="${i}" title="Xóa">✕</button></td>`;
     tbody.appendChild(tr);
@@ -287,28 +301,32 @@ function render(){
   renderFormula();
 }
 function renderFormula(){
-  const cfg=CUR[cur];
-  const p=cfg.sample, raw=p*cfg.mul+cfg.add, rd=round4(raw);
-  const mulTxt=(""+cfg.mul).replace(".",",");
-  elFormula.innerHTML=`Công thức <b>${cfg.name}</b>: Giá × ${fmtDec.format(cfg.mul)} + ${fmtInt.format(cfg.add)} `+
-    `&nbsp;—&nbsp; VD: ${fmtInt.format(p)} × ${fmtDec.format(cfg.mul)} + ${fmtInt.format(cfg.add)} = ${fmtInt.format(raw)} `+
-    `<span class="g">→ ${fmtInt.format(rd)} ₫</span>`;
+  const cfg=CUR[cur], p=cfg.sample, {won,raw,rounded}=calc(cfg,p);
+  if(cfg.convert){
+    elFormula.innerHTML=`Công thức <b>${cfg.name}</b>: (Giá USD × tỷ giá USD→Won) × ${fmtMul(cfg.mul)} + ${fmtInt.format(cfg.add)}<br>`+
+      `VD: ${fmtDec.format(p)} × ${fmtMul(cfg.usdkrw)} = ${fmtInt.format(Math.round(won))} ₩ → × ${fmtMul(cfg.mul)} + ${fmtInt.format(cfg.add)} = ${fmtInt.format(raw)} `+
+      `<span class="g">→ ${fmtInt.format(rounded)} ₫</span>`;
+  }else{
+    elFormula.innerHTML=`Công thức <b>${cfg.name}</b>: Giá × ${fmtMul(cfg.mul)} + ${fmtInt.format(cfg.add)} `+
+      `&nbsp;—&nbsp; VD: ${fmtInt.format(p)} × ${fmtMul(cfg.mul)} + ${fmtInt.format(cfg.add)} = ${fmtInt.format(raw)} `+
+      `<span class="g">→ ${fmtInt.format(rounded)} ₫</span>`;
+  }
 }
 
 /* nhập trong bảng */
 tbody.addEventListener("input",e=>{
   const t=e.target; if(t.dataset.i===undefined)return;
-  const i=+t.dataset.i,f=t.dataset.f;
-  dataRows[cur][i][f]=t.value;
+  dataRows[cur][+t.dataset.i][t.dataset.f]=t.value;
   liveTotals();
 });
 function liveTotals(){
-  const cfg=CUR[cur],mul=cfg.mul,add=cfg.add; let grand=0;
+  const cfg=CUR[cur]; let grand=0;
   [...tbody.querySelectorAll("tr")].forEach((tr,i)=>{
-    const rawv=parseVN(dataRows[cur][i].price)*mul+add, rd=round4(rawv);
-    grand+=rd;
-    tr.querySelector(".raw").textContent=money(rawv);
-    tr.querySelector(".total").textContent=money(rd);
+    const {won,raw,rounded}=calc(cfg,dataRows[cur][i].price); grand+=rounded;
+    if(cfg.convert)tr.querySelector(".mid").textContent=fmtInt.format(Math.round(won))+" ₩";
+    const mids=tr.querySelectorAll(".mid");
+    mids[mids.length-1].textContent=money(raw);
+    tr.querySelector(".total").textContent=money(rounded);
   });
   document.getElementById("grand").textContent=money(grand);
   localStorage.setItem(keyRows(cur),JSON.stringify(dataRows[cur]));
@@ -316,58 +334,48 @@ function liveTotals(){
 tbody.addEventListener("click",e=>{
   if(e.target.dataset.del!==undefined){dataRows[cur].splice(+e.target.dataset.del,1);render();}
 });
+document.getElementById("btnAdd").onclick=()=>{dataRows[cur].push({name:"Sản phẩm "+(dataRows[cur].length+1),price:""});render();};
+document.getElementById("btnClear").onclick=()=>{if(confirm("Xóa toàn bộ danh sách của "+CUR[cur].name+"?")){dataRows[cur]=[];render();}};
 
-document.getElementById("btnAdd").onclick=()=>{
-  dataRows[cur].push({name:"Sản phẩm "+(dataRows[cur].length+1),price:""});render();
-};
-document.getElementById("btnClear").onclick=()=>{
-  if(confirm("Xóa toàn bộ danh sách của "+CUR[cur].name+"?")){dataRows[cur]=[];render();}
-};
-
-/* ---------- Tỷ giá hằng ngày (USD/JPY/KRW) ---------- */
-function showRates(usd,jpy,krw,when){
-  rates={usd,jpy,krw};
+/* ---------- Tỷ giá hằng ngày ---------- */
+function showRates(usd,jpy,krw,usdkrw,when){
+  rates={usd,jpy,krw,usdkrw};
   document.getElementById("rUSD").textContent=fmtInt.format(usd)+" ₫";
   document.getElementById("rJPY").textContent=fmtDec.format(jpy)+" ₫";
-  document.getElementById("rKRW").textContent=fmtDec.format(krw)+" ₫";
+  document.getElementById("rKRW").textContent=fmtDec.format(krw);
+  document.getElementById("rUSDKRW").textContent=fmtInt.format(Math.round(usdkrw))+" ₩";
   document.getElementById("rUSDk").textContent=fmtInt.format(Math.floor(usd/1000)*1000)+" (×"+Math.floor(usd/1000)+")";
   const today=new Date().toLocaleDateString("vi-VN");
   document.getElementById("rateMeta").textContent="Cập nhật ngày "+today+(when?" · "+when:"");
-  // tự cập nhật hệ số USD theo tỷ giá mới (nếu người dùng chưa sửa tay khác)
-  if(CUR.usd.auto){
-    const k=Math.floor(usd/1000)*1000;
-    if(!localStorage.getItem(keyCfg("usd"))){ CUR.usd.mul=k; if(cur==="usd")syncConfigInputs(); }
-  }
-  render();
+  // tự set hệ số USD & tỷ giá USD→Won nếu người dùng chưa lưu cấu hình riêng
+  if(!localStorage.getItem(keyCfg("usd"))){CUR.usd.mul=Math.floor(usd/1000)*1000;}
+  if(!localStorage.getItem(keyCfg("krw"))){CUR.krw.usdkrw=Math.round(usdkrw);}
+  syncConfigInputs(); render();
 }
 async function loadRates(){
   document.getElementById("rateMeta").textContent="Đang tải tỷ giá…";
-  // Nguồn 1: open.er-api.com (base USD)
   try{
     const r=await fetch("https://open.er-api.com/v6/latest/USD");
     const d=await r.json();
     if(d&&d.rates&&d.rates.VND){
-      const usd=d.rates.VND, jpy=d.rates.VND/d.rates.JPY, krw=d.rates.VND/d.rates.KRW;
-      showRates(usd,jpy,krw,"nguồn: open.er-api.com"); return;
+      showRates(d.rates.VND, d.rates.VND/d.rates.JPY, d.rates.VND/d.rates.KRW, d.rates.KRW, "nguồn: open.er-api.com");
+      return;
     }
   }catch(e){}
-  // Nguồn 2: fawazahmed0 currency-api (cập nhật hằng ngày)
   try{
     const r=await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json");
     const d=await r.json();
     if(d&&d.usd&&d.usd.vnd){
-      const usd=d.usd.vnd, jpy=d.usd.vnd/d.usd.jpy, krw=d.usd.vnd/d.usd.krw;
-      showRates(usd,jpy,krw,"nguồn: cập nhật hằng ngày"); return;
+      showRates(d.usd.vnd, d.usd.vnd/d.usd.jpy, d.usd.vnd/d.usd.krw, d.usd.krw, "nguồn: cập nhật hằng ngày");
+      return;
     }
   }catch(e){}
-  document.getElementById("rateMeta").textContent="Không tải được tỷ giá (kiểm tra mạng). Vẫn tính bằng hệ số thủ công.";
+  document.getElementById("rateMeta").textContent="Không tải được tỷ giá (kiểm tra mạng). Vẫn tính bằng hệ số/tỷ giá thủ công.";
 }
 document.getElementById("btnRefresh").onclick=loadRates;
 
 /* ---------- Khởi động ---------- */
-syncConfigInputs();
-render();
-loadRates();
+syncConfigInputs(); render(); loadRates();
 </script>
 </body>
 </html>
