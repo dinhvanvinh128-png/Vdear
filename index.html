@@ -74,11 +74,11 @@
       <section class="panel">
         <div class="panel-head">
           <h2>📊 Biến động 24h · Volume &amp; Giá</h2>
-          <select id="moverSort" class="select">
-            <option value="gain">Tăng nhiều nhất (+%)</option>
-            <option value="lose">Giảm nhiều nhất (−%)</option>
-            <option value="vol">Volume cao nhất</option>
-          </select>
+          <div class="search-box">
+            <span class="search-ico">🔍</span>
+            <input id="moverSearch" type="text" autocomplete="off" placeholder="Tìm coin (VD: BTC, SOL…)">
+            <button id="searchClear" class="search-clear" title="Xoá" hidden>✕</button>
+          </div>
         </div>
         <!-- Thanh phân loại mảng coin: cuộn/kéo ngang -->
         <div class="sector-scroll" id="sectorBar"></div>

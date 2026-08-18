@@ -21,6 +21,7 @@
   let moversPage = 1;
   let volRank = {};
   let sortState = { key: 'vol', dir: 'desc' }; // KLGD giảm dần mặc định
+  let searchQuery = '';
   let favs = loadFavs();
 
   /* ------------------------------ favorites ---------------------------- */
@@ -193,6 +194,7 @@
     const sector = CFG.sectors.find((s) => s.id === activeSector);
     let list = market;
     if (sector && sector.coins) list = market.filter((c) => sector.coins.includes(c.base));
+    if (searchQuery) list = list.filter((c) => c.base.toLowerCase().includes(searchQuery));
     list = list.slice();
     const { key, dir } = sortState;
     const sgn = dir === 'asc' ? 1 : -1;
@@ -209,12 +211,6 @@
       th.classList.toggle('asc', th.dataset.sort === sortState.key && sortState.dir === 'asc');
       th.classList.toggle('desc', th.dataset.sort === sortState.key && sortState.dir === 'desc');
     });
-    const sel = $('moverSort');
-    if (sel) {
-      const map = { change_desc: 'gain', change_asc: 'lose', vol_desc: 'vol' };
-      const v = map[sortState.key + '_' + sortState.dir];
-      if (v) sel.value = v;
-    }
   }
 
   function setSort(key) {
@@ -339,12 +335,14 @@
     document.querySelectorAll('.mtab').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
     renderSectorBar();
     $('scanMore').addEventListener('click', () => { scanExpanded = !scanExpanded; renderScan(); });
-    // sort qua dropdown
-    $('moverSort').addEventListener('change', () => {
-      const m = { gain: ['change', 'desc'], lose: ['change', 'asc'], vol: ['vol', 'desc'] }[$('moverSort').value];
-      if (m) { sortState.key = m[0]; sortState.dir = m[1]; }
-      moversPage = 1; renderMovers(); updateSortUI();
+    // ô tìm kiếm coin
+    const search = $('moverSearch'), clearBtn = $('searchClear');
+    search.addEventListener('input', () => {
+      searchQuery = search.value.trim().toLowerCase();
+      clearBtn.hidden = !searchQuery;
+      moversPage = 1; renderMovers();
     });
+    clearBtn.addEventListener('click', () => { search.value = ''; searchQuery = ''; clearBtn.hidden = true; moversPage = 1; renderMovers(); search.focus(); });
     // sort qua header (mũi tên ▲/▼)
     document.querySelectorAll('.movers .th-sort').forEach((th) =>
       th.addEventListener('click', () => setSort(th.dataset.sort)));
