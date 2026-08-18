@@ -20,6 +20,7 @@
   let activeSector = 'all';
   let moversPage = 1;
   let volRank = {};
+  let sortState = { key: 'vol', dir: 'desc' }; // KLGD giảm dần mặc định
   let favs = loadFavs();
 
   /* ------------------------------ favorites ---------------------------- */
@@ -140,8 +141,7 @@
   function renderSectorBar() {
     const bar = $('sectorBar');
     bar.innerHTML = CFG.sectors.map((s) =>
-      `<button class="sector-chip ${s.id === activeSector ? 'active' : ''}" data-sec="${s.id}">
-        <span class="sec-ico">${s.icon}</span>${s.label}</button>`
+      `<button class="sector-chip ${s.id === activeSector ? 'active' : ''}" data-sec="${s.id}">${s.label}</button>`
     ).join('');
     bar.querySelectorAll('.sector-chip').forEach((b) => b.addEventListener('click', () => {
       activeSector = b.dataset.sec; moversPage = 1; renderSectorBar(); renderMovers();
@@ -179,19 +179,13 @@
 
   function moverRow(c) {
     const up = c.change >= 0;
-    const fund = c.funding != null
-      ? `<span class="${c.funding >= 0 ? 'up' : 'down'}">${c.funding >= 0 ? '+' : ''}${c.funding.toFixed(4)}%</span>`
-      : '<span class="muted">—</span>';
     const star = `<button class="fav-star ${favs.has(c.base) ? 'on' : ''}" data-fav="${c.base}" title="Yêu thích">${favs.has(c.base) ? '★' : '☆'}</button>`;
     return `<tr class="mv-row" data-base="${c.base}">
       <td class="mv-coin">${star}<img class="mv-logo" alt="" data-logo="${c.base}">
-        <span class="mv-cell">
-          <span class="mv-sym">${c.base}<small>USDT</small> ${volIcon(c.base)}</span>
-          <small class="mv-subvol">${shortNum(c.quoteVolume)} USDT</small>
-        </span></td>
+        <span class="mv-sym">${c.base}<small>USDT</small> ${volIcon(c.base)}</span></td>
       <td class="mv-price">$${fmt(c.price)}</td>
       <td><span class="mv-pill ${up ? 'up' : 'down'}">${up ? '+' : ''}${c.change.toFixed(2)}%</span></td>
-      <td class="mv-fund">${fund}</td>
+      <td class="mv-klgd">$${shortNum(c.quoteVolume)}</td>
     </tr>`;
   }
 
@@ -199,12 +193,34 @@
     const sector = CFG.sectors.find((s) => s.id === activeSector);
     let list = market;
     if (sector && sector.coins) list = market.filter((c) => sector.coins.includes(c.base));
-    const mode = $('moverSort').value;
     list = list.slice();
-    if (mode === 'gain') list.sort((a, b) => b.change - a.change);
-    else if (mode === 'lose') list.sort((a, b) => a.change - b.change);
-    else list.sort((a, b) => b.quoteVolume - a.quoteVolume);
+    const { key, dir } = sortState;
+    const sgn = dir === 'asc' ? 1 : -1;
+    if (key === 'name') list.sort((a, b) => sgn * a.base.localeCompare(b.base));
+    else if (key === 'price') list.sort((a, b) => sgn * (a.price - b.price));
+    else if (key === 'change') list.sort((a, b) => sgn * (a.change - b.change));
+    else list.sort((a, b) => sgn * (a.quoteVolume - b.quoteVolume)); // vol / KLGD
     return list;
+  }
+
+  // Cập nhật mũi tên ▲/▼ trên header + đồng bộ dropdown.
+  function updateSortUI() {
+    document.querySelectorAll('.movers .th-sort').forEach((th) => {
+      th.classList.toggle('asc', th.dataset.sort === sortState.key && sortState.dir === 'asc');
+      th.classList.toggle('desc', th.dataset.sort === sortState.key && sortState.dir === 'desc');
+    });
+    const sel = $('moverSort');
+    if (sel) {
+      const map = { change_desc: 'gain', change_asc: 'lose', vol_desc: 'vol' };
+      const v = map[sortState.key + '_' + sortState.dir];
+      if (v) sel.value = v;
+    }
+  }
+
+  function setSort(key) {
+    if (sortState.key === key) sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+    else { sortState.key = key; sortState.dir = key === 'name' ? 'asc' : 'desc'; }
+    moversPage = 1; renderMovers(); updateSortUI();
   }
 
   function renderMovers() {
@@ -323,7 +339,16 @@
     document.querySelectorAll('.mtab').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
     renderSectorBar();
     $('scanMore').addEventListener('click', () => { scanExpanded = !scanExpanded; renderScan(); });
-    $('moverSort').addEventListener('change', () => { moversPage = 1; renderMovers(); });
+    // sort qua dropdown
+    $('moverSort').addEventListener('change', () => {
+      const m = { gain: ['change', 'desc'], lose: ['change', 'asc'], vol: ['vol', 'desc'] }[$('moverSort').value];
+      if (m) { sortState.key = m[0]; sortState.dir = m[1]; }
+      moversPage = 1; renderMovers(); updateSortUI();
+    });
+    // sort qua header (mũi tên ▲/▼)
+    document.querySelectorAll('.movers .th-sort').forEach((th) =>
+      th.addEventListener('click', () => setSort(th.dataset.sort)));
+    updateSortUI();
 
     try {
       market = await API.getMarket();

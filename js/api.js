@@ -281,7 +281,10 @@
   }
   function logoSources(base) {
     const l = logoKey(base);
+    const U = l.toUpperCase();
     return [
+      // Logo TradingView (ưu tiên) — định dạng crypto: XTVC<SYMBOL>.svg
+      'https://s3-symbol-logo.tradingview.com/crypto/XTVC' + U + '.svg',
       'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + l + '.png',
       'https://assets.coincap.io/assets/icons/' + l + '@2x.png',
       CFG.logoBase + l + '.png',
