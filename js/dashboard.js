@@ -82,15 +82,16 @@
     scanResults = results.filter((r) => r && r.sig.side !== 'NEUTRAL');
     scanResults.forEach((r) => {
       const z = r.sig.zone.key;
+      // extreme 2 = RSI<20 (quá bán mạnh) hoặc RSI>80 (quá mua mạnh) -> ưu tiên cao nhất
       r.extreme = (z === 'ob_strong' || z === 'os_strong') ? 2 : (z === 'ob' || z === 'os') ? 1 : 0;
-      r.rank = (r.sig.valid ? 5000 : 0) + r.extreme * 1000 + r.sig.confluence * 300
+      r.rank = r.extreme * 20000 + (r.sig.valid ? 3000 : 0) + r.sig.confluence * 300
              + Math.abs(r.sig.score - 50) + r.sig.winRate * 0.2;
     });
     scanResults.sort((a, b) => b.rank - a.rank);
     scanResults = scanResults.slice(0, CFG.scan.targetSignals);
 
     const validCount = scanResults.filter((r) => r.sig.valid).length;
-    if (status) status.textContent = `Đã quét TOÀN BỘ ${universe.length} coin futures · khung ${tf.label} · ${scanResults.length} tín hiệu (${validCount} đạt hội tụ ✓)`;
+    if (status) status.textContent = `Đã quét TOÀN BỘ · khung ${tf.label} · ${scanResults.length} tín hiệu (${validCount} đạt hội tụ ✓)`;
     renderScan();
     renderSentiment();
   }
@@ -176,15 +177,14 @@
       .forEach((c, i) => (volRank[c.base] = i));
   }
 
-  function moverRow(c, i) {
+  function moverRow(c) {
     const up = c.change >= 0;
     const fund = c.funding != null
       ? `<span class="${c.funding >= 0 ? 'up' : 'down'}">${c.funding >= 0 ? '+' : ''}${c.funding.toFixed(4)}%</span>`
       : '<span class="muted">—</span>';
     const star = `<button class="fav-star ${favs.has(c.base) ? 'on' : ''}" data-fav="${c.base}" title="Yêu thích">${favs.has(c.base) ? '★' : '☆'}</button>`;
     return `<tr class="mv-row" data-base="${c.base}">
-      <td class="mv-rank">${star}<span>${i}</span></td>
-      <td class="mv-coin"><img class="mv-logo" alt="" data-logo="${c.base}">
+      <td class="mv-coin">${star}<img class="mv-logo" alt="" data-logo="${c.base}">
         <span class="mv-cell">
           <span class="mv-sym">${c.base}<small>USDT</small> ${volIcon(c.base)}</span>
           <small class="mv-subvol">${shortNum(c.quoteVolume)} USDT</small>
@@ -218,8 +218,8 @@
 
     const body = $('moversBody');
     body.innerHTML = page.length
-      ? page.map((c, k) => moverRow(c, start + k + 1)).join('')
-      : '<tr><td colspan="5" class="muted">Không có coin trong nhóm này.</td></tr>';
+      ? page.map((c) => moverRow(c)).join('')
+      : '<tr><td colspan="4" class="muted">Không có coin trong nhóm này.</td></tr>';
     body.querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
     bindRowActions(body);
     renderPager(totalPages, list.length);
@@ -270,7 +270,7 @@
     computeVolRank();
     const list = market.filter((c) => favs.has(c.base));
     const body = $('favBody');
-    body.innerHTML = list.length ? list.map((c, k) => moverRow(c, k + 1)).join('') : '';
+    body.innerHTML = list.length ? list.map((c) => moverRow(c)).join('') : '';
     $('favEmpty').style.display = list.length ? 'none' : 'block';
     body.querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
     bindRowActions(body);
@@ -282,15 +282,19 @@
     try { data = await API.getTradFi(); } catch (e) { data = []; }
     $('tradfiRow').innerHTML = data.map((t) => {
       const up = t.change >= 0;
-      return `<div class="tf-card">
-        <div class="tf-ico">${t.icon}</div>
+      // logo TradingView, lỗi -> emoji dự phòng
+      const ico = t.logo
+        ? `<img class="tf-logo" src="${t.logo}" alt="${t.symbol}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="tf-ico" style="display:none">${t.icon}</span>`
+        : `<span class="tf-ico">${t.icon}</span>`;
+      return `<a class="tf-card" href="coin.html?c=${t.symbol}&type=tradfi">
+        ${ico}
         <div class="tf-body">
           <div class="tf-sym">${t.symbol} <small>${t.label}</small></div>
           <div class="tf-price">$${fmt(t.price)} <span class="tf-unit">${t.unit}</span></div>
         </div>
         <div class="tf-chg ${up ? 'up' : 'down'}">${up ? '+' : ''}${t.change.toFixed(2)}%
           ${t.live ? '<span class="live-dot" title="realtime"></span>' : '<small class="sim" title="dữ liệu mô phỏng">~</small>'}</div>
-      </div>`;
+      </a>`;
     }).join('');
   }
 

@@ -200,7 +200,7 @@ h1,h2,h3{margin:0;font-weight:700}
   padding:0 2px;line-height:1;transition:color .12s;vertical-align:middle}
 .fav-star:hover{color:var(--gold)}
 .fav-star.on{color:var(--gold)}
-.mv-coin{display:flex;align-items:center;gap:10px}
+.mv-coin{display:flex;align-items:center;gap:8px}
 .mv-logo{width:30px;height:30px;border-radius:50%;background:#12161f}
 .mv-cell{display:flex;flex-direction:column;gap:2px;line-height:1.25}
 .mv-sym{font-weight:700;font-family:'Chakra Petch',sans-serif;font-size:14.5px}
@@ -217,8 +217,10 @@ h1,h2,h3{margin:0;font-weight:700}
 /* -------------------------- TradFi -------------------------- */
 .tradfi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
 .tf-card{display:flex;align-items:center;gap:12px;background:var(--panel-2);
-  border:1px solid var(--line);border-radius:12px;padding:14px}
-.tf-ico{font-size:26px}
+  border:1px solid var(--line);border-radius:12px;padding:14px;transition:transform .12s,border-color .12s}
+.tf-card:hover{transform:translateY(-2px);border-color:var(--line-2)}
+.tf-ico{font-size:26px;width:34px;height:34px;place-items:center}
+.tf-logo{width:34px;height:34px;border-radius:50%;object-fit:contain;background:#fff;padding:3px}
 .tf-body{flex:1}
 .tf-sym{font-weight:700;font-family:'Chakra Petch',sans-serif;font-size:15px}
 .tf-sym small{color:var(--muted);font-weight:400;font-family:'Inter';font-size:12px}

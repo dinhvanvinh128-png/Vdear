@@ -138,7 +138,7 @@
       const p = TA.tradePlan(sig.price, sig.side, combatLev);
       chart.setPlan(p); // các mức đổi theo đòn bẩy, vẽ lên chart
       const bt = TA.miniBacktest(candles, combatLev); // win-rate THẬT theo đòn bẩy
-      const winTxt = bt.winRate != null ? `${bt.winRate}% (${bt.trades} lệnh backtest)` : 'chưa đủ mẫu';
+      const winTxt = bt.winRate != null ? `${bt.winRate}%` : 'chưa đủ mẫu';
       $('cbVerdict').textContent = `${verdict ? '✓ ' : ''}${sig.side} · Win ${winTxt}`;
       $('cbVerdict').className = 'gauge-side ' + (isLong ? 'long' : 'short');
       if (best && best.winRate != null)
@@ -244,8 +244,48 @@
     }));
   }
 
+  /* --------------------------- TradFi detail --------------------------- */
+  async function initTradfi() {
+    window.VdearTicker.initTicker('ticker');
+    const cfg = (CFG.tradfi || []).find((t) => t.symbol === base) || { symbol: base, label: base, unit: '', icon: '📈' };
+    document.title = base + ' — Vdear TradFi';
+    // logo TradingView
+    const logo = $('coinLogo');
+    if (cfg.logo) { logo.src = cfg.logo; logo.onerror = () => { logo.onerror = null; API.applyLogo(logo, base); }; }
+    else API.applyLogo(logo, base);
+    $('coinName').textContent = base;
+    $('coinPair').textContent = cfg.label;
+
+    // ẩn các mục chỉ dành cho crypto
+    ['tfScores', 'srList', 'priceCanvas', 'gaugeFill'].forEach((id) => {
+      const p = $(id) && $(id).closest('.panel'); if (p) p.hidden = true;
+    });
+    $('rsiNote').style.display = 'none';
+    const stats = document.querySelector('.coin-stats'); if (stats) stats.style.display = 'none';
+
+    let data = [];
+    try { data = await API.getTradFi(); } catch (e) {}
+    const item = data.find((d) => d.symbol === base) || { price: cfg.base || 0, change: 0, live: false };
+    const up = item.change >= 0;
+    $('coinPrice').textContent = '$' + fmt(item.price);
+    $('coinChange').textContent = (up ? '▲ ' : '▼ ') + item.change.toFixed(2) + '%';
+    $('coinChange').className = 'big-chg ' + (up ? 'up' : 'down');
+
+    $('combatPanel').innerHTML = `
+      <div class="panel-head"><h2>🏦 ${base} · ${cfg.label}</h2>
+        <span class="gauge-side ${up ? 'long' : 'short'}">${up ? '+' : ''}${item.change.toFixed(2)}%</span></div>
+      <div class="plan-grid">
+        <div class="plan-cell"><span>Giá</span><b>$${fmt(item.price)}</b></div>
+        <div class="plan-cell"><span>Đơn vị</span><b>${cfg.unit || '—'}</b></div>
+        <div class="plan-cell ${up ? 'up' : 'down'}"><span>Biến động</span><b>${up ? '+' : ''}${item.change.toFixed(2)}%</b></div>
+        <div class="plan-cell"><span>Nguồn</span><b>${item.live ? 'Realtime' : 'Tham khảo'}</b></div>
+      </div>
+      <p class="hint">TradFi (vàng/bạc/dầu) không niêm yết trên sàn crypto nên <b>chưa có biểu đồ nến chi tiết &amp; chiến lược</b> như coin. XAU/XAG lấy giá realtime khi khả dụng; CL/BZ là chỉ báo tham khảo. <b>Chỉ tham khảo, không phải lời khuyên đầu tư.</b></p>`;
+  }
+
   /* ------------------------------- init -------------------------------- */
   async function init() {
+    if (qs.get('type') === 'tradfi') { await initTradfi(); return; }
     document.title = base + '/USDT — Vdear';
     chart = new window.VdearChart($('priceCanvas'), $('rsiCanvas'));
     // nút zoom (cho cảm ứng / mobile)

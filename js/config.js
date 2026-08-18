@@ -72,10 +72,14 @@ window.VDEAR_CONFIG = {
   // TradFi — vàng, bạc, dầu WTI, dầu Brent. Không niêm yết trên sàn crypto nên
   // được lấy từ nguồn miễn phí (best-effort) + fallback mô phỏng có nhãn rõ ràng.
   tradfi: [
-    { symbol: 'XAU', label: 'Vàng (Gold)', unit: 'USD/oz', icon: '🥇', base: 2380 },
-    { symbol: 'XAG', label: 'Bạc (Silver)', unit: 'USD/oz', icon: '🥈', base: 30.2 },
-    { symbol: 'CL', label: 'Dầu WTI', unit: 'USD/bbl', icon: '🛢️', base: 78.5 },
-    { symbol: 'BZ', label: 'Dầu Brent', unit: 'USD/bbl', icon: '🛢️', base: 82.3 },
+    { symbol: 'XAU', label: 'Vàng (Gold)', unit: 'USD/oz', icon: '🥇', base: 2380,
+      logo: 'https://s3-symbol-logo.tradingview.com/metal/gold.svg' },
+    { symbol: 'XAG', label: 'Bạc (Silver)', unit: 'USD/oz', icon: '🥈', base: 30.2,
+      logo: 'https://s3-symbol-logo.tradingview.com/metal/silver.svg' },
+    { symbol: 'CL', label: 'Dầu WTI', unit: 'USD/bbl', icon: '🛢️', base: 78.5,
+      logo: 'https://s3-symbol-logo.tradingview.com/crude-oil.svg' },
+    { symbol: 'BZ', label: 'Dầu Brent', unit: 'USD/bbl', icon: '🛢️', base: 82.3,
+      logo: 'https://s3-symbol-logo.tradingview.com/crude-oil.svg' },
   ],
 
   // Số coin quét & hiển thị
