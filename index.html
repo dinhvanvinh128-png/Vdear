@@ -66,6 +66,10 @@
   .grand{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#2a1730,#161a2e);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:8px;box-shadow:var(--shadow)}
   .grand .label{color:var(--muted);font-size:13px}
   .grand .val{font-size:26px;font-weight:800;color:var(--accent)}
+  .histhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:26px 0 12px;flex-wrap:wrap}
+  #histRows td{color:var(--text)}
+  #histRows td.hmoney{color:var(--green);font-weight:700}
+  #histRows tr:nth-child(even){background:rgba(255,255,255,.02)}
   footer{color:var(--muted);font-size:12px;text-align:center;margin-top:24px;line-height:1.6}
   @media(max-width:680px){.rates{grid-template-columns:1fr}.config{grid-template-columns:1fr}}
 </style>
@@ -154,12 +158,37 @@
 
   <div class="actions">
     <button class="btn" id="btnAdd">＋ Thêm sản phẩm</button>
-    <button class="btn ghost" id="btnClear">Xóa hết</button>
+    <button class="btn ghost" id="btnClear">Xóa hết (nháp)</button>
+    <button class="btn" id="btnSaveHist" style="background:var(--green);color:#04231a">💾 Lưu vào lịch sử</button>
   </div>
 
   <div class="grand">
     <div class="label">TỔNG CỘNG (<span id="count">0</span> sp · đã làm tròn)</div>
     <div class="val" id="grand">0 ₫</div>
+  </div>
+
+  <!-- Lịch sử: chỉ đọc, không sửa/xóa -->
+  <div class="histhead">
+    <div>
+      <h2 style="margin:0;font-size:18px">📜 Lịch sử đơn hàng</h2>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">🔒 Chỉ xem — đã lưu thì không sửa, không xóa được.</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:12px;color:var(--muted)">Tổng lịch sử (<span id="histCount">0</span> dòng)</div>
+      <div style="font-size:20px;font-weight:800;color:var(--gold)" id="histTotal">0 ₫</div>
+    </div>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Thời gian</th><th>Đồng</th><th>Tên</th><th>Giá</th><th>Thành tiền (₫)</th>
+        </tr>
+      </thead>
+      <tbody id="histRows">
+        <tr><td colspan="6" style="text-align:center;color:var(--muted)">Chưa có lịch sử. Bấm “💾 Lưu vào lịch sử”.</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <footer>
@@ -385,6 +414,52 @@ async function loadRates(){
 }
 document.getElementById("btnRefresh").onclick=loadRates;
 
+/* ---------- Lịch sử (chỉ đọc, không sửa/xóa) ---------- */
+const HKEY="sales_history_v1";
+function loadHistory(){try{return JSON.parse(localStorage.getItem(HKEY))||[];}catch(e){return[];}}
+let history=loadHistory();
+function saveToHistory(){
+  const cfg=CUR[cur], now=new Date(), stamp=now.toLocaleString("vi-VN"), batch=now.getTime();
+  let added=0;
+  dataRows[cur].forEach(r=>{
+    if(parseVN(r.price)<=0) return;                 // bỏ dòng trống
+    const {won,raw,rounded}=calc(cfg,r.price);
+    history.push({t:stamp,batch,cur,name:(r.name||"").trim(),price:r.price,unit:cfg.priceUnit,won:won!=null?Math.round(won):null,rounded});
+    added++;
+  });
+  if(added===0){alert("Chưa có sản phẩm hợp lệ (giá > 0) để lưu.");return;}
+  localStorage.setItem(HKEY,JSON.stringify(history));
+  renderHistory();
+  alert("Đã lưu "+added+" sản phẩm vào lịch sử.\n🔒 Lịch sử không thể sửa hay xóa.");
+}
+function renderHistory(){
+  const tb=document.getElementById("histRows");
+  const total=history.reduce((s,h)=>s+h.rounded,0);
+  document.getElementById("histCount").textContent=history.length;
+  document.getElementById("histTotal").textContent=money(total);
+  if(!history.length){
+    tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Chưa có lịch sử. Bấm “💾 Lưu vào lịch sử”.</td></tr>';
+    return;
+  }
+  tb.innerHTML="";
+  // mới nhất lên đầu, nhưng số thứ tự theo lúc lưu
+  history.map((h,idx)=>({h,idx})).reverse().forEach(({h,idx})=>{
+    const c=CUR[h.cur]||{flag:"",name:h.cur};
+    const priceTxt=(""+h.price).replace(".",",")+" "+(h.unit||"");
+    const wonTxt=h.won!=null?(" → "+fmtInt.format(h.won)+" ₩"):"";
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${idx+1}</td>
+      <td style="text-align:left;white-space:nowrap">${h.t}</td>
+      <td style="text-align:left">${c.flag} ${c.name}</td>
+      <td style="text-align:left">${(h.name||"").replace(/</g,"&lt;")||"—"}</td>
+      <td style="text-align:left">${priceTxt}${wonTxt}</td>
+      <td class="hmoney">${money(h.rounded)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+document.getElementById("btnSaveHist").onclick=saveToHistory;
+
 /* ---------- Số chữ số làm tròn ---------- */
 const elSig=document.getElementById("cfgSig");
 elSig.value=sigDigits;
@@ -394,7 +469,7 @@ elSig.addEventListener("input",()=>{
 });
 
 /* ---------- Khởi động ---------- */
-syncConfigInputs(); render(); loadRates();
+syncConfigInputs(); render(); renderHistory(); loadRates();
 </script>
 </body>
 </html>
