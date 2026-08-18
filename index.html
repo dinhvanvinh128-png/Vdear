@@ -159,7 +159,7 @@
   <div class="actions">
     <button class="btn" id="btnAdd">＋ Thêm sản phẩm</button>
     <button class="btn ghost" id="btnClear">Xóa hết (nháp)</button>
-    <button class="btn" id="btnSaveHist" style="background:var(--green);color:#04231a">💾 Lưu vào lịch sử</button>
+    <button class="btn" id="btnSaveHist" style="background:var(--green);color:#04231a;font-size:15px">🧮 Ra kết quả &amp; Lưu</button>
   </div>
 
   <div class="grand">
@@ -186,7 +186,7 @@
         </tr>
       </thead>
       <tbody id="histRows">
-        <tr><td colspan="6" style="text-align:center;color:var(--muted)">Chưa có lịch sử. Bấm “💾 Lưu vào lịch sử”.</td></tr>
+        <tr><td colspan="6" style="text-align:center;color:var(--muted)">Chưa có lịch sử. Nhập giá rồi bấm “🧮 Ra kết quả &amp; Lưu”.</td></tr>
       </tbody>
     </table>
   </div>
@@ -318,27 +318,33 @@ function calc(cfg,price){
   return {won, raw, rounded:roundSig(raw)};
 }
 
-/* ---------- Render ---------- */
+/* ---------- Render (kết quả chỉ hiện sau khi bấm nút) ---------- */
+function saveRows(){localStorage.setItem(keyRows(cur),JSON.stringify(dataRows[cur]));}
 function render(){
   const cfg=CUR[cur], rowsArr=dataRows[cur];
-  tbody.innerHTML=""; let grand=0;
+  tbody.innerHTML="";
   rowsArr.forEach((r,i)=>{
-    const {won,raw,rounded}=calc(cfg,r.price); grand+=rounded;
-    const wonCell=cfg.convert?`<td class="mid">${fmtInt.format(Math.round(won))} ₩</td>`:"";
+    const done=r.done;
+    const wonCell=cfg.convert?`<td class="mid" data-c="won">${done?fmtInt.format(Math.round(r._won))+" ₩":"—"}</td>`:"";
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td><input data-i="${i}" data-f="name" value="${(r.name||"").replace(/"/g,'&quot;')}" placeholder="Tên..." style="text-align:left"/></td>
       <td><input data-i="${i}" data-f="price" inputmode="decimal" value="${r.price??""}" placeholder="0"/></td>
       ${wonCell}
-      <td class="mid">${money(raw)}</td>
-      <td class="total">${money(rounded)}</td>
+      <td class="mid" data-c="raw">${done?money(r._raw):"—"}</td>
+      <td class="total" data-c="rd">${done?money(r._rounded):"—"}</td>
       <td><button class="del" data-del="${i}" title="Xóa">✕</button></td>`;
     tbody.appendChild(tr);
   });
-  document.getElementById("grand").textContent=money(grand);
-  document.getElementById("count").textContent=rowsArr.length;
-  localStorage.setItem(keyRows(cur),JSON.stringify(rowsArr));
+  updateGrand();
+  saveRows();
   renderFormula();
+}
+function updateGrand(){
+  const done=dataRows[cur].filter(r=>r.done);
+  const grand=done.reduce((s,r)=>s+r._rounded,0);
+  document.getElementById("grand").textContent=done.length?money(grand):"— (bấm Ra kết quả)";
+  document.getElementById("count").textContent=done.length;
 }
 function renderFormula(){
   const cfg=CUR[cur], p=cfg.sample, {won,raw,rounded}=calc(cfg,p);
@@ -353,27 +359,38 @@ function renderFormula(){
   }
 }
 
-/* nhập trong bảng */
+/* nhập trong bảng -> xoá kết quả cũ, chờ bấm tính lại */
 tbody.addEventListener("input",e=>{
   const t=e.target; if(t.dataset.i===undefined)return;
-  dataRows[cur][+t.dataset.i][t.dataset.f]=t.value;
-  liveTotals();
+  const i=+t.dataset.i;
+  dataRows[cur][i][t.dataset.f]=t.value;
+  dataRows[cur][i].done=false; delete dataRows[cur][i]._raw; delete dataRows[cur][i]._rounded; delete dataRows[cur][i]._won;
+  const tr=t.closest("tr");
+  if(tr) tr.querySelectorAll("[data-c]").forEach(td=>td.textContent="—");
+  updateGrand();
+  saveRows();
 });
-function liveTotals(){
-  const cfg=CUR[cur]; let grand=0;
-  [...tbody.querySelectorAll("tr")].forEach((tr,i)=>{
-    const {won,raw,rounded}=calc(cfg,dataRows[cur][i].price); grand+=rounded;
-    if(cfg.convert)tr.querySelector(".mid").textContent=fmtInt.format(Math.round(won))+" ₩";
-    const mids=tr.querySelectorAll(".mid");
-    mids[mids.length-1].textContent=money(raw);
-    tr.querySelector(".total").textContent=money(rounded);
-  });
-  document.getElementById("grand").textContent=money(grand);
-  localStorage.setItem(keyRows(cur),JSON.stringify(dataRows[cur]));
-}
 tbody.addEventListener("click",e=>{
   if(e.target.dataset.del!==undefined){dataRows[cur].splice(+e.target.dataset.del,1);render();}
 });
+
+/* ---------- RA KẾT QUẢ: tính + lưu lịch sử (không xoá được) ---------- */
+function calcAndSave(){
+  const cfg=CUR[cur], rowsArr=dataRows[cur];
+  const now=new Date(), stamp=now.toLocaleString("vi-VN"), batch=now.getTime();
+  let n=0;
+  rowsArr.forEach(r=>{
+    if(parseVN(r.price)<=0){ r.done=false; return; }
+    const {won,raw,rounded}=calc(cfg,r.price);
+    r._won=won!=null?Math.round(won):null; r._raw=raw; r._rounded=rounded; r.done=true;
+    history.push({t:stamp,batch,cur,name:(r.name||"").trim(),price:r.price,unit:cfg.priceUnit,won:r._won,rounded});
+    n++;
+  });
+  if(n===0){alert("Chưa có sản phẩm hợp lệ (giá > 0) để tính.");return;}
+  localStorage.setItem(HKEY,JSON.stringify(history));
+  saveRows(); render(); renderHistory();
+  alert("Đã tính "+n+" sản phẩm và lưu vào lịch sử.\n🔒 Lịch sử không sửa/xóa được.");
+}
 document.getElementById("btnAdd").onclick=()=>{dataRows[cur].push({name:"Sản phẩm "+(dataRows[cur].length+1),price:""});render();};
 document.getElementById("btnClear").onclick=()=>{if(confirm("Xóa toàn bộ danh sách của "+CUR[cur].name+"?")){dataRows[cur]=[];render();}};
 
@@ -418,27 +435,13 @@ document.getElementById("btnRefresh").onclick=loadRates;
 const HKEY="sales_history_v1";
 function loadHistory(){try{return JSON.parse(localStorage.getItem(HKEY))||[];}catch(e){return[];}}
 let history=loadHistory();
-function saveToHistory(){
-  const cfg=CUR[cur], now=new Date(), stamp=now.toLocaleString("vi-VN"), batch=now.getTime();
-  let added=0;
-  dataRows[cur].forEach(r=>{
-    if(parseVN(r.price)<=0) return;                 // bỏ dòng trống
-    const {won,raw,rounded}=calc(cfg,r.price);
-    history.push({t:stamp,batch,cur,name:(r.name||"").trim(),price:r.price,unit:cfg.priceUnit,won:won!=null?Math.round(won):null,rounded});
-    added++;
-  });
-  if(added===0){alert("Chưa có sản phẩm hợp lệ (giá > 0) để lưu.");return;}
-  localStorage.setItem(HKEY,JSON.stringify(history));
-  renderHistory();
-  alert("Đã lưu "+added+" sản phẩm vào lịch sử.\n🔒 Lịch sử không thể sửa hay xóa.");
-}
 function renderHistory(){
   const tb=document.getElementById("histRows");
   const total=history.reduce((s,h)=>s+h.rounded,0);
   document.getElementById("histCount").textContent=history.length;
   document.getElementById("histTotal").textContent=money(total);
   if(!history.length){
-    tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Chưa có lịch sử. Bấm “💾 Lưu vào lịch sử”.</td></tr>';
+    tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">Chưa có lịch sử. Nhập giá rồi bấm “🧮 Ra kết quả & Lưu”.</td></tr>';
     return;
   }
   tb.innerHTML="";
@@ -458,7 +461,7 @@ function renderHistory(){
     tb.appendChild(tr);
   });
 }
-document.getElementById("btnSaveHist").onclick=saveToHistory;
+document.getElementById("btnSaveHist").onclick=calcAndSave;
 
 /* ---------- Số chữ số làm tròn ---------- */
 const elSig=document.getElementById("cfgSig");
