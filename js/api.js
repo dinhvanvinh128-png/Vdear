@@ -351,6 +351,6 @@
 
   window.VdearAPI = {
     getMarket, getCoin, binanceKlines, klinesMulti, getTradFi,
-    logoUrl, letterAvatar, applyLogo, baseFromSymbol, pool, num,
+    logoUrl, logoSources, letterAvatar, applyLogo, baseFromSymbol, pool, num,
   };
 })();
