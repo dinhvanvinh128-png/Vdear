@@ -179,8 +179,17 @@ h1,h2,h3{margin:0;font-weight:700}
 .sc-bar{height:6px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}
 .sc-bar-fill{height:100%;border-radius:6px}
 .sc-bar-fill.long{background:var(--up)} .sc-bar-fill.short{background:var(--down)}
-.ex-flag{position:absolute;top:10px;right:56px;font-size:9px;font-weight:800;letter-spacing:.4px;
-  background:var(--gold);color:#04121a;padding:2px 6px;border-radius:6px}
+/* Scan status + rescan */
+.scan-status-wrap{display:flex;align-items:center;gap:10px}
+.rescan-btn{background:var(--panel-2);border:1px solid var(--line-2);color:var(--text);
+  padding:6px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .12s}
+.rescan-btn:hover:not(:disabled){background:#1c2230;border-color:var(--accent-2)}
+.rescan-btn:disabled{opacity:.55;cursor:default}
+.rescan-btn.spin{color:var(--accent-2)}
+
+.sc-flags{margin:9px 0 2px}
+.ex-flag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.4px;
+  background:var(--gold);color:#04121a;padding:3px 9px;border-radius:6px}
 .ex-flag.strong{background:linear-gradient(90deg,#ff3b57,#f0b90b);color:#fff}
 .more-btn{margin-top:16px;background:var(--panel-2);border:1px solid var(--line-2);color:var(--text);
   padding:9px 20px;border-radius:22px;font-weight:700;font-size:13px;cursor:pointer;transition:background .12s}

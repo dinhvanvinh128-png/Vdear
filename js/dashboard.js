@@ -63,22 +63,25 @@
   }
 
   /* -------------------- Gợi ý Long/Short (quét 4h) --------------------- */
+  let scanning = false;
   async function runScan() {
+    if (scanning) return;
+    scanning = true;
     const status = $('scanStatus');
+    const btn = $('scanRescan');
+    if (status) status.textContent = 'Đang quét…';
+    if (btn) { btn.disabled = true; btn.classList.add('spin'); }
     const cap = CFG.scan.universeSize === 'all' ? CFG.scan.maxUniverse : CFG.scan.universeSize;
     const universe = market.slice(0, cap);
     const tf = CFG.timeframes.find((t) => t.id === CFG.scanTimeframe);
-    let done = 0;
 
     const results = await API.pool(universe, async (coin) => {
       try {
         const candles = await API.klinesMulti(coin, tf.id, CFG.scan.klineLimit);
-        done++;
-        if (status) status.textContent = `Đang quét ${done}/${universe.length} coin futures (toàn bộ · khung ${tf.label})…`;
         if (candles.length < 40) return null;
         const sig = TA.combatSignal(candles);
         return { coin, sig };
-      } catch (e) { done++; return null; }
+      } catch (e) { return null; }
     }, CFG.scan.concurrency);
 
     scanResults = results.filter((r) => r && r.sig.side !== 'NEUTRAL');
@@ -92,8 +95,9 @@
     scanResults.sort((a, b) => b.rank - a.rank);
     scanResults = scanResults.slice(0, CFG.scan.targetSignals);
 
-    const validCount = scanResults.filter((r) => r.sig.valid).length;
-    if (status) status.textContent = `Đã quét TOÀN BỘ · khung ${tf.label} · ${scanResults.length} tín hiệu (${validCount} đạt hội tụ ✓)`;
+    if (status) status.textContent = `Đã quét · ${scanResults.length} tín hiệu`;
+    if (btn) { btn.disabled = false; btn.classList.remove('spin'); }
+    scanning = false;
     renderScan();
     renderSentiment();
   }
@@ -115,6 +119,7 @@
         <div class="sc-id"><b>${c.base}</b><span>${'$' + fmt(c.price)}</span></div>
         <span class="sc-side ${isLong ? 'long' : 'short'}">${s.side}</span>
       </div>
+      ${extremeBadge ? `<div class="sc-flags">${extremeBadge}</div>` : ''}
       <div class="sc-mid">
         <div class="sc-metric"><span>RSI</span><b style="color:${z.color}">${s.rsi.toFixed(0)}</b></div>
         <div class="sc-metric"><span>Win</span><b>${s.winRate}%</b></div>
@@ -122,7 +127,6 @@
       </div>
       ${conf}
       <div class="sc-bar"><div class="sc-bar-fill ${isLong ? 'long' : 'short'}" style="width:${s.score}%"></div></div>
-      ${extremeBadge}
     </a>`;
   }
 
@@ -335,6 +339,10 @@
     document.querySelectorAll('.mtab').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
     renderSectorBar();
     $('scanMore').addEventListener('click', () => { scanExpanded = !scanExpanded; renderScan(); });
+    $('scanRescan').addEventListener('click', async () => {
+      try { market = await API.getMarket(true); renderMovers(); } catch (e) {}
+      runScan();
+    });
     // ô tìm kiếm coin
     const search = $('moverSearch'), clearBtn = $('searchClear');
     search.addEventListener('input', () => {
