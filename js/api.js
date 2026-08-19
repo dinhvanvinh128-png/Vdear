@@ -204,6 +204,30 @@
     return [];
   }
 
+  /* ------- Bản đồ logo CoinGecko (miễn phí, CORS mở, logo đúng coin) ----- */
+  let _cgLogos = null, _cgPromise = null;
+  async function loadCGLogos() {
+    if (_cgLogos) return _cgLogos;
+    if (_cgPromise) return _cgPromise;
+    _cgPromise = (async () => {
+      const map = {};
+      for (const page of [1, 2, 3]) {
+        try {
+          const j = await getJSON(
+            'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=' + page + '&sparkline=false',
+            { timeout: 9000 });
+          (Array.isArray(j) ? j : []).forEach((c) => {
+            const s = (c.symbol || '').toUpperCase();
+            if (s && c.image && !map[s]) map[s] = c.image; // vốn hoá lớn hơn xuất hiện trước -> đúng coin
+          });
+        } catch (e) { /* bỏ trang lỗi */ }
+      }
+      _cgLogos = map;
+      return map;
+    })();
+    return _cgPromise;
+  }
+
   /* --------------------- thị trường gộp 4 sàn --------------------------- */
   let _marketCache = null;
   let _marketAt = 0;
@@ -219,6 +243,7 @@
       okxFutures(),
       bitgetFutures(),
       binanceFunding(),
+      loadCGLogos().catch(() => null), // nạp bản đồ logo (kết quả bỏ qua, chỉ set cache)
     ]);
 
     const venueOrder = [['binance', bnb], ['bybit', bybit], ['okx', okx], ['bitget', bitget]];
@@ -282,13 +307,14 @@
   function logoSources(base) {
     const l = logoKey(base);
     const U = l.toUpperCase();
-    return [
-      // Logo TradingView (ưu tiên) — định dạng crypto: XTVC<SYMBOL>.svg
-      'https://s3-symbol-logo.tradingview.com/crypto/XTVC' + U + '.svg',
-      'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + l + '.png',
-      'https://assets.coincap.io/assets/icons/' + l + '@2x.png',
-      CFG.logoBase + l + '.png',
-    ];
+    const arr = [];
+    // 1) CoinGecko: logo đúng coin, phủ rộng nhất (nếu bản đồ đã nạp)
+    if (_cgLogos && _cgLogos[U]) arr.push(_cgLogos[U]);
+    // 2) TradingView (crypto): XTVC<SYMBOL>.svg
+    arr.push('https://s3-symbol-logo.tradingview.com/crypto/XTVC' + U + '.svg');
+    // 3) cryptocurrency-icons qua jsDelivr
+    arr.push('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/' + l + '.png');
+    return arr;
   }
   function logoUrl(base) { return logoSources(base)[0]; }
   // Trả về data-URI avatar chữ (fallback khi không có logo).
