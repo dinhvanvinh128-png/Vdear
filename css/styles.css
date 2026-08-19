@@ -207,12 +207,12 @@ h1,h2,h3{margin:0;font-weight:700}
 /* -------------------------- Movers table -------------------------- */
 .table-wrap{overflow-x:auto;margin-top:12px}
 .movers{width:100%;border-collapse:collapse;min-width:600px;table-layout:fixed}
-/* Cố định độ rộng + căn cột để các hàng luôn thẳng hàng */
-.movers th,.movers td{vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.movers th:nth-child(1),.movers td:nth-child(1){width:40%;text-align:left}
-.movers th:nth-child(2),.movers td:nth-child(2){width:22%;text-align:right}
-.movers th:nth-child(3),.movers td:nth-child(3){width:16%;text-align:right}
-.movers th:nth-child(4),.movers td:nth-child(4){width:22%;text-align:right}
+/* Cột nối liền, sát nhau: tên rộng cố định, các cột số căn trái ngay sau. */
+.movers th,.movers td{vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.movers th:nth-child(1),.movers td:nth-child(1){width:210px}
+.movers th:nth-child(2),.movers td:nth-child(2){width:150px}
+.movers th:nth-child(3),.movers td:nth-child(3){width:130px}
+.movers th:nth-child(4),.movers td:nth-child(4){width:auto}
 .movers thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
   color:var(--muted-2);padding:8px 10px;border-bottom:1px solid var(--line)}
 .movers thead th.th-sort{cursor:pointer;user-select:none;white-space:nowrap;transition:color .12s}
