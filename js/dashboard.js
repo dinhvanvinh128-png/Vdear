@@ -186,8 +186,8 @@
     const up = c.change >= 0;
     const star = `<button class="fav-star ${favs.has(c.base) ? 'on' : ''}" data-fav="${c.base}" title="Yêu thích">${favs.has(c.base) ? '★' : '☆'}</button>`;
     return `<tr class="mv-row" data-base="${c.base}">
-      <td class="mv-coin">${star}<img class="mv-logo" alt="" data-logo="${c.base}">
-        <span class="mv-sym">${c.base}<small>USDT</small> ${volIcon(c.base)}</span></td>
+      <td class="mv-coin"><div class="mv-coin-in">${star}<img class="mv-logo" alt="" data-logo="${c.base}">
+        <span class="mv-sym">${c.base}<small>USDT</small> ${volIcon(c.base)}</span></div></td>
       <td class="mv-price">$${fmt(c.price)}</td>
       <td><span class="mv-pill ${up ? 'up' : 'down'}">${up ? '+' : ''}${c.change.toFixed(2)}%</span></td>
       <td class="mv-klgd">$${shortNum(c.quoteVolume)}</td>

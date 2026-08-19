@@ -206,13 +206,8 @@ h1,h2,h3{margin:0;font-weight:700}
 
 /* -------------------------- Movers table -------------------------- */
 .table-wrap{overflow-x:auto;margin-top:12px}
-.movers{width:100%;border-collapse:collapse;min-width:600px;table-layout:fixed}
-/* Cột nối liền, sát nhau: tên rộng cố định, các cột số căn trái ngay sau. */
-.movers th,.movers td{vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
-.movers th:nth-child(1),.movers td:nth-child(1){width:210px}
-.movers th:nth-child(2),.movers td:nth-child(2){width:150px}
-.movers th:nth-child(3),.movers td:nth-child(3){width:130px}
-.movers th:nth-child(4),.movers td:nth-child(4){width:auto}
+.movers{width:100%;border-collapse:collapse;min-width:600px}
+.movers th,.movers td{vertical-align:middle}
 .movers thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;
   color:var(--muted-2);padding:8px 10px;border-bottom:1px solid var(--line)}
 .movers thead th.th-sort{cursor:pointer;user-select:none;white-space:nowrap;transition:color .12s}
@@ -231,7 +226,7 @@ h1,h2,h3{margin:0;font-weight:700}
   padding:0 2px;line-height:1;transition:color .12s;vertical-align:middle}
 .fav-star:hover{color:var(--gold)}
 .fav-star.on{color:var(--gold)}
-.mv-coin{display:flex;align-items:center;gap:8px}
+.mv-coin-in{display:flex;align-items:center;gap:8px}
 .mv-logo{width:30px;height:30px;border-radius:50%;background:#12161f}
 .mv-cell{display:flex;flex-direction:column;gap:2px;line-height:1.25}
 .mv-sym{font-weight:700;font-family:'Chakra Petch',sans-serif;font-size:14.5px}
