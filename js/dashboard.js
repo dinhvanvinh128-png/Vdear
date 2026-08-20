@@ -22,19 +22,12 @@
   let volRank = {};
   let sortState = { key: 'vol', dir: 'desc' }; // KLGD giảm dần mặc định
   let searchQuery = '';
-  let favs = loadFavs();
 
-  /* ------------------------------ favorites ---------------------------- */
-  function loadFavs() {
-    try { return new Set(JSON.parse(localStorage.getItem('vdear_fav') || '[]')); }
-    catch (e) { return new Set(); }
-  }
-  function saveFavs() { try { localStorage.setItem('vdear_fav', JSON.stringify([...favs])); } catch (e) {} }
-  function toggleFav(base) {
-    if (favs.has(base)) favs.delete(base); else favs.add(base);
-    saveFavs(); updateFavCount();
-  }
-  function updateFavCount() { $('favCount').textContent = favs.size; }
+  /* -------- favorites: dùng kho tách lớp (localStorage ↔ cloud) -------- */
+  const Fav = window.VdearFav;
+  function favHas(base) { return Fav.has(base); }
+  function toggleFav(base) { Fav.toggle(base); }
+  function updateFavCount() { $('favCount').textContent = Fav.count(); }
 
   function fmt(p) {
     if (p >= 1000) return p.toLocaleString('en-US', { maximumFractionDigits: 2 });
@@ -184,7 +177,7 @@
 
   function moverRow(c) {
     const up = c.change >= 0;
-    const star = `<button class="fav-star ${favs.has(c.base) ? 'on' : ''}" data-fav="${c.base}" title="Yêu thích">${favs.has(c.base) ? '★' : '☆'}</button>`;
+    const star = `<button class="fav-star ${favHas(c.base) ? 'on' : ''}" data-fav="${c.base}" title="Yêu thích">${favHas(c.base) ? '★' : '☆'}</button>`;
     return `<tr class="mv-row" data-base="${c.base}">
       <td class="mv-coin"><div class="mv-coin-in">${star}<img class="mv-logo" alt="" data-logo="${c.base}">
         <span class="mv-sym">${c.base}<small>USDT</small> ${volIcon(c.base)}</span></div></td>
@@ -284,7 +277,7 @@
   /* ------------------------------ Favorites ---------------------------- */
   function renderFavorites() {
     computeVolRank();
-    const list = market.filter((c) => favs.has(c.base));
+    const list = market.filter((c) => favHas(c.base));
     const body = $('favBody');
     body.innerHTML = list.length ? list.map((c) => moverRow(c)).join('') : '';
     $('favEmpty').style.display = list.length ? 'none' : 'block';
@@ -335,6 +328,12 @@
   async function init() {
     window.VdearTicker.initTicker('ticker');
     updateFavCount();
+    // khi Yêu thích đổi (kể cả do đồng bộ cloud lúc đăng nhập) -> cập nhật UI
+    Fav.onChange(() => {
+      updateFavCount();
+      if (market.length) renderMovers();
+      if (!$('view-fav').hidden) renderFavorites();
+    });
 
     document.querySelectorAll('.mtab').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
     renderSectorBar();
