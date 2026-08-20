@@ -1,0 +1,128 @@
+╔══════════════════════════════════════════════════════════════════╗
+║              VDEAR — PHIẾU ĐIỀN THÔNG TIN (dễ điền)                ║
+╚══════════════════════════════════════════════════════════════════╝
+
+HƯỚNG DẪN:
+• Chỉ cần gõ nội dung của bạn sau dấu  →
+• Chỗ nào chưa biết cứ để trống, mình xử lý sau.
+• KHÔNG dán mật khẩu/secret cho ai qua chat công khai — điền vào file này
+  trên máy bạn thôi.
+
+Ví dụ:
+   Tên miền của bạn:
+   → vdear.io
+
+
+================================================================════
+ PHẦN 1 · 4 THỨ CẦN NHẤT (làm trước là mình bắt đầu được ngay)
+════════════════════════════════════════════════════════════════════
+
+1) TÊN MIỀN (mua ở Namecheap.com — vd vdear.io, khoảng 200–300k/năm)
+   →
+
+2) CLERK (để user đăng nhập). Vào clerk.com → tạo app → mục "API Keys",
+   copy 2 dòng:
+   Publishable key (bắt đầu pk_):
+   →
+   Secret key (bắt đầu sk_):
+   →
+
+3) SUPABASE (kho dữ liệu). Vào supabase.com → tạo project → Settings → API,
+   copy 3 dòng:
+   Project URL (dạng https://....supabase.co):
+   →
+   anon key:
+   →
+   service_role key (cái này BÍ MẬT):
+   →
+
+4) GIÁ BÁN SƠ BỘ (có thể sửa sau)
+   Gói Pro giá bao nhiêu / tháng?
+   →
+   Gói Pro cho làm được gì (kể vài ý)?
+   →
+
+
+════════════════════════════════════════════════════════════════════
+ PHẦN 2 · THÔNG TIN THƯƠNG HIỆU (để web trông chuyên nghiệp)
+════════════════════════════════════════════════════════════════════
+
+Tên sản phẩm (mặc định là Vdear, đổi nếu muốn):
+→
+
+Một câu giới thiệu ngắn (slogan):
+→
+
+Email hỗ trợ khách (vd support@vdear.io):
+→
+
+Bạn đứng tên cá nhân hay công ty? (ghi tên + quốc gia — cần cho hoá đơn):
+→
+
+Đã có logo riêng chưa? (Có = gửi mình / Chưa = mình thiết kế tạm):
+→
+
+3 điểm mạnh nhất của Vdear (mỗi dòng 1 ý):
+→
+→
+→
+
+Mạng xã hội nếu có (X / Telegram / Discord):
+→
+
+
+════════════════════════════════════════════════════════════════════
+ PHẦN 3 · CÁC DỊCH VỤ CÒN LẠI (điền sau cũng được)
+════════════════════════════════════════════════════════════════════
+
+STRIPE — nhận thanh toán thẻ. (dashboard.stripe.com → Developers → API keys)
+   Secret key (sk_live_...):
+   →
+   Publishable key (pk_live_...):
+   →
+
+RESEND — gửi email (chào mừng, cảnh báo giá). (resend.com → API Keys)
+   API key (re_...):
+   →
+
+UPSTASH — bộ nhớ đệm giúp web nhanh hơn. (upstash.com → tạo Redis → REST API)
+   REST URL:
+   →
+   REST Token:
+   →
+
+POSTHOG — xem người dùng thao tác gì. (posthog.com → Project API Key)
+   Project key (phc_...):
+   →
+
+SENTRY — báo lỗi khi web hỏng. (sentry.io → Project → Client Keys DSN)
+   DSN (https://...):
+   →
+
+PINECONE — bộ não cho tính năng AI hỏi–đáp coin. (pinecone.io → API Keys)
+   API key:
+   →
+
+AI (chọn để làm tính năng hỏi–đáp):
+   Anthropic API key (console.anthropic.com):
+   →
+   OpenAI API key (platform.openai.com):
+   →
+
+
+════════════════════════════════════════════════════════════════════
+ PHẦN 4 · 2 CÂU HỎI MÌNH CẦN BẠN TRẢ LỜI
+════════════════════════════════════════════════════════════════════
+
+a) "ProductBridge" trong danh sách của bạn là dịch vụ gì / dùng để làm gì?
+   →
+
+b) Phần AI muốn dùng OpenAI hay Voyage để tạo dữ liệu? (nếu không rõ, ghi
+   "bạn chọn giúp"):
+   →
+
+
+────────────────────────────────────────────────────────────────────
+XONG PHẦN 1 là nhắn mình một tiếng — mình sẽ dựng đăng nhập + lưu dữ liệu
+và đưa web lên tên miền của bạn. Các phần sau bổ sung dần.
+────────────────────────────────────────────────────────────────────
