@@ -504,3 +504,125 @@ h1,h2,h3{margin:0;font-weight:700}
 
 /* đảm bảo thuộc tính hidden luôn ẩn phần tử dù có display riêng */
 [hidden]{display:none !important}
+
+/* ══════════════════════════════════════════════════════════════════
+   MODERN v2 — aurora, glass, glow, spotlight (đè lên style cơ bản)
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+  --font-display:'Space Grotesk','Chakra Petch',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --glass:rgba(19,24,34,.55);
+  --glass-brd:rgba(255,255,255,.09);
+  --glow:0 0 0 1px rgba(255,255,255,.04), 0 24px 60px -28px rgba(0,0,0,.75);
+  --neon:0 0 24px rgba(0,224,199,.35);
+}
+:root[data-theme="light"]{ --glass:rgba(255,255,255,.6); --glass-brd:rgba(10,15,30,.10);
+  --glow:0 0 0 1px rgba(10,15,30,.03), 0 24px 60px -30px rgba(10,15,30,.30); }
+
+/* Aurora + grid nền động (đặt sau nền body cơ bản) */
+body::before{content:'';position:fixed;inset:-20%;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(38vw 38vw at 12% 8%, rgba(47,129,247,.22), transparent 60%),
+    radial-gradient(34vw 34vw at 88% 4%, rgba(0,224,199,.20), transparent 60%),
+    radial-gradient(40vw 40vw at 78% 92%, rgba(139,92,246,.18), transparent 62%),
+    radial-gradient(30vw 30vw at 20% 96%, rgba(240,185,11,.10), transparent 60%);
+  filter:blur(30px);opacity:.9;animation:aurora 22s ease-in-out infinite alternate}
+body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(120% 80% at 50% 0,#000,transparent 78%);
+          mask-image:radial-gradient(120% 80% at 50% 0,#000,transparent 78%)}
+:root[data-theme="light"] body::after{background-image:linear-gradient(rgba(10,15,30,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(10,15,30,.05) 1px,transparent 1px)}
+@keyframes aurora{0%{transform:translate3d(-3%,-2%,0) rotate(0deg)}50%{transform:translate3d(3%,2%,0) rotate(6deg)}100%{transform:translate3d(-2%,3%,0) rotate(-4deg)}}
+@media (prefers-reduced-motion:reduce){body::before{animation:none}}
+
+/* Fonts hiển thị hiện đại */
+.brand-name,.hero h1,.panel-head h2,.mtab,.coin-id h1,.doc h1{font-family:var(--font-display);letter-spacing:.2px}
+.big-price,.gauge-val,.mv-price,.mv-klgd,.tk-price,.sc-id b,.plan-cell b{font-family:var(--font-mono)}
+
+/* Scrollbar + selection */
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent),var(--accent-2));border-radius:10px;border:2px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-track{background:transparent}
+::selection{background:rgba(0,224,199,.28)}
+
+/* Glass surfaces */
+.topbar{background:var(--glass) !important;backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);
+  border-bottom:1px solid var(--glass-brd)}
+.panel,.hero-inner,.cmd-box,.coin-header{
+  background:var(--glass) !important;backdrop-filter:blur(14px) saturate(135%);-webkit-backdrop-filter:blur(14px) saturate(135%);
+  border:1px solid var(--glass-brd);box-shadow:var(--glow);position:relative;overflow:hidden}
+.panel:hover{border-color:rgba(0,224,199,.28)}
+
+/* Viền gradient phát sáng ở mép trên panel */
+.panel::before,.hero-inner::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(120deg,rgba(47,129,247,.5),rgba(0,224,199,.4),transparent 60%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+          mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;opacity:.55}
+
+/* Spotlight theo chuột (glow nhẹ, không che chữ) */
+.panel::after,.scan-card::after,.tf-card::after,.plan-cell::after,.hero-inner::after,.combat-panel::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity .25s;mix-blend-mode:screen;
+  background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),rgba(0,224,199,.16),transparent 46%)}
+.panel:hover::after,.scan-card:hover::after,.tf-card:hover::after,.plan-cell:hover::after,.hero-inner:hover::after{opacity:1}
+
+/* Hero — tiêu đề gradient phát sáng + nền quét */
+.hero-inner{padding:34px 30px}
+.hero h1{font-size:clamp(26px,4vw,44px);line-height:1.08;
+  background:linear-gradient(92deg,#eaf2ff 0%,#7fd6ff 40%,#00e0c7 75%,#9b8cff 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 24px rgba(0,224,199,.25))}
+.hero p{font-size:clamp(14px,1.4vw,16px)}
+.hb{backdrop-filter:blur(6px);transition:transform .15s,border-color .15s,box-shadow .15s}
+.hb:hover{transform:translateY(-2px);border-color:var(--accent-2);box-shadow:var(--neon)}
+
+/* Stat strip trong hero */
+.hero-stats{display:flex;flex-wrap:wrap;gap:26px;margin-top:20px;padding-top:18px;border-top:1px solid var(--glass-brd)}
+.hero-stat b{font-family:var(--font-mono);font-size:26px;
+  background:linear-gradient(92deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-stat span{display:block;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+
+/* Brand mark phát sáng + xoay nhẹ */
+.brand-mark{box-shadow:0 0 0 1px rgba(255,255,255,.12),0 6px 22px rgba(0,224,199,.5)}
+.pill.live{border-color:rgba(0,214,143,.4);box-shadow:0 0 18px rgba(0,214,143,.18)}
+
+/* Nút hiện đại */
+.btn-primary{position:relative;overflow:hidden;box-shadow:0 6px 22px rgba(0,224,199,.35)}
+.btn-primary::after{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);animation:shine 3.2s ease-in-out infinite}
+@keyframes shine{0%,60%{left:-120%}100%{left:130%}}
+.rescan-btn,.pg-btn,.tf-btn,.sector-chip,.mtab,.icon-btn,.kbd-hint,.more-btn{transition:all .16s ease}
+.sector-chip:hover{box-shadow:var(--neon)}
+
+/* Scan card — glass + viền theo LONG/SHORT + hover nổi */
+.scan-card{background:var(--glass) !important;backdrop-filter:blur(10px);border:1px solid var(--glass-brd);
+  position:relative;overflow:hidden;transition:transform .16s,box-shadow .16s,border-color .16s}
+.scan-card:hover{transform:translateY(-4px) scale(1.012);box-shadow:0 18px 40px -18px rgba(0,0,0,.7),var(--neon)}
+.scan-card.valid{box-shadow:inset 3px 0 0 var(--accent-2),0 0 0 1px rgba(0,224,199,.3),0 0 26px rgba(0,224,199,.14)}
+.sc-side.long,.sr-tag.long,.gauge-side.long{text-shadow:0 0 12px rgba(0,214,143,.5)}
+.sc-side.short,.sr-tag.short,.gauge-side.short{text-shadow:0 0 12px rgba(255,59,87,.5)}
+
+/* Gauge — glow */
+.gauge-fill{box-shadow:0 0 18px rgba(0,224,199,.4)}
+.gauge-track{background:linear-gradient(90deg,rgba(255,59,87,.22),rgba(138,148,166,.12),rgba(0,214,143,.22)),
+  repeating-linear-gradient(90deg,transparent 0 10px,rgba(255,255,255,.03) 10px 11px)}
+
+/* Ticker — nền glass + đường viền phát sáng dưới */
+.ticker-bar{border-bottom:1px solid rgba(0,224,199,.18);box-shadow:0 6px 24px -12px rgba(0,224,199,.4)}
+
+/* Movers row hover: quét sáng */
+.mv-row{transition:background .15s}
+.mv-row:hover{background:linear-gradient(90deg,rgba(0,224,199,.06),transparent)}
+
+/* Market tabs underline glow */
+.mtab.active::after{box-shadow:0 0 14px rgba(0,224,199,.6)}
+
+/* Reveal khi cuộn (chỉ bật qua JS bằng class .reveal) */
+.reveal{opacity:0;transform:translateY(18px)}
+.reveal.in{opacity:1;transform:none;transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}}
+
+/* Coin-rain viền trên phát sáng */
+.coinrain-section{border-top:1px solid rgba(139,92,246,.25);box-shadow:inset 0 20px 60px -40px rgba(139,92,246,.5)}
