@@ -4,12 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vdear — Crypto Intelligence Terminal</title>
-  <meta name="description" content="Bảng điều khiển crypto chuyên nghiệp: tín hiệu Long/Short, RSI, vùng hỗ trợ/kháng cự đa khung, dữ liệu 4 sàn Binance · Bybit · OKX · Bitget.">
+  <meta name="description" content="Radar tín hiệu futures — quét toàn thị trường 4 sàn (Binance · Bybit · OKX · Bitget), RSI + hỗ trợ/kháng cự đa khung, kế hoạch Entry/TP/SL/DCA.">
+  <meta property="og:title" content="Vdear — Radar tín hiệu futures">
+  <meta property="og:description" content="Quét toàn thị trường futures, tìm hội tụ RSI + S&R + Price Action, kế hoạch vào lệnh rõ ràng.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#080a0f">
+  <link rel="manifest" href="site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📈</text></svg>">
+  <script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 </head>
 <body>
   <!-- Ticker 50px -->
@@ -30,10 +37,28 @@
       <a href="coin.html?c=ETH">ETH</a>
       <a href="coin.html?c=SOL">SOL</a>
     </nav>
-    <div class="topbar-right">
-      <span class="pill live"><span class="live-dot"></span> Futures · Realtime</span>
+    <div class="tb-actions">
+      <span class="pill live"><span class="live-dot"></span> Realtime</span>
+      <button class="kbd-hint" data-cmd-open>🔍 Tìm nhanh <kbd>Ctrl</kbd><kbd>K</kbd></button>
+      <button class="icon-btn" data-theme-toggle title="Đổi nền">☀️</button>
+      <a class="btn-primary" data-auth-login href="#" hidden>Đăng nhập</a>
     </div>
   </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>Radar tín hiệu Futures cho dân trade crypto</h1>
+      <p>Quét toàn bộ coin futures trên Binance · Bybit · OKX · Bitget, tìm hội tụ <b>RSI đảo chiều + Hỗ trợ/Kháng cự + Price Action</b> ở khung 4H, và dựng sẵn kế hoạch <b>Entry / TP / SL / DCA</b> theo đòn bẩy.</p>
+      <div class="hero-badges">
+        <span class="hb">⚡ Realtime 4 sàn</span>
+        <span class="hb">🎯 Tín hiệu hội tụ</span>
+        <span class="hb">📉 RSI &amp; S/R đa khung</span>
+        <span class="hb">🧮 Backtest ngay trên chart</span>
+        <span class="hb">🏦 TradFi: Vàng · Bạc · Dầu</span>
+      </div>
+    </div>
+  </section>
 
   <!-- Tab cấp cao: Yêu thích / Crypto / TradFi -->
   <div class="market-tabs">
@@ -130,16 +155,39 @@
     <canvas id="coinRain"></canvas>
   </section>
 
-  <footer class="site-foot">
-    <span>Vdear · Futures data: Binance · Bybit · OKX · Bitget</span>
-    <span class="muted">Chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</span>
+  <footer class="foot-wrap">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="brand-name">Vdear</div>
+        <p>Radar tín hiệu futures — quét toàn thị trường, vào lệnh có kế hoạch. Dữ liệu từ Binance · Bybit · OKX · Bitget.</p>
+      </div>
+      <div class="foot-col"><h4>Sản phẩm</h4>
+        <a href="index.html">Thị trường</a>
+        <a href="coin.html?c=BTC">Phân tích coin</a>
+        <a href="about.html">Giới thiệu</a>
+      </div>
+      <div class="foot-col"><h4>Pháp lý</h4>
+        <a href="terms.html">Điều khoản</a>
+        <a href="privacy.html">Bảo mật</a>
+        <a href="risk.html">Khuyến cáo rủi ro</a>
+      </div>
+      <div class="foot-col"><h4>Liên hệ</h4>
+        <a href="contact.html">Liên hệ</a>
+        <a href="mailto:support@vdear.io">support@vdear.io</a>
+      </div>
+    </div>
+    <p class="hint" style="text-align:center;margin-top:24px">© 2026 Vdear · Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
   </footer>
 
+  <script src="env.js"></script>
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/indicators.js"></script>
   <script src="js/ticker.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/coinrain.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/command.js"></script>
+  <script src="js/integrations.js"></script>
 </body>
 </html>
