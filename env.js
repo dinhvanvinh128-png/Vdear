@@ -8,20 +8,20 @@
  * Chỗ nào để trống thì tính năng đó tự tắt (không gây lỗi).
  */
 window.VDEAR_ENV = {
-  SITE_URL: "",                    // vd "https://vdear.io"
+  SITE_URL: "",                         // để trống cũng được (hoặc domain khi có)
 
-  // Supabase (công khai) — để đồng bộ "Yêu thích" khi bật
-  SUPABASE_URL: "",                // https://xxxx.supabase.co
-  SUPABASE_ANON_KEY: "",           // anon / publishable key
+  // Supabase (công khai)
+  SUPABASE_URL: "https://bsazxdcoatwulmxbwyow.supabase.co",   // ← project của bạn (đã biết)
+  SUPABASE_ANON_KEY: "sb_publishable_gNOF46lTsGF1abdfRNm5Hg_wlxr3KfY",   // Supabase → API Keys → Publishable (sb_publishable_...) hoặc anon
 
-  // Clerk (công khai) — hiện nút Đăng nhập khi có
-  CLERK_PUBLISHABLE_KEY: "",       // pk_test_... hoặc pk_live_...
+  // Clerk (công khai)
+  CLERK_PUBLISHABLE_KEY: "pk_test_dG9wLWNyaWNrZXQtNzA1NC5jbGVyay5hY2NvdW50cy5kZXYk",   // Clerk → API keys → Publishable (pk_test_...)
   SIGN_IN_URL: "/sign-in",
 
-  // PostHog (khoá phc_ là công khai)
-  POSTHOG_KEY: "",                 // phc_...
+  // PostHog (để trống nếu chưa dùng)
+  POSTHOG_KEY: "phc_qfnACm84SNZ3UyDpVXcwZsCwncKHZ525XRG7VKsq7xSh",
   POSTHOG_HOST: "https://us.i.posthog.com",
 
-  // Sentry (DSN là công khai)
-  SENTRY_DSN: "",                  // https://....ingest.sentry.io/....
+  // Sentry (để trống nếu chưa dùng)
+  SENTRY_DSN: "https://b1bdeefd98a7d0082f83e7a4b77e6a15@o4511943176749056.ingest.de.sentry.io/4511943199227984",
 };
