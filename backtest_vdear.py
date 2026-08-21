@@ -11,16 +11,18 @@ TÓM TẮT PHƯƠNG PHÁP (1 khung thời gian, mặc định 4H, hàng futures)
         (mức swing = đỉnh/đáy pivot, cửa sổ 5 nến hai bên)
     (3) NẾN PRICE ACTION cùng chiều: nến nhấn chìm (engulfing) HOẶC pin bar
         (bóng nến > 2x thân và > 50% biên độ)
-    (4) XÁC NHẬN BREAKOUT (mới): nến đóng cửa vượt hẳn cực trị 3 nến trước theo
+    (4) XÁC NHẬN BREAKOUT: nến đóng cửa vượt hẳn cực trị 3 nến trước theo
         hướng lệnh (LONG: đóng > đỉnh 3 nến & nến xanh; SHORT: đóng < đáy & nến đỏ).
         -> tránh "bắt dao rơi", giảm tỉ lệ thua. Tắt bằng USE_BREAKOUT = False.
+    (5) XÁC NHẬN VOLUME GIÁ (mới): nến vào lệnh phải có KLGD vượt trung bình
+        `VOLUME_LOOKBACK` nến trước * `VOLUME_MULTIPLIER` -> chỉ vào khi có dòng
+        tiền thật đẩy giá, lọc phá vỡ giả. Tắt bằng USE_VOLUME = False.
 
-  QUẢN LÝ VỐN (DCA) — giống hệt web:
-    - TP gốc: +100% margin  -> giá đi 1/L
-    - Nếu lỗ -50% margin (giá đi 0.5/L NGƯỢC chiều) TRƯỚC khi chạm TP -> DCA 1 lần
-      (thêm đúng 1 lần vốn ở giá đó), tính giá vào trung bình, tổng vốn = 2x.
-    - Sau DCA: SL = -50% / TP = +100% trên TỔNG vốn mới.
-    - TRƯỚC DCA không có SL (chỉ thắng +100% hoặc chạm ngưỡng DCA).
+  QUẢN LÝ VỐN — ĐÃ BỎ DCA (theo yêu cầu mới):
+    - TP chốt lời: +100% margin  -> giá đi 1/L thuận chiều.
+    - SL cắt lỗ CỨNG: -50% margin -> giá đi 0.5/L ngược chiều (KHÔNG còn DCA).
+    - Bên nào chạm trước thì xử theo bên đó; nếu 1 nến chạm cả hai, ưu tiên SL
+      (giả định kịch bản xấu -> con số backtest khắt khe, không tô hồng).
 
 CÀI ĐẶT (Colab): !pip install ccxt pandas numpy
 CHẠY:            python backtest_vdear.py
@@ -68,12 +70,16 @@ SR_NO_LOOKAHEAD = True        # True = sạch; False = khớp đúng số web
 USE_BREAKOUT = True
 BREAKOUT_LOOKBACK = 3
 
-# --- QUẢN LÝ VỐN (khớp CFG.money) ---
-TP_MARGIN_PCT = 100
-DCA_TRIGGER_PCT = 50
-POST_DCA_SL_PCT = 50
-POST_DCA_TP_PCT = 100
-LEVERAGES = [20]              # đòn bẩy x20 cho mọi coin
+# --- XÁC NHẬN VOLUME GIÁ (mới): nến vào lệnh phải có KLGD vượt hẳn trung bình
+#     `VOLUME_LOOKBACK` nến trước * `VOLUME_MULTIPLIER` -> có dòng tiền thật.
+USE_VOLUME = True
+VOLUME_LOOKBACK = 20
+VOLUME_MULTIPLIER = 1.3
+
+# --- QUẢN LÝ VỐN (khớp CFG.money) — ĐÃ BỎ DCA ---
+TP_MARGIN_PCT = 100          # TP = +100% margin
+SL_MARGIN_PCT = 50           # SL cứng = -50% margin (không DCA)
+LEVERAGES = [20]             # đòn bẩy x20 cho mọi coin
 TAKER_FEE_PCT_PER_SIDE = 0.05
 FORWARD_SCAN = 1000
 
@@ -177,62 +183,52 @@ def near_level(price, levels, tol=SR_TOLERANCE):
     return False
 
 
-# ==================== MÔ PHỎNG 1 LỆNH (DCA) =======================
-def simulate_dca(df, entry_idx, direction, leverage):
-    o = df["open"].values; h = df["high"].values; l = df["low"].values; c = df["close"].values
+def volume_confirm(vol, i, lookback=VOLUME_LOOKBACK, mult=VOLUME_MULTIPLIER):
+    """Nến i có KLGD vượt trung bình `lookback` nến trước * `mult` -> dòng tiền thật."""
+    if i < lookback:
+        return False
+    prev = vol[i - lookback:i]
+    avg = prev.mean() if len(prev) else 0.0
+    cur = vol[i]
+    if avg <= 0 or not np.isfinite(cur) or cur <= 0:
+        return False
+    return cur >= avg * mult
+
+
+# ============ MÔ PHỎNG 1 LỆNH (TP +100% / SL -50%, KHÔNG DCA) =========
+def simulate_trade(df, entry_idx, direction, leverage):
+    h = df["high"].values; l = df["low"].values; c = df["close"].values
     L = leverage
-    E1 = c[entry_idx]
+    E = c[entry_idx]
     move_tp = (TP_MARGIN_PCT / 100) / L
-    move_dca = (DCA_TRIGGER_PCT / 100) / L
+    move_sl = (SL_MARGIN_PCT / 100) / L
     long = direction in ("bullish", "LONG")
-    P_tp0 = E1 * (1 + move_tp) if long else E1 * (1 - move_tp)
-    P_dca = E1 * (1 - move_dca) if long else E1 * (1 + move_dca)
+    P_tp = E * (1 + move_tp) if long else E * (1 - move_tp)
+    P_sl = E * (1 - move_sl) if long else E * (1 + move_sl)
     fee = TAKER_FEE_PCT_PER_SIDE / 100
-    units1 = L / E1
-    fee_entry1 = units1 * E1 * fee
-    dca_done = False; P_sl = P_tp = None; fee_dca = 0.0
-    units_total = units1
+    units = L / E
+    fee_entry = units * E * fee
     end = min(entry_idx + FORWARD_SCAN, len(df))
     for j in range(entry_idx + 1, end):
         hi, loo = h[j], l[j]
-        if not dca_done:
-            hit_dca = (loo <= P_dca) if long else (hi >= P_dca)
-            hit_tp0 = (hi >= P_tp0) if long else (loo <= P_tp0)
-            if hit_dca:
-                units2 = L / P_dca
-                units_total = units1 + units2
-                avg = (units1 * E1 + units2 * P_dca) / units_total
-                mT = 2
-                if long:
-                    P_sl = avg - (POST_DCA_SL_PCT / 100) * mT / units_total
-                    P_tp = avg + (POST_DCA_TP_PCT / 100) * mT / units_total
-                else:
-                    P_sl = avg + (POST_DCA_SL_PCT / 100) * mT / units_total
-                    P_tp = avg - (POST_DCA_TP_PCT / 100) * mT / units_total
-                fee_dca = units2 * P_dca * fee
-                dca_done = True
-                continue
-            if hit_tp0:
-                fee_exit = units_total * P_tp0 * fee
-                net = TP_MARGIN_PCT - (fee_entry1 + fee_exit) * 100
-                return {"win": True, "outcome": "win_no_dca", "net_pct": net, "dca": False}, j
-        else:
-            hit_sl = (loo <= P_sl) if long else (hi >= P_sl)
-            hit_tp = (hi >= P_tp) if long else (loo <= P_tp)
-            if hit_sl:
-                fee_exit = units_total * P_sl * fee
-                net = -POST_DCA_SL_PCT * 2 - (fee_entry1 + fee_dca + fee_exit) * 100
-                return {"win": False, "outcome": "loss_after_dca", "net_pct": net, "dca": True}, j
-            if hit_tp:
-                fee_exit = units_total * P_tp * fee
-                net = POST_DCA_TP_PCT * 2 - (fee_entry1 + fee_dca + fee_exit) * 100
-                return {"win": True, "outcome": "win_after_dca", "net_pct": net, "dca": True}, j
+        hit_sl = (loo <= P_sl) if long else (hi >= P_sl)
+        hit_tp = (hi >= P_tp) if long else (loo <= P_tp)
+        # ưu tiên xét SL trước: kịch bản xấu khi 1 nến chạm cả hai mức
+        if hit_sl:
+            fee_exit = units * P_sl * fee
+            net = -SL_MARGIN_PCT - (fee_entry + fee_exit) * 100
+            return {"win": False, "outcome": "loss", "net_pct": net}, j
+        if hit_tp:
+            fee_exit = units * P_tp * fee
+            net = TP_MARGIN_PCT - (fee_entry + fee_exit) * 100
+            return {"win": True, "outcome": "win", "net_pct": net}, j
     return None, None
 
 
 # ======================= BACKTEST 1 COIN ==========================
 def backtest_symbol(df, leverage):
     o = df["open"].values; h = df["high"].values; l = df["low"].values; c = df["close"].values
+    vol = df["volume"].values
     rsi = compute_rsi(df["close"])
     pivots = build_pivots(df)
     all_levels = [p[1] for p in pivots]
@@ -264,7 +260,9 @@ def backtest_symbol(df, leverage):
             else:
                 if not (c[i] < ll and c[i] < o[i]):   # đóng cửa phá xuống đáy gần + nến đỏ
                     continue
-        res, ridx = simulate_dca(df, i, rev, leverage)
+        if USE_VOLUME and not volume_confirm(vol, i):  # KLGD nến vào lệnh phải bùng nổ
+            continue
+        res, ridx = simulate_trade(df, i, rev, leverage)
         if res:
             res["dir"] = "LONG" if rev == "bullish" else "SHORT"
             trades.append(res)
@@ -279,11 +277,11 @@ def summarize(trades, symbol, leverage):
     total = len(t)
     wins = int(t["win"].sum())
     win_rate = wins / total * 100
-    dca_rate = t["dca"].sum() / total * 100
     expectancy = t["net_pct"].mean()
     return {
         "symbol": symbol, "leverage": leverage, "total": total,
-        "win_rate": win_rate, "dca_rate": dca_rate, "expectancy": expectancy,
+        "wins": wins, "losses": total - wins,
+        "win_rate": win_rate, "expectancy": expectancy,
     }
 
 
@@ -312,7 +310,9 @@ if __name__ == "__main__":
     ex = make_exchange()
     since_str = (pd.Timestamp(BACKTEST_UNTIL, tz="UTC") - pd.Timedelta(days=BACKTEST_DAYS)).strftime("%Y-%m-%d")
 
-    print(f"Phương pháp: RSI đảo chiều + gần S/R + Price Action  ·  khung {TIMEFRAME}")
+    print(f"Phương pháp: RSI đảo chiều + gần S/R + Price Action + Breakout + Volume giá  ·  khung {TIMEFRAME}")
+    print(f"Vốn: TP +{TP_MARGIN_PCT}% / SL -{SL_MARGIN_PCT}% margin (KHÔNG DCA)  ·  "
+          f"Volume x{VOLUME_MULTIPLIER} ({'bật' if USE_VOLUME else 'tắt'})")
     print(f"No-lookahead S/R: {SR_NO_LOOKAHEAD}  ·  {BACKTEST_DAYS} ngày  ·  phí {TAKER_FEE_PCT_PER_SIDE}%/chiều\n")
 
     summary = []
@@ -329,8 +329,8 @@ if __name__ == "__main__":
                 if res:
                     summary.append(res)
                     tag = "CÓ LỜI" if res["expectancy"] > 0 else "LỖ"
-                    print(f"  x{lev}: {res['total']} lệnh | win {res['win_rate']:.1f}% | "
-                          f"DCA {res['dca_rate']:.1f}% | kỳ vọng {res['expectancy']:+.1f}%/lệnh | {tag}")
+                    print(f"  x{lev}: {res['total']} lệnh | win {res['win_rate']:.1f}% "
+                          f"({res['wins']}T/{res['losses']}B) | kỳ vọng {res['expectancy']:+.1f}%/lệnh | {tag}")
                 else:
                     print(f"  x{lev}: không có lệnh nào.")
         except Exception as e:
@@ -340,13 +340,13 @@ if __name__ == "__main__":
     if not summary:
         print("Không có kết quả. Kiểm tra symbol / mạng.")
     else:
-        print(f"{'Coin':<16}{'Lev':<6}{'Lệnh':<7}{'Win%':<8}{'DCA%':<8}{'Kỳ vọng/lệnh':<14}{'KQ'}")
+        print(f"{'Coin':<16}{'Lev':<6}{'Lệnh':<7}{'Win%':<8}{'T/B':<9}{'Kỳ vọng/lệnh':<14}{'KQ'}")
         for r in sorted(summary, key=lambda x: (x["symbol"], x["leverage"])):
             tag = "CÓ LỜI" if r["expectancy"] > 0 else "LỖ"
             print(f"{r['symbol']:<16}x{r['leverage']:<5}{r['total']:<7}{r['win_rate']:<8.1f}"
-                  f"{r['dca_rate']:<8.1f}{r['expectancy']:+<14.1f}{tag}")
+                  f"{str(r['wins'])+'/'+str(r['losses']):<9}{r['expectancy']:+<14.1f}{tag}")
         prof = sum(1 for r in summary if r["expectancy"] > 0)
         print(f"\n{prof}/{len(summary)} cấu hình CÓ LỜI (kỳ vọng dương).")
-        print("Cảnh báo: win-rate cao + DCA che giấu rủi ro đuôi — 1 lệnh thua sau DCA")
-        print("mất ~100% vốn gốc. Hãy xem KỲ VỌNG/lệnh, không chỉ win-rate.")
+        print("Đã BỎ DCA: mỗi lệnh chỉ TP +100% margin hoặc SL -50% margin (rủi ro rõ ràng).")
+        print("Hãy xem KỲ VỌNG/lệnh, không chỉ win-rate.")
         print("Coin < ~15-20 lệnh: mẫu quá nhỏ, đừng tin con số.")

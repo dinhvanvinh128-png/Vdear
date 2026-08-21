@@ -108,17 +108,18 @@ window.VDEAR_CONFIG = {
     // Xác nhận BREAKOUT: chỉ vào lệnh khi nến đóng cửa vượt hẳn vùng vài nến gần
     // nhất theo hướng lệnh (LONG phá lên / SHORT phá xuống) -> lọc tín hiệu giả.
     breakout: { enabled: true, lookback: 3 },
+    // Xác nhận VOLUME GIÁ: nến vào lệnh phải có KLGD vượt trung bình `lookback` nến
+    // gần nhất * `multiplier` -> chỉ vào khi có dòng tiền thật đẩy giá (lọc phá giả).
+    volume: { enabled: true, lookback: 20, multiplier: 1.3 },
   },
 
-  // Quản lý vốn (giống hệt backtest): TP +100% margin, DCA khi -50%, sau DCA SL/TP mới.
+  // Quản lý vốn: TP +100% margin, SL cứng -50% margin (KHÔNG còn DCA).
   money: {
     leverage: 20,         // đòn bẩy mặc định = x20 cho mọi coin
     minLeverage: 1,
     maxLeverage: 100,
-    tpMarginPct: 100,     // TP gốc = +100% margin
-    dcaTriggerPct: 50,    // DCA khi lỗ -50% margin
-    postDcaSlPct: 50,     // sau DCA: SL -50% trên tổng vốn
-    postDcaTpPct: 100,    // sau DCA: TP +100% trên tổng vốn
+    tpMarginPct: 100,     // TP = +100% margin (chốt lời)
+    slMarginPct: 50,      // SL cứng = -50% margin (cắt lỗ, không DCA)
     takerFeePct: 0.05,    // phí taker mỗi chiều
     forwardScan: 1000,    // số nến quét tới khi mô phỏng 1 lệnh (giống backtest)
     // cố định đề xuất ở x20 (mọi coin x20)

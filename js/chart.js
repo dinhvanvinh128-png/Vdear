@@ -143,7 +143,7 @@
         });
       }
       if (this.plan) {
-        [this.plan.tp0, this.plan.dca, this.plan.slAfterDca, this.plan.entry].forEach((p) => {
+        [this.plan.tp, this.plan.sl, this.plan.entry].forEach((p) => {
           if (p != null && Math.abs(p - this.plan.entry) / this.plan.entry < 0.1) {
             lo = Math.min(lo, p); hi = Math.max(hi, p);
           }
@@ -260,10 +260,9 @@
           ctx.fillStyle = color; ctx.fillRect(w - this.padR - tw, ly - 7, tw, 13);
           ctx.fillStyle = '#04121a'; ctx.fillText(label, w - this.padR - 4, ly + 2);
         };
-        line(P.tp0, COLORS.up, 'TP +100%');
+        line(P.tp, COLORS.up, 'TP +100%');
         line(P.entry, '#e7ebf2', 'ENTRY');
-        line(P.dca, COLORS.gold, 'DCA −50%');
-        line(P.slAfterDca, COLORS.down, 'SL sau DCA');
+        line(P.sl, COLORS.down, 'SL −50%');
       }
 
       // giá hiện tại (nhãn trên trục phải)

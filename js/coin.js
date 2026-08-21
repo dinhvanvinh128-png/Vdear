@@ -122,6 +122,7 @@
         <span class="cf-item ${okSR ? 'on' : ''}">Hợp tụ S&amp;R: <b>${srTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
         <span class="cf-item ${okPA ? 'on' : ''}">Price Action: <b>${paTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
         <span class="cf-item ${sig.breakout ? 'on' : ''}">Breakout: <b>${sig.breakout ? 'đã xác nhận ✓' : 'chưa'}</b></span>
+        <span class="cf-item ${sig.volume ? 'on' : ''}">Volume giá: <b>${sig.volume ? 'bùng nổ ✓' : 'yếu'}</b></span>
       </div>
       <div class="lev-box">
         <div class="lev-head"><span>Đòn bẩy: <b id="levVal">x${combatLev}</b></span>
@@ -146,11 +147,8 @@
         $('levBest').innerHTML = `Đề xuất <b>x${best.lev}</b> · win cao nhất ${best.winRate}%`;
       $('planGrid').innerHTML = `
         <div class="plan-cell"><span>Vào lệnh (Entry)</span><b>$${fmt(p.entry)}</b></div>
-        <div class="plan-cell up"><span>TP gốc +100% margin</span><b>$${fmt(p.tp0)}</b></div>
-        <div class="plan-cell gold"><span>DCA khi −50% margin</span><b>$${fmt(p.dca)}</b></div>
-        <div class="plan-cell"><span>Giá TB sau DCA</span><b>$${fmt(p.avgAfterDca)}</b></div>
-        <div class="plan-cell up"><span>TP sau DCA</span><b>$${fmt(p.tpAfterDca)}</b></div>
-        <div class="plan-cell down"><span>SL sau DCA</span><b>$${fmt(p.slAfterDca)}</b></div>`;
+        <div class="plan-cell up"><span>TP chốt lời +100% margin</span><b>$${fmt(p.tp)}</b></div>
+        <div class="plan-cell down"><span>SL cắt lỗ −50% margin</span><b>$${fmt(p.sl)}</b></div>`;
     };
     slider.addEventListener('input', update);
     update();

@@ -217,6 +217,25 @@
     return c.close < ll && c.close < c.open;
   }
 
+  // Xác nhận VOLUME GIÁ: nến i có khối lượng (KLGD) vượt hẳn trung bình `lookback`
+  // nến ngay trước * `multiplier` -> có dòng tiền thật đẩy giá, phá vỡ đáng tin hơn.
+  function volumeConfirm(candles, i, lookback, mult) {
+    const V = CFG.money.volume || {};
+    lookback = lookback || V.lookback || 20;
+    mult = mult || V.multiplier || 1.3;
+    if (i < lookback) return false;
+    let sum = 0, cnt = 0;
+    for (let k = i - lookback; k < i; k++) {
+      const v = candles[k] && candles[k].volume;
+      if (v && isFinite(v)) { sum += v; cnt++; }
+    }
+    if (!cnt) return false;
+    const avg = sum / cnt;
+    const cur = candles[i] && candles[i].volume;
+    if (!cur || !isFinite(cur) || avg <= 0) return false;
+    return cur >= avg * mult;
+  }
+
   // Bắt đảo chiều RSI trong "lookback" nến gần nhất (giống rsi_reversal_direction).
   function rsiReversal(rsiSeries, idx, lookback) {
     const R = CFG.rsi;
@@ -247,22 +266,17 @@
     return levels.some((lv) => Math.abs(price - lv) / lv <= tol);
   }
 
-  // Kế hoạch vào lệnh theo quản lý vốn của backtest (TP/DCA/SL sau DCA).
+  // Kế hoạch vào lệnh theo quản lý vốn: TP +100% margin, SL cứng -50% margin.
+  // (Đã BỎ DCA — chỉ còn 1 điểm vào, 1 TP, 1 SL.)
   function tradePlan(entry, dir, leverage) {
     const M = CFG.money;
     const L = leverage || M.leverage;
     const moveTp = (M.tpMarginPct / 100) / L;
-    const moveDca = (M.dcaTriggerPct / 100) / L;
+    const moveSl = (M.slMarginPct / 100) / L;
     const long = dir === 'bullish' || dir === 'LONG';
-    const tp0 = long ? entry * (1 + moveTp) : entry * (1 - moveTp);
-    const dca = long ? entry * (1 - moveDca) : entry * (1 + moveDca);
-    // Sau DCA: vào 2 phần đều nhau -> giá TB
-    const units1 = L / entry, units2 = L / dca;
-    const avg = (units1 * entry + units2 * dca) / (units1 + units2);
-    const uT = units1 + units2, mT = 2;
-    const slNew = long ? avg - (M.postDcaSlPct / 100) * mT / uT : avg + (M.postDcaSlPct / 100) * mT / uT;
-    const tpNew = long ? avg + (M.postDcaTpPct / 100) * mT / uT : avg - (M.postDcaTpPct / 100) * mT / uT;
-    return { leverage: L, entry, tp0, dca, avgAfterDca: avg, slAfterDca: slNew, tpAfterDca: tpNew };
+    const tp = long ? entry * (1 + moveTp) : entry * (1 - moveTp);
+    const sl = long ? entry * (1 - moveSl) : entry * (1 + moveSl);
+    return { leverage: L, entry, tp, sl };
   }
 
   // Tín hiệu thực chiến trên 1 khung (dùng cho quét dashboard nhanh).
@@ -278,64 +292,56 @@
     const pa = priceAction(candles, last);
     const base = signalScore(candles); // điểm nền + winRate
 
-    // Hội tụ: RSI đảo chiều + PA cùng hướng + gần vùng S&R + xác nhận BREAKOUT
+    // Hội tụ: RSI đảo chiều + PA cùng hướng + gần vùng S&R + BREAKOUT + VOLUME giá
     let dir = rev ? rev.dir : (base.side === 'LONG' ? 'bullish' : base.side === 'SHORT' ? 'bearish' : null);
     const paMatch = pa && dir && pa === dir;
     const boOn = (CFG.strategy.breakout || {}).enabled;
+    const volOn = (CFG.money.volume || {}).enabled;
     const bo = dir ? breakoutConfirm(candles, last, dir) : false;
-    const confluence = (rev ? 1 : 0) + (srNear ? 1 : 0) + (paMatch ? 1 : 0) + (bo ? 1 : 0);
-    // "thực chiến": RSI đảo chiều + ≥1 xác nhận khác; nếu bật breakout thì BẮT BUỘC có breakout.
-    const valid = !!rev && confluence >= 2 && (!boOn || bo);
+    const vol = volumeConfirm(candles, last);
+    const confluence = (rev ? 1 : 0) + (srNear ? 1 : 0) + (paMatch ? 1 : 0) + (bo ? 1 : 0) + (vol ? 1 : 0);
+    // "thực chiến": RSI đảo chiều + ≥2 xác nhận khác; nếu bật breakout/volume thì BẮT BUỘC có.
+    const valid = !!rev && confluence >= 2 && (!boOn || bo) && (!volOn || vol);
 
     const side = dir === 'bullish' ? 'LONG' : dir === 'bearish' ? 'SHORT' : 'NEUTRAL';
     const winRate = Math.min(95, Math.round(base.winRate + confluence * 4 + (valid ? 6 : 0)));
     const plan = side !== 'NEUTRAL' ? tradePlan(price, side) : null;
 
     return {
-      side, valid, confluence, srNear, paMatch: !!paMatch, breakout: !!bo,
+      side, valid, confluence, srNear, paMatch: !!paMatch, breakout: !!bo, volume: !!vol,
       rsi: base.rsi, rsiNote: rev ? rev.note : base.zone.label,
       zone: base.zone, score: base.score, winRate, price, plan,
     };
   }
 
-  /* ===== Mô phỏng 1 lệnh theo ĐÚNG money-management của backtest ========
-   * TP gốc +100% margin; nếu chạm -50% margin trước -> DCA 1 lần;
-   * sau DCA: SL -50% / TP +100% trên TỔNG vốn. Trả win/loss (hoặc null nếu chưa dứt).
+  /* ===== Mô phỏng 1 lệnh theo money-management (ĐÃ BỎ DCA) ==============
+   * TP +100% margin; SL cứng -50% margin. Bên nào chạm trước trong khung nến
+   * đó thì xử theo hướng đó (ưu tiên xét SL trước cho an toàn/khắt khe hơn).
+   * Trả win/loss (hoặc null nếu chưa dứt trong tầm quét).
    */
-  function simulateDCA(candles, entryIdx, direction, leverage) {
+  function simulateTrade(candles, entryIdx, direction, leverage) {
     const M = CFG.money, L = leverage;
-    const E1 = candles[entryIdx].close;
-    const moveTp = (M.tpMarginPct / 100) / L, moveDca = (M.dcaTriggerPct / 100) / L;
+    const E = candles[entryIdx].close;
+    const moveTp = (M.tpMarginPct / 100) / L, moveSl = (M.slMarginPct / 100) / L;
     const long = direction === 'bullish' || direction === 'LONG';
-    const Ptp0 = long ? E1 * (1 + moveTp) : E1 * (1 - moveTp);
-    const Pdca = long ? E1 * (1 - moveDca) : E1 * (1 + moveDca);
-    let dcaDone = false, Psl = null, Ptp = null;
+    const Ptp = long ? E * (1 + moveTp) : E * (1 - moveTp);
+    const Psl = long ? E * (1 - moveSl) : E * (1 + moveSl);
     const end = Math.min(entryIdx + (M.forwardScan || 1000), candles.length);
     for (let j = entryIdx + 1; j < end; j++) {
       const hi = candles[j].high, lo = candles[j].low;
-      if (!dcaDone) {
-        const hitDca = long ? lo <= Pdca : hi >= Pdca;
-        const hitTp0 = long ? hi >= Ptp0 : lo <= Ptp0;
-        if (hitDca) {
-          const units1 = L / E1, units2 = L / Pdca;
-          const unitsTot = units1 + units2, avg = (units1 * E1 + units2 * Pdca) / unitsTot, mT = 2;
-          Psl = long ? avg - (M.postDcaSlPct / 100) * mT / unitsTot : avg + (M.postDcaSlPct / 100) * mT / unitsTot;
-          Ptp = long ? avg + (M.postDcaTpPct / 100) * mT / unitsTot : avg - (M.postDcaTpPct / 100) * mT / unitsTot;
-          dcaDone = true; continue;
-        }
-        if (hitTp0) return { win: true, outcome: 'win_no_dca', resolveIdx: j };
-      } else {
-        const hitSl = long ? lo <= Psl : hi >= Psl;
-        const hitTp = long ? hi >= Ptp : lo <= Ptp;
-        if (hitSl) return { win: false, outcome: 'loss_after_dca', resolveIdx: j };
-        if (hitTp) return { win: true, outcome: 'win_after_dca', resolveIdx: j };
-      }
+      const hitSl = long ? lo <= Psl : hi >= Psl;
+      const hitTp = long ? hi >= Ptp : lo <= Ptp;
+      // xét SL trước: giả định kịch bản xấu khi 1 nến chạm cả 2 mức
+      if (hitSl) return { win: false, outcome: 'loss', resolveIdx: j };
+      if (hitTp) return { win: true, outcome: 'win', resolveIdx: j };
     }
     return null;
   }
+  // Giữ tên cũ để tương thích với các nơi còn gọi.
+  const simulateDCA = simulateTrade;
 
-  // Backtest nhanh trên chuỗi nến 1 khung: bắt tín hiệu (RSI đảo chiều + gần S&R + PA)
-  // rồi mô phỏng DCA với đòn bẩy cho trước -> win-rate THẬT theo phương pháp của bạn.
+  // Backtest nhanh trên chuỗi nến 1 khung: bắt tín hiệu (RSI đảo chiều + gần S&R + PA
+  // + breakout + volume giá) rồi mô phỏng TP/SL với đòn bẩy cho trước -> win-rate THẬT.
   function miniBacktest(candles, leverage) {
     if (!candles || candles.length < 60) return { trades: 0, wins: 0, winRate: null };
     const closes = candles.map((c) => c.close);
@@ -350,7 +356,8 @@
       if (!nearLevel(closes[i], levels)) continue;
       if (priceAction(candles, i) !== rev.dir) continue;
       if ((CFG.strategy.breakout || {}).enabled && !breakoutConfirm(candles, i, rev.dir)) continue;
-      const r = simulateDCA(candles, i, rev.dir, leverage);
+      if ((CFG.money.volume || {}).enabled && !volumeConfirm(candles, i)) continue;
+      const r = simulateTrade(candles, i, rev.dir, leverage);
       if (r) { trades++; if (r.win) wins++; nextIdx = r.resolveIdx + 1; }
     }
     return { trades, wins, winRate: trades ? Math.round((wins / trades) * 100) : null };
@@ -383,7 +390,7 @@
   window.VdearTA = {
     rsiSeries, lastRSI, rsiZone, emaSeries, supportResistance,
     averageTrueRange, signalScore, pivots,
-    priceAction, rsiReversal, breakoutConfirm, swingLevels, nearLevel, tradePlan, combatSignal,
-    fundingCost, simulateDCA, miniBacktest, bestLeverage,
+    priceAction, rsiReversal, breakoutConfirm, volumeConfirm, swingLevels, nearLevel, tradePlan, combatSignal,
+    fundingCost, simulateTrade, simulateDCA, miniBacktest, bestLeverage,
   };
 })();
