@@ -19,6 +19,11 @@ export default async function BranchesPage() {
       <p className="mb-8 text-clan-brown/70 dark:text-clan-cream/60">
         Dòng họ chia thành nhiều chi, mỗi chi do một vị tổ khởi lập.
       </p>
+      {branches.length === 0 && (
+        <div className="rounded-xl border border-dashed border-clan-brown/30 p-12 text-center text-clan-brown/60">
+          Chưa có chi họ nào. Hãy đăng nhập quản trị để thêm chi họ.
+        </div>
+      )}
       <div className="grid gap-6 md:grid-cols-3">
         {branches.map((b) => {
           const count = members.filter((m) => m.branch_id === b.id).length;

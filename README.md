@@ -6,10 +6,11 @@ Website gia phả dòng họ hiện đại, trang trọng, responsive. Lưu tr�
 **Công nghệ:** Next.js 14 (App Router) · TypeScript · Tailwind CSS · React Flow ·
 Supabase (PostgreSQL + Auth + Storage) · Lucide Icons · Zod · Vercel · Cloudflare.
 
-> **Chế độ demo:** App chạy được ngay **chưa cần Supabase** — dữ liệu demo (30
-> thành viên, 3 chi, 5 đời) hiển thị sẵn để bạn deploy lên Vercel và xem kết quả.
-> Khi bạn thêm biến môi trường Supabase, app **tự động** chuyển sang dùng database
-> thật.
+> **Không có dữ liệu bịa sẵn.** Khi chưa cấu hình Supabase, website **để trống**
+> và hiển thị lời mời thêm thành viên — không tự tạo người giả. Khi bạn thêm biến
+> môi trường Supabase, toàn bộ dữ liệu lấy từ database do **bạn tự nhập**.
+> (Có sẵn `supabase/seed.sql` — dữ liệu MẪU **tùy chọn** để thử giao diện, có thể
+> bỏ qua.)
 
 ---
 
@@ -80,7 +81,8 @@ Không có `.env.local` vẫn chạy được ở chế độ demo.
 
 1. Tạo project tại [supabase.com](https://supabase.com).
 2. **SQL Editor** → dán nội dung `supabase/migrations/0001_init.sql` → **Run**.
-3. (Tùy chọn) dán `supabase/seed.sql` → **Run** để có dữ liệu demo trong DB.
+3. (Tùy chọn) dán `supabase/seed.sql` → **Run** nếu muốn dữ liệu MẪU để thử. Bỏ
+   qua bước này nếu muốn tự nhập dữ liệu thật của dòng họ.
 4. **Storage** → tạo bucket `photos` (và `documents`) cho ảnh/tài liệu.
 5. **Authentication → Providers**: bật **Email** và **Google** (điền OAuth client).
 6. **Project Settings → API**: copy `Project URL` và `anon public key`.

@@ -11,7 +11,7 @@ export function Footer() {
             <span className="font-serif text-lg font-bold">Gia Phả</span>
           </div>
           <p className="mt-3 text-sm text-clan-brown/70 dark:text-clan-cream/60">
-            Lưu giữ cội nguồn — Kết nối các thế hệ dòng họ Nguyễn Phúc.
+            Lưu giữ cội nguồn — Kết nối các thế hệ dòng họ Lê.
           </p>
         </div>
         <div>
@@ -40,7 +40,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-clan-brown/15 py-4 text-center text-xs text-clan-brown/60 dark:border-white/10 dark:text-clan-cream/50">
-        © {new Date().getFullYear()} Gia Phả Dòng Họ Nguyễn Phúc · Uống nước nhớ nguồn
+        © {new Date().getFullYear()} Gia Phả Dòng Họ Lê · Uống nước nhớ nguồn
       </div>
     </footer>
   );

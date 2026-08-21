@@ -15,7 +15,7 @@ const serif = Playfair_Display({
   variable: "--font-serif"
 });
 
-const siteName = "Gia Phả Dòng Họ Nguyễn Phúc";
+const siteName = "Gia Phả Dòng Họ Lê";
 const description =
   "Website gia phả dòng họ — lưu trữ, quản lý và trực quan hóa cây phả hệ, thành viên, chi họ, lịch sử, sự kiện và lịch giỗ của dòng họ.";
 
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: `%s · ${siteName}`
   },
   description,
-  keywords: ["gia phả", "phả hệ", "dòng họ", "cây gia phả", "family tree", "Nguyễn Phúc"],
+  keywords: ["gia phả", "phả hệ", "dòng họ", "cây gia phả", "family tree", "dòng họ Lê"],
   openGraph: {
     title: siteName,
     description,

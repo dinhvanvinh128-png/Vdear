@@ -7,7 +7,8 @@ import {
   Heart,
   CalendarDays,
   ArrowRight,
-  TreePine
+  TreePine,
+  UserPlus
 } from "lucide-react";
 import { getStats, getEvents, getMembers } from "@/lib/data";
 import { StatCard } from "@/components/stat-card";
@@ -23,8 +24,9 @@ export default async function HomePage() {
     getMembers()
   ]);
 
+  const isEmpty = members.length === 0;
   const upcoming = events
-    .filter((e) => new Date(e.event_date) >= new Date("2026-08-21"))
+    .filter((e) => new Date(e.event_date) >= new Date())
     .slice(0, 3);
   const featured = members.filter((m) => m.generation <= 2).slice(0, 4);
 
@@ -38,7 +40,7 @@ export default async function HomePage() {
           </div>
           <p className="font-serif text-clan-gold-light">Uống nước nhớ nguồn</p>
           <h1 className="mt-2 font-serif text-4xl font-bold sm:text-6xl">
-            Gia Phả Dòng Họ<br />Nguyễn Phúc
+            Gia Phả Dòng Họ Lê
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-white/85">
             Nơi lưu giữ cội nguồn, kết nối các thế hệ và trực quan hóa toàn bộ
@@ -71,88 +73,80 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* GIỚI THIỆU */}
-      <section className="mx-auto max-w-7xl px-4 py-16">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
-          <div>
-            <Badge variant="gold">Giới thiệu</Badge>
-            <h2 className="section-title mt-3">Cội nguồn dòng họ</h2>
-            <p className="mt-4 text-clan-brown/80 dark:text-clan-cream/70">
-              Dòng họ Nguyễn Phúc khởi nguồn từ Thủy tổ Nguyễn Phúc Nguyên, người
-              khai cơ lập nghiệp và gây dựng nền nếp gia phong. Trải qua nhiều
-              đời, con cháu tỏa ra ba chi lớn, mỗi chi một nghiệp nhưng chung một
-              cội rễ.
-            </p>
-            <p className="mt-3 text-clan-brown/80 dark:text-clan-cream/70">
-              Website này số hóa toàn bộ gia phả, giúp con cháu dù ở đâu cũng có
-              thể tra cứu tổ tiên, quan hệ họ hàng và gìn giữ lịch sử dòng họ.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <Link href="/history">
-                <Button variant="default">Đọc lịch sử dòng họ</Button>
-              </Link>
-              <Link href="/branches">
-                <Button variant="outline">Các chi họ</Button>
-              </Link>
-            </div>
-          </div>
-          <Card className="overflow-hidden">
-            <div className="bg-gradient-to-br from-clan-gold/20 to-clan-red/10 p-8">
-              <h3 className="font-serif text-xl font-bold">Ba chi lớn</h3>
-              <ul className="mt-4 space-y-3">
-                {["Chi Trưởng — giữ việc thờ tự tổ tiên", "Chi Hai — nghiệp nông và giáo", "Chi Ba — nghề buôn bán"].map((t) => (
-                  <li key={t} className="flex items-start gap-3">
-                    <GitBranch className="mt-0.5 h-5 w-5 shrink-0 text-clan-red dark:text-clan-gold" />
-                    <span className="text-clan-brown/80 dark:text-clan-cream/70">{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {isEmpty ? (
+        /* TRẠNG THÁI TRỐNG — chưa có dữ liệu, mời thêm */
+        <section className="mx-auto max-w-3xl px-4 py-16">
+          <Card>
+            <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-clan-red/10 text-clan-red dark:bg-clan-gold/15 dark:text-clan-gold">
+                <UserPlus className="h-8 w-8" />
+              </div>
+              <h2 className="font-serif text-2xl font-bold">Gia phả còn trống</h2>
+              <p className="max-w-md text-clan-brown/70 dark:text-clan-cream/60">
+                Chưa có thành viên nào. Hãy cấu hình Supabase và đăng nhập bằng tài
+                khoản quản trị để bắt đầu thêm tổ tiên và con cháu của dòng họ.
+                (Xem hướng dẫn trong README.)
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link href="/login">
+                  <Button>Đăng nhập quản trị</Button>
+                </Link>
+                <Link href="/history">
+                  <Button variant="outline">Giới thiệu dòng họ</Button>
+                </Link>
+              </div>
+            </CardContent>
           </Card>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <>
+          {/* SỰ KIỆN SẮP TỚI */}
+          {upcoming.length > 0 && (
+            <section className="mx-auto max-w-7xl px-4 pb-4 pt-14">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="section-title">Sự kiện sắp tới</h2>
+                <Link href="/events" className="text-sm font-medium text-clan-red hover:underline dark:text-clan-gold">
+                  Xem tất cả →
+                </Link>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                {upcoming.map((e) => (
+                  <Card key={e.id}>
+                    <CardContent className="pt-5">
+                      {e.type && <Badge variant="muted">{e.type}</Badge>}
+                      <h3 className="mt-2 font-serif text-lg font-semibold">{e.title}</h3>
+                      <p className="mt-1 flex items-center gap-2 text-sm text-clan-brown/70 dark:text-clan-cream/60">
+                        <CalendarDays className="h-4 w-4" />
+                        {new Date(e.event_date).toLocaleDateString("vi-VN")}
+                      </p>
+                      <p className="mt-2 line-clamp-2 text-sm text-clan-brown/70 dark:text-clan-cream/60">
+                        {e.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
 
-      {/* SỰ KIỆN SẮP TỚI */}
-      <section className="mx-auto max-w-7xl px-4 pb-4">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="section-title">Sự kiện sắp tới</h2>
-          <Link href="/events" className="text-sm font-medium text-clan-red hover:underline dark:text-clan-gold">
-            Xem tất cả →
-          </Link>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {upcoming.map((e) => (
-            <Card key={e.id}>
-              <CardContent className="pt-5">
-                <Badge variant="muted">{e.type}</Badge>
-                <h3 className="mt-2 font-serif text-lg font-semibold">{e.title}</h3>
-                <p className="mt-1 flex items-center gap-2 text-sm text-clan-brown/70 dark:text-clan-cream/60">
-                  <CalendarDays className="h-4 w-4" />
-                  {new Date(e.event_date).toLocaleDateString("vi-VN")}
-                </p>
-                <p className="mt-2 line-clamp-2 text-sm text-clan-brown/70 dark:text-clan-cream/60">
-                  {e.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* THÀNH VIÊN TIÊU BIỂU */}
-      <section className="mx-auto max-w-7xl px-4 py-12">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="section-title">Tổ tiên các đời</h2>
-          <Link href="/members" className="text-sm font-medium text-clan-red hover:underline dark:text-clan-gold">
-            Tất cả thành viên →
-          </Link>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {featured.map((m) => (
-            <MemberCard key={m.id} member={m} />
-          ))}
-        </div>
-      </section>
+          {/* THÀNH VIÊN ĐỜI ĐẦU */}
+          {featured.length > 0 && (
+            <section className="mx-auto max-w-7xl px-4 py-12">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="section-title">Tổ tiên các đời</h2>
+                <Link href="/members" className="text-sm font-medium text-clan-red hover:underline dark:text-clan-gold">
+                  Tất cả thành viên →
+                </Link>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {featured.map((m) => (
+                  <MemberCard key={m.id} member={m} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
 }

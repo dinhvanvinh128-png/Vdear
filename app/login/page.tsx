@@ -55,7 +55,7 @@ export default function LoginPage() {
         {mode === "signin" ? "Đăng nhập" : "Đăng ký"}
       </h1>
       <p className="mb-6 mt-1 text-center text-sm text-clan-brown/70 dark:text-clan-cream/60">
-        Truy cập gia phả dòng họ Nguyễn Phúc
+        Truy cập gia phả dòng họ Lê
       </p>
 
       <Card className="w-full">

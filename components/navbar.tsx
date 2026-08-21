@@ -34,7 +34,7 @@ export function Navbar() {
           <div className="leading-tight">
             <div className="font-serif text-lg font-bold">Gia Phả</div>
             <div className="text-[11px] text-clan-brown/70 dark:text-clan-cream/60">
-              Dòng họ Nguyễn Phúc
+              Dòng họ Lê
             </div>
           </div>
         </Link>

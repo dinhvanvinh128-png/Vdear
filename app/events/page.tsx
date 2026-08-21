@@ -21,6 +21,11 @@ export default async function EventsPage() {
       <p className="mb-8 text-clan-brown/70 dark:text-clan-cream/60">
         Lịch các hoạt động chung của dòng họ.
       </p>
+      {events.length === 0 && (
+        <div className="rounded-xl border border-dashed border-clan-brown/30 p-12 text-center text-clan-brown/60">
+          Chưa có sự kiện nào. Hãy đăng nhập quản trị để thêm sự kiện.
+        </div>
+      )}
       <div className="space-y-4">
         {events.map((e) => {
           const d = new Date(e.event_date);

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ScrollText } from "lucide-react";
 import { getMembers } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,16 +7,8 @@ import { lifeSpan } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Lịch sử dòng họ",
-  description: "Nguồn gốc, thủy tổ, các đời và quá trình phát triển của dòng họ Nguyễn Phúc."
+  description: "Nguồn gốc, thủy tổ, các đời và quá trình phát triển của dòng họ Lê."
 };
-
-const timeline = [
-  { year: "Cuối TK 19", title: "Khởi nguồn", text: "Thủy tổ Nguyễn Phúc Nguyên khai cơ lập nghiệp tại làng, gây dựng nền nếp gia phong." },
-  { year: "Đầu TK 20", title: "Hình thành ba chi", text: "Các con của Thủy tổ trưởng thành, lập nên ba chi lớn: Chi Trưởng, Chi Hai và Chi Ba." },
-  { year: "1945 – 1975", title: "Phân tán và hội tụ", text: "Trải qua binh biến, con cháu tỏa đi nhiều nơi nhưng vẫn giữ liên lạc và gia phả." },
-  { year: "1985 – nay", title: "Khôi phục gia phả", text: "Con cháu chung tay tu sửa nhà thờ họ, sưu tầm tư liệu và biên soạn lại gia phả." },
-  { year: "2026", title: "Số hóa gia phả", text: "Gia phả được số hóa, xây dựng website để lưu giữ và kết nối các thế hệ." }
-];
 
 export default async function HistoryPage() {
   const members = await getMembers();
@@ -24,9 +17,9 @@ export default async function HistoryPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <Badge variant="gold">Lịch sử</Badge>
-      <h1 className="section-title mb-4 mt-3">Lịch sử dòng họ Nguyễn Phúc</h1>
+      <h1 className="section-title mb-4 mt-3">Lịch sử dòng họ Lê</h1>
 
-      {ancestor && (
+      {ancestor ? (
         <Card className="mb-8">
           <CardContent className="flex flex-col items-center gap-4 pt-6 text-center sm:flex-row sm:text-left">
             <img
@@ -38,25 +31,28 @@ export default async function HistoryPage() {
               <div className="text-xs uppercase tracking-wide text-clan-brown/60">Thủy tổ</div>
               <h2 className="font-serif text-2xl font-bold">{ancestor.full_name}</h2>
               <p className="text-clan-brown/70 dark:text-clan-cream/60">{lifeSpan(ancestor)}</p>
-              <p className="mt-2 text-sm text-clan-brown/80 dark:text-clan-cream/70">
-                {ancestor.biography}
-              </p>
+              {ancestor.biography && (
+                <p className="mt-2 text-sm text-clan-brown/80 dark:text-clan-cream/70">
+                  {ancestor.biography}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-clan-red/10 text-clan-red dark:bg-clan-gold/15 dark:text-clan-gold">
+              <ScrollText className="h-8 w-8" />
+            </div>
+            <h2 className="font-serif text-xl font-bold">Chưa có nội dung lịch sử</h2>
+            <p className="max-w-md text-clan-brown/70 dark:text-clan-cream/60">
+              Phần lịch sử dòng họ (nguồn gốc, thủy tổ, các đời, những sự kiện lớn và
+              quá trình phát triển) sẽ được quản trị viên biên soạn và cập nhật tại đây.
+            </p>
+          </CardContent>
+        </Card>
       )}
-
-      <h2 className="mb-6 font-serif text-xl font-bold">Dòng thời gian</h2>
-      <ol className="relative border-l-2 border-clan-gold/40 pl-6">
-        {timeline.map((t) => (
-          <li key={t.year} className="mb-8 last:mb-0">
-            <span className="absolute -left-[9px] flex h-4 w-4 items-center justify-center rounded-full bg-clan-red ring-4 ring-clan-cream dark:ring-[#1a1512]" />
-            <div className="text-sm font-semibold text-clan-red dark:text-clan-gold">{t.year}</div>
-            <h3 className="font-serif text-lg font-semibold">{t.title}</h3>
-            <p className="mt-1 text-sm text-clan-brown/80 dark:text-clan-cream/70">{t.text}</p>
-          </li>
-        ))}
-      </ol>
     </div>
   );
 }

@@ -40,11 +40,18 @@ export default async function MemorialPage() {
       )}
 
       <h2 className="mb-3 font-serif text-lg font-semibold">Lịch giỗ cả năm</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {withDate.map((m) => (
-          <MemorialCard key={m.id} m={m} />
-        ))}
-      </div>
+      {withDate.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-clan-brown/30 p-12 text-center text-clan-brown/60">
+          Chưa có lịch giỗ nào. Lịch giỗ sẽ hiển thị khi bạn thêm thành viên đã mất
+          hoặc nhập ngày giỗ.
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {withDate.map((m) => (
+            <MemorialCard key={m.id} m={m} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
