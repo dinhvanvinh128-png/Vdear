@@ -49,11 +49,18 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function handle_new_user();
 
--- Helper: kiểm tra admin
+-- Helper: kiểm tra admin.
+-- SECURITY DEFINER để BỎ QUA RLS khi đọc profiles → tránh đệ quy vô hạn
+-- (policy của profiles lại gọi is_admin()).
 create or replace function is_admin()
-returns boolean language sql stable as $$
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
   select exists (
-    select 1 from profiles where id = auth.uid() and role = 'admin'
+    select 1 from public.profiles where id = auth.uid() and role = 'admin'
   );
 $$;
 
@@ -258,3 +265,18 @@ create policy "noti own" on notifications for all using (user_id = auth.uid()) w
 -- AUDIT LOGS: chỉ admin đọc
 create policy "audit admin read" on audit_logs for select using (is_admin());
 create policy "audit insert" on audit_logs for insert with check (auth.uid() is not null);
+
+-- ============================================================
+--  GRANTS — cấp quyền ở tầng bảng cho anon/authenticated.
+--  RLS ở trên vẫn quyết định từng DÒNG được xem/sửa, đây chỉ mở tầng bảng
+--  để tránh lỗi "permission denied for table".
+-- ============================================================
+grant usage on schema public to anon, authenticated;
+grant select on all tables in schema public to anon, authenticated;
+grant insert, update, delete on all tables in schema public to authenticated;
+
+-- Áp dụng cho các bảng tạo về sau (nếu có)
+alter default privileges in schema public
+  grant select on tables to anon, authenticated;
+alter default privileges in schema public
+  grant insert, update, delete on tables to authenticated;
