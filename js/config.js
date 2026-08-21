@@ -109,7 +109,7 @@ window.VDEAR_CONFIG = {
 
   // Quản lý vốn (giống hệt backtest): TP +100% margin, DCA khi -50%, sau DCA SL/TP mới.
   money: {
-    leverage: 50,         // đòn bẩy mặc định
+    leverage: 20,         // đòn bẩy mặc định = x20 cho mọi coin
     minLeverage: 1,
     maxLeverage: 100,
     tpMarginPct: 100,     // TP gốc = +100% margin
@@ -118,8 +118,8 @@ window.VDEAR_CONFIG = {
     postDcaTpPct: 100,    // sau DCA: TP +100% trên tổng vốn
     takerFeePct: 0.05,    // phí taker mỗi chiều
     forwardScan: 1000,    // số nến quét tới khi mô phỏng 1 lệnh (giống backtest)
-    // các mức đòn bẩy để dò tìm win-rate cao nhất (đề xuất)
-    leverageSamples: [5, 10, 20, 25, 50, 75, 100],
+    // cố định đề xuất ở x20 (mọi coin x20)
+    leverageSamples: [20],
   },
 
   // Trang coin tải nhiều nến hơn để mô phỏng backtest có đủ mẫu.
