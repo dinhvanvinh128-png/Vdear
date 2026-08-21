@@ -35,7 +35,8 @@ import pandas as pd
 import numpy as np
 
 # ============================== CONFIG ==============================
-EXCHANGE_ID = "binance"       # đổi "bybit"/"okx" nếu bị chặn
+# Tự thử lần lượt tới sàn nào Colab truy cập được (Binance hay bị chặn IP -> lỗi 451).
+EXCHANGES = ["bybit", "okx", "gateio", "mexc", "binance"]
 MARKET_TYPE = "swap"          # futures perpetual (giống web)
 
 SYMBOLS = [
@@ -270,9 +271,28 @@ def summarize(trades, symbol, leverage):
 
 
 # ============================== MAIN ==============================
+def make_exchange():
+    """Thử lần lượt các sàn, trả về sàn ĐẦU TIÊN truy cập được từ máy đang chạy."""
+    last = ""
+    for exid in EXCHANGES:
+        try:
+            ex = getattr(ccxt, exid)({"enableRateLimit": True, "options": {"defaultType": MARKET_TYPE}})
+            ex.load_markets()
+            ex.fetch_ohlcv("BTC/USDT:USDT", TIMEFRAME, limit=5)  # test thật
+            print(f"✓ Dùng sàn: {exid}\n")
+            return ex
+        except Exception as e:
+            last = str(e)[:120]
+            print(f"  (bỏ {exid}: {last})")
+    raise SystemExit(
+        "\n❌ Không sàn nào truy cập được từ đây (thường do Colab bị chặn IP).\n"
+        "   Cách xử lý: đổi thứ tự EXCHANGES, hoặc chạy trên máy cá nhân/VPS,\n"
+        "   hoặc Colab → Runtime → Disconnect and delete runtime rồi thử lại.\n"
+        f"   Lỗi cuối: {last}")
+
+
 if __name__ == "__main__":
-    ex = getattr(ccxt, EXCHANGE_ID)({"enableRateLimit": True, "options": {"defaultType": MARKET_TYPE}})
-    ex.load_markets()
+    ex = make_exchange()
     since_str = (pd.Timestamp(BACKTEST_UNTIL, tz="UTC") - pd.Timedelta(days=BACKTEST_DAYS)).strftime("%Y-%m-%d")
 
     print(f"Phương pháp: RSI đảo chiều + gần S/R + Price Action  ·  khung {TIMEFRAME}")
