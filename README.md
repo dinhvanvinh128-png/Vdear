@@ -136,3 +136,5 @@ Không có `.env.local` vẫn chạy được ở chế độ demo.
   nghiêm ngặt.
 - Quan hệ gia phả có **chống vòng lặp** (không cho A là cha của B rồi B là cha của A)
   ở tầng nhập liệu (sẽ hoàn thiện trong Phase 4 khi làm CRUD admin).
+
+<!-- build: trigger redeploy 2026-08-21T17:15Z -->
