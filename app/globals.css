@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-clan-cream text-clan-ink antialiased dark:bg-[#1a1512] dark:text-clan-cream;
+}
+
+/* Hoa văn nền nhẹ cho cảm giác truyền thống */
+.paper-texture {
+  background-image: radial-gradient(circle at 1px 1px, rgba(92, 68, 51, 0.06) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+.section-title {
+  @apply font-serif text-2xl font-bold text-clan-ink dark:text-clan-cream sm:text-3xl;
+}
+
+/* React Flow: nền trong suốt để ăn theo theme */
+.react-flow__attribution {
+  display: none;
+}
