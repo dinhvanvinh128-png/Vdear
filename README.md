@@ -25,14 +25,30 @@ Supabase (PostgreSQL + Auth + Storage) · Lucide Icons · Zod · Vercel · Cloud
   danh sách con, anh chị em, **QR code**, SEO riêng.
 - **Chi họ**, **Lịch sử dòng họ** (timeline), **Sự kiện**, **Lịch giỗ**, **Thư viện**.
 - **Đăng nhập** Email + Google (Supabase Auth).
+- **Trang quản trị `/admin`**: Dashboard thống kê; **thêm/sửa/xóa thành viên** và
+  **chi họ**, ghi thẳng vào Supabase — có validation (Zod), **chống quan hệ vòng lặp**,
+  đồng bộ vợ/chồng hai chiều, toast thông báo và xác nhận trước khi xóa.
 - **Database schema đầy đủ** + **Row Level Security** cho toàn bộ bảng.
 - SEO: metadata, Open Graph, `sitemap.xml`, `robots.txt`. Dark mode. Responsive.
 
-## 🧭 Lộ trình tiếp theo (Phase 4–9)
+## ✍️ Nhập dữ liệu — hai cách
 
-Admin Dashboard & CRUD · hệ thống duyệt thay đổi (change requests) · upload ảnh/tài
-liệu qua Supabase Storage · thông báo · thống kê biểu đồ · Export Excel/CSV/PDF/PNG &
-Import · bản đồ quê quán/mộ phần · tích hợp AI hỏi–đáp gia phả.
+**Cách A — Trang quản trị (khuyên dùng):** đăng nhập tài khoản admin → vào `/admin`
+→ *Chi họ* (tạo chi trước) → *Thành viên* → **Thêm thành viên**. Thêm thủy tổ (đời 1,
+để trống cha/mẹ) trước, rồi thêm con cháu và chọn cha/mẹ.
+
+**Cách B — Nhập thẳng trong Supabase:** mở **Table Editor** trong Supabase, thêm dòng
+vào bảng `branches` rồi `members` (đặt `father_id` / `mother_id` / `spouse_id` trỏ tới
+`id` của người tương ứng). Cả hai cách dùng chung một database.
+
+> Muốn trở thành admin: sau khi đăng nhập lần đầu, chạy trong SQL Editor:
+> `update profiles set role = 'admin' where id = '<user-uuid>';`
+
+## 🧭 Lộ trình tiếp theo (Phase 5–9)
+
+Upload ảnh/tài liệu qua Supabase Storage · hệ thống duyệt thay đổi (change requests) ·
+thông báo · thống kê biểu đồ · Export Excel/CSV/PDF/PNG & Import · bản đồ quê quán/mộ
+phần · tích hợp AI hỏi–đáp gia phả.
 
 ---
 

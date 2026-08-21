@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { Toaster } from "@/components/ui/toast";
 
 const sans = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
+        <Toaster />
       </body>
     </html>
   );
