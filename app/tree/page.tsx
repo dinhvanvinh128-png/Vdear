@@ -1,17 +1,18 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import { TreePine } from "lucide-react";
-import { getMembers } from "@/lib/data";
+import { useStore, useHydrated } from "@/lib/store";
 import { FamilyTree } from "@/components/tree/family-tree";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = {
-  title: "Cây gia phả",
-  description: "Cây phả hệ tương tác của dòng họ — nhiều đời, nhiều chi, phóng to, tìm kiếm và xem hồ sơ từng người."
-};
+export default function TreePage() {
+  const hydrated = useHydrated();
+  const members = useStore((s) => s.members);
 
-export default async function TreePage() {
-  const members = await getMembers();
+  if (!hydrated) {
+    return <div className="p-10 text-center text-clan-brown/60">Đang tải…</div>;
+  }
 
   if (members.length === 0) {
     return (
@@ -21,11 +22,10 @@ export default async function TreePage() {
         </div>
         <h1 className="font-serif text-2xl font-bold">Cây gia phả còn trống</h1>
         <p className="mt-2 text-clan-brown/70 dark:text-clan-cream/60">
-          Chưa có thành viên nào để hiển thị. Hãy đăng nhập quản trị và thêm thành
-          viên đầu tiên để dựng cây gia phả.
+          Chưa có thành viên nào. Hãy vào trang Quản lý để thêm thành viên đầu tiên.
         </p>
-        <Link href="/login" className="mt-6">
-          <Button>Đăng nhập quản trị</Button>
+        <Link href="/quan-ly" className="mt-6">
+          <Button>Quản lý gia phả</Button>
         </Link>
       </div>
     );

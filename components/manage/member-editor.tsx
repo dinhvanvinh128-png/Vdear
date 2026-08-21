@@ -1,37 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Save } from "lucide-react";
-import type { Member, Branch } from "@/types";
+import { useStore } from "@/lib/store";
 import { memberSchema } from "@/lib/validators";
-import { createMember, updateMember, deleteMember } from "@/lib/actions/members";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { ConfirmButton } from "@/components/ui/confirm-button";
+import type { Member } from "@/types";
 
-export function MemberForm({
+export function MemberEditor({
   member,
-  members,
-  branches
+  onClose
 }: {
-  member?: Member;
-  members: Member[];
-  branches: Branch[];
+  member?: Member | null;
+  onClose: () => void;
 }) {
-  const router = useRouter();
+  const members = useStore((s) => s.members);
+  const branches = useStore((s) => s.branches);
+  const addMember = useStore((s) => s.addMember);
+  const updateMember = useStore((s) => s.updateMember);
   const push = useToast((s) => s.push);
-  const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const others = members.filter((m) => m.id !== member?.id);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const raw = {
@@ -49,58 +43,42 @@ export function MemberForm({
       generation: fd.get("generation"),
       branch_id: fd.get("branch_id"),
       is_alive: fd.get("is_alive") === "on",
-      visibility: fd.get("visibility"),
+      visibility: "public",
       father_id: fd.get("father_id"),
       mother_id: fd.get("mother_id"),
       spouse_id: fd.get("spouse_id")
     };
-
     const parsed = memberSchema.safeParse(raw);
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      for (const issue of parsed.error.errors) errs[String(issue.path[0])] = issue.message;
-      setErrors(errs);
       push("error", parsed.error.errors[0].message);
       return;
     }
-    setErrors({});
-    setSaving(true);
-    const res = member
-      ? await updateMember(member.id, parsed.data)
-      : await createMember(parsed.data);
-    setSaving(false);
-
+    const res = member ? updateMember(member.id, parsed.data) : addMember(parsed.data);
     if (res.ok) {
-      push("success", member ? "Đã cập nhật thành viên." : "Đã thêm thành viên.");
-      router.push("/admin/members");
-      router.refresh();
+      push("success", member ? "Đã cập nhật." : "Đã thêm thành viên.");
+      onClose();
     } else {
       push("error", res.error || "Có lỗi xảy ra.");
     }
   }
 
-  async function onDelete() {
-    if (!member) return;
-    const res = await deleteMember(member.id);
-    if (res.ok) {
-      push("success", "Đã xóa thành viên.");
-      router.push("/admin/members");
-      router.refresh();
-    } else {
-      push("error", res.error || "Không xóa được.");
-    }
-  }
-
   return (
-    <form onSubmit={onSubmit}>
-      <Card>
-        <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
+    <div
+      className="fixed inset-0 z-[150] flex items-start justify-center overflow-auto bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="my-8 w-full max-w-2xl rounded-2xl bg-white p-5 shadow-xl dark:bg-clan-ink"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="mb-4 font-serif text-xl font-bold">
+          {member ? "Sửa thành viên" : "Thêm thành viên"}
+        </h2>
+        <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label htmlFor="full_name">Họ và tên *</Label>
             <Input id="full_name" name="full_name" defaultValue={member?.full_name} placeholder="Lê Văn A" />
-            {errors.full_name && <p className="mt-1 text-xs text-red-600">{errors.full_name}</p>}
           </div>
-
           <div>
             <Label htmlFor="nickname">Tên thường gọi</Label>
             <Input id="nickname" name="nickname" defaultValue={member?.nickname ?? ""} />
@@ -113,7 +91,6 @@ export function MemberForm({
               <option value="other">Khác</option>
             </Select>
           </div>
-
           <div>
             <Label htmlFor="birth_date">Ngày sinh</Label>
             <Input id="birth_date" name="birth_date" type="date" defaultValue={member?.birth_date ?? ""} />
@@ -121,13 +98,10 @@ export function MemberForm({
           <div>
             <Label htmlFor="death_date">Ngày mất</Label>
             <Input id="death_date" name="death_date" type="date" defaultValue={member?.death_date ?? ""} />
-            <p className="mt-1 text-xs text-clan-brown/50">Để trống nếu còn sống.</p>
           </div>
-
           <div>
             <Label htmlFor="generation">Đời thứ *</Label>
             <Input id="generation" name="generation" type="number" min={1} max={30} defaultValue={member?.generation ?? 1} />
-            {errors.generation && <p className="mt-1 text-xs text-red-600">{errors.generation}</p>}
           </div>
           <div>
             <Label htmlFor="branch_id">Chi họ</Label>
@@ -138,7 +112,6 @@ export function MemberForm({
               ))}
             </Select>
           </div>
-
           <div>
             <Label htmlFor="father_id">Cha</Label>
             <Select id="father_id" name="father_id" defaultValue={member?.father_id ?? ""}>
@@ -157,7 +130,6 @@ export function MemberForm({
               ))}
             </Select>
           </div>
-
           <div>
             <Label htmlFor="spouse_id">Vợ / Chồng</Label>
             <Select id="spouse_id" name="spouse_id" defaultValue={member?.spouse_id ?? ""}>
@@ -168,17 +140,12 @@ export function MemberForm({
             </Select>
           </div>
           <div>
-            <Label htmlFor="visibility">Mức hiển thị</Label>
-            <Select id="visibility" name="visibility" defaultValue={member?.visibility ?? "public"}>
-              <option value="public">Công khai</option>
-              <option value="family">Chỉ trong họ</option>
-              <option value="private">Riêng tư</option>
-            </Select>
-          </div>
-
-          <div>
             <Label htmlFor="hometown">Quê quán</Label>
             <Input id="hometown" name="hometown" defaultValue={member?.hometown ?? ""} />
+          </div>
+          <div>
+            <Label htmlFor="occupation">Nghề nghiệp</Label>
+            <Input id="occupation" name="occupation" defaultValue={member?.occupation ?? ""} />
           </div>
           <div>
             <Label htmlFor="birth_place">Nơi sinh</Label>
@@ -188,40 +155,25 @@ export function MemberForm({
             <Label htmlFor="address">Nơi ở</Label>
             <Input id="address" name="address" defaultValue={member?.address ?? ""} />
           </div>
-          <div>
-            <Label htmlFor="occupation">Nghề nghiệp</Label>
-            <Input id="occupation" name="occupation" defaultValue={member?.occupation ?? ""} />
-          </div>
-
           <div className="sm:col-span-2">
             <Label htmlFor="avatar_url">Ảnh đại diện (URL)</Label>
-            <Input id="avatar_url" name="avatar_url" defaultValue={member?.avatar_url ?? ""} placeholder="https://..." />
+            <Input id="avatar_url" name="avatar_url" defaultValue={member?.avatar_url ?? ""} placeholder="https://... (để trống sẽ tự tạo ảnh)" />
           </div>
-
           <div className="sm:col-span-2">
             <Label htmlFor="biography">Tiểu sử</Label>
-            <Textarea id="biography" name="biography" rows={4} defaultValue={member?.biography ?? ""} />
+            <Textarea id="biography" name="biography" rows={3} defaultValue={member?.biography ?? ""} />
           </div>
-
           <label className="flex items-center gap-2 sm:col-span-2">
             <input type="checkbox" name="is_alive" defaultChecked={member ? member.is_alive : true} className="h-4 w-4" />
             <span className="text-sm">Còn sống</span>
           </label>
-        </CardContent>
-      </Card>
 
-      <div className="mt-4 flex items-center gap-3">
-        <Button type="submit" disabled={saving}>
-          <Save className="h-4 w-4" /> {saving ? "Đang lưu..." : "Lưu"}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.push("/admin/members")}>
-          Hủy
-        </Button>
-        <div className="flex-1" />
-        {member && (
-          <ConfirmButton onConfirm={onDelete} label="Xóa thành viên" message="Con cháu sẽ thành đời gốc." />
-        )}
+          <div className="mt-2 flex justify-end gap-2 sm:col-span-2">
+            <Button type="button" variant="outline" onClick={onClose}>Hủy</Button>
+            <Button type="submit">Lưu</Button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   );
 }

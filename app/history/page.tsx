@@ -1,25 +1,25 @@
-import type { Metadata } from "next";
+"use client";
+
 import { ScrollText } from "lucide-react";
-import { getMembers } from "@/lib/data";
+import { useStore, useHydrated } from "@/lib/store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { lifeSpan } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Lịch sử dòng họ",
-  description: "Nguồn gốc, thủy tổ, các đời và quá trình phát triển của dòng họ Lê."
-};
-
-export default async function HistoryPage() {
-  const members = await getMembers();
-  const ancestor = members.find((m) => m.generation === 1 && m.gender === "male");
+export default function HistoryPage() {
+  const hydrated = useHydrated();
+  const members = useStore((s) => s.members);
+  const ancestor = members.find((m) => m.generation === 1 && m.gender === "male")
+    || members.find((m) => m.generation === 1);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <Badge variant="gold">Lịch sử</Badge>
       <h1 className="section-title mb-4 mt-3">Lịch sử dòng họ Lê</h1>
 
-      {ancestor ? (
+      {!hydrated ? (
+        <div className="p-10 text-center text-clan-brown/60">Đang tải…</div>
+      ) : ancestor ? (
         <Card className="mb-8">
           <CardContent className="flex flex-col items-center gap-4 pt-6 text-center sm:flex-row sm:text-left">
             <img
@@ -32,9 +32,7 @@ export default async function HistoryPage() {
               <h2 className="font-serif text-2xl font-bold">{ancestor.full_name}</h2>
               <p className="text-clan-brown/70 dark:text-clan-cream/60">{lifeSpan(ancestor)}</p>
               {ancestor.biography && (
-                <p className="mt-2 text-sm text-clan-brown/80 dark:text-clan-cream/70">
-                  {ancestor.biography}
-                </p>
+                <p className="mt-2 text-sm text-clan-brown/80 dark:text-clan-cream/70">{ancestor.biography}</p>
               )}
             </div>
           </CardContent>
@@ -47,8 +45,8 @@ export default async function HistoryPage() {
             </div>
             <h2 className="font-serif text-xl font-bold">Chưa có nội dung lịch sử</h2>
             <p className="max-w-md text-clan-brown/70 dark:text-clan-cream/60">
-              Phần lịch sử dòng họ (nguồn gốc, thủy tổ, các đời, những sự kiện lớn và
-              quá trình phát triển) sẽ được quản trị viên biên soạn và cập nhật tại đây.
+              Thêm thủy tổ (đời 1) trong trang Quản lý, phần lịch sử sẽ hiện tại đây.
+              Bạn có thể ghi nguồn gốc, công trạng vào ô Tiểu sử của thủy tổ.
             </p>
           </CardContent>
         </Card>

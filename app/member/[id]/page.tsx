@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import {
   MapPin,
   Briefcase,
@@ -8,41 +8,34 @@ import {
   Home,
   Users,
   Heart,
-  QrCode
+  QrCode,
+  Pencil
 } from "lucide-react";
-import {
-  getMembers,
-  getBranches,
-  childrenOf,
-  siblingsOf,
-  spouseOf,
-  parentsOf
-} from "@/lib/data";
+import { useStore, useHydrated } from "@/lib/store";
+import { childrenOf, siblingsOf, spouseOf, parentsOf } from "@/lib/genealogy";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { MemberCard } from "@/components/member-card";
 import { lifeSpan, toOrdinalGen } from "@/lib/utils";
 
-export async function generateMetadata({
-  params
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
-  const members = await getMembers();
-  const m = members.find((x) => x.id === params.id);
-  if (!m) return { title: "Không tìm thấy thành viên" };
-  return {
-    title: m.full_name,
-    description: `Hồ sơ ${m.full_name} — ${toOrdinalGen(m.generation)}${
-      m.occupation ? ", " + m.occupation : ""
-    }. ${m.biography || ""}`.trim()
-  };
-}
+export default function MemberProfile({ params }: { params: { id: string } }) {
+  const { id } = params;
+  const hydrated = useHydrated();
+  const members = useStore((s) => s.members);
+  const branches = useStore((s) => s.branches);
 
-export default async function MemberProfile({ params }: { params: { id: string } }) {
-  const [members, branches] = await Promise.all([getMembers(), getBranches()]);
-  const member = members.find((m) => m.id === params.id);
-  if (!member) notFound();
+  if (!hydrated) return <div className="p-10 text-center text-clan-brown/60">Đang tải…</div>;
+
+  const member = members.find((m) => m.id === id);
+  if (!member) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-20 text-center">
+        <h1 className="font-serif text-xl font-bold">Không tìm thấy thành viên</h1>
+        <Link href="/members" className="mt-4 inline-block text-clan-red underline">← Danh sách thành viên</Link>
+      </div>
+    );
+  }
 
   const { father, mother } = parentsOf(members, member);
   const spouse = spouseOf(members, member);
@@ -50,12 +43,10 @@ export default async function MemberProfile({ params }: { params: { id: string }
   const siblings = siblingsOf(members, member);
   const branch = branches.find((b) => b.id === member.branch_id);
 
-  const profileUrl = `https://gia-pha.vercel.app/member/${member.id}`;
-  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-    profileUrl
-  )}`;
+  const profileUrl = typeof window !== "undefined" ? `${window.location.origin}/member/${member.id}` : "";
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(profileUrl)}`;
 
-  const info: { icon: any; label: string; value?: string | null }[] = [
+  const info = [
     { icon: Calendar, label: "Ngày sinh", value: member.birth_date },
     { icon: Calendar, label: "Ngày mất", value: member.death_date },
     { icon: Home, label: "Quê quán", value: member.hometown },
@@ -66,7 +57,6 @@ export default async function MemberProfile({ params }: { params: { id: string }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      {/* Header hồ sơ */}
       <Card className="overflow-hidden">
         <div className="h-28 bg-gradient-to-r from-clan-red to-clan-red-dark" />
         <CardContent className="pt-0">
@@ -78,15 +68,11 @@ export default async function MemberProfile({ params }: { params: { id: string }
             />
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-serif text-2xl font-bold sm:text-3xl">
-                  {member.full_name}
-                </h1>
+                <h1 className="font-serif text-2xl font-bold sm:text-3xl">{member.full_name}</h1>
                 {!member.is_alive && <span title="Đã mất">🕯️</span>}
               </div>
               {member.nickname && (
-                <p className="text-clan-brown/70 dark:text-clan-cream/60">
-                  Thường gọi: {member.nickname}
-                </p>
+                <p className="text-clan-brown/70 dark:text-clan-cream/60">Thường gọi: {member.nickname}</p>
               )}
               <div className="mt-2 flex flex-wrap gap-2">
                 <Badge variant={member.gender === "male" ? "male" : "female"}>
@@ -98,80 +84,69 @@ export default async function MemberProfile({ params }: { params: { id: string }
                   {member.is_alive ? "Còn sống" : "Đã mất"}
                 </Badge>
               </div>
-              <p className="mt-2 text-sm text-clan-brown/70 dark:text-clan-cream/60">
-                {lifeSpan(member)}
-              </p>
+              <p className="mt-2 text-sm text-clan-brown/70 dark:text-clan-cream/60">{lifeSpan(member)}</p>
             </div>
-            <div className="flex flex-col items-center rounded-lg border border-clan-brown/15 p-2">
-              <img src={qr} alt="QR hồ sơ" width={110} height={110} className="rounded" />
-              <span className="mt-1 flex items-center gap-1 text-[11px] text-clan-brown/60">
-                <QrCode className="h-3 w-3" /> Quét để mở hồ sơ
-              </span>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center rounded-lg border border-clan-brown/15 p-2">
+                <img src={qr} alt="QR" width={110} height={110} className="rounded" />
+                <span className="mt-1 flex items-center gap-1 text-[11px] text-clan-brown/60">
+                  <QrCode className="h-3 w-3" /> Quét mở hồ sơ
+                </span>
+              </div>
+              <Link href="/quan-ly">
+                <Button variant="outline" size="sm"><Pencil className="h-3.5 w-3.5" /> Sửa</Button>
+              </Link>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        {/* Thông tin */}
         <div className="lg:col-span-2">
           <Card>
             <CardContent className="pt-5">
               <h2 className="mb-4 font-serif text-lg font-semibold">Thông tin</h2>
               <div className="grid gap-3 sm:grid-cols-2">
-                {info
-                  .filter((i) => i.value)
-                  .map((i) => (
-                    <div key={i.label} className="flex items-start gap-3">
-                      <i.icon className="mt-0.5 h-5 w-5 shrink-0 text-clan-red dark:text-clan-gold" />
-                      <div>
-                        <div className="text-xs text-clan-brown/60 dark:text-clan-cream/50">{i.label}</div>
-                        <div className="text-sm">{i.value}</div>
-                      </div>
+                {info.filter((i) => i.value).map((i) => (
+                  <div key={i.label} className="flex items-start gap-3">
+                    <i.icon className="mt-0.5 h-5 w-5 shrink-0 text-clan-red dark:text-clan-gold" />
+                    <div>
+                      <div className="text-xs text-clan-brown/60 dark:text-clan-cream/50">{i.label}</div>
+                      <div className="text-sm">{i.value}</div>
                     </div>
-                  ))}
+                  </div>
+                ))}
               </div>
               {member.biography && (
                 <>
                   <h3 className="mb-2 mt-6 font-serif font-semibold">Tiểu sử</h3>
-                  <p className="text-sm leading-relaxed text-clan-brown/80 dark:text-clan-cream/70">
-                    {member.biography}
-                  </p>
+                  <p className="text-sm leading-relaxed text-clan-brown/80 dark:text-clan-cream/70">{member.biography}</p>
                 </>
               )}
             </CardContent>
           </Card>
 
-          {/* Con cái */}
           {children.length > 0 && (
             <div className="mt-6">
               <h2 className="mb-3 flex items-center gap-2 font-serif text-lg font-semibold">
                 <Users className="h-5 w-5 text-clan-red dark:text-clan-gold" /> Con ({children.length})
               </h2>
               <div className="grid gap-3 sm:grid-cols-2">
-                {children.map((c) => (
-                  <MemberCard key={c.id} member={c} />
-                ))}
+                {children.map((c) => <MemberCard key={c.id} member={c} />)}
               </div>
             </div>
           )}
 
-          {/* Anh chị em */}
           {siblings.length > 0 && (
             <div className="mt-6">
-              <h2 className="mb-3 font-serif text-lg font-semibold">
-                Anh chị em ({siblings.length})
-              </h2>
+              <h2 className="mb-3 font-serif text-lg font-semibold">Anh chị em ({siblings.length})</h2>
               <div className="grid gap-3 sm:grid-cols-2">
-                {siblings.map((s) => (
-                  <MemberCard key={s.id} member={s} />
-                ))}
+                {siblings.map((s) => <MemberCard key={s.id} member={s} />)}
               </div>
             </div>
           )}
         </div>
 
-        {/* Quan hệ trực hệ */}
         <div>
           <Card>
             <CardContent className="pt-5">
@@ -201,15 +176,8 @@ export default async function MemberProfile({ params }: { params: { id: string }
 function RelRow({ label, member }: { label: string; member: any }) {
   if (!member) return null;
   return (
-    <Link
-      href={`/member/${member.id}`}
-      className="flex items-center gap-3 rounded-lg p-2 hover:bg-clan-cream dark:hover:bg-white/5"
-    >
-      <img
-        src={member.avatar_url || ""}
-        alt=""
-        className="h-10 w-10 rounded-full border border-clan-gold/40 bg-clan-cream object-cover"
-      />
+    <Link href={`/member/${member.id}`} className="flex items-center gap-3 rounded-lg p-2 hover:bg-clan-cream dark:hover:bg-white/5">
+      <img src={member.avatar_url || ""} alt="" className="h-10 w-10 rounded-full border border-clan-gold/40 bg-clan-cream object-cover" />
       <div>
         <div className="text-xs text-clan-brown/60 dark:text-clan-cream/50">{label}</div>
         <div className="text-sm font-medium">{member.full_name}</div>

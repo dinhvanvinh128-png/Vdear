@@ -63,8 +63,8 @@ export function Navbar() {
             <Sun className="hidden h-5 w-5 dark:block" />
             <Moon className="h-5 w-5 dark:hidden" />
           </button>
-          <Link href="/login" className="hidden sm:block">
-            <Button size="sm">Đăng nhập</Button>
+          <Link href="/quan-ly" className="hidden sm:block">
+            <Button size="sm">Quản lý</Button>
           </Link>
           <button
             className="rounded-lg p-2 text-clan-ink hover:bg-white dark:text-clan-cream lg:hidden"
@@ -94,8 +94,8 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
-            <Link href="/login" onClick={() => setOpen(false)} className="mt-2">
-              <Button className="w-full">Đăng nhập</Button>
+            <Link href="/quan-ly" onClick={() => setOpen(false)} className="mt-2">
+              <Button className="w-full">Quản lý</Button>
             </Link>
           </div>
         </nav>

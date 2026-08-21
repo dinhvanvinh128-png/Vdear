@@ -1,140 +1,70 @@
-# 🌳 Gia Phả Dòng Họ — Website Full-Stack
+# 🌳 Gia Phả Dòng Họ Lê
 
-Website gia phả dòng họ hiện đại, trang trọng, responsive. Lưu trữ, quản lý và
-**trực quan hóa cây phả hệ** qua nhiều đời, nhiều chi.
+Website gia phả dòng họ — dựng và trực quan hóa **cây phả hệ** qua nhiều đời, nhiều chi.
+**Không cần đăng nhập, không cần cấu hình gì.** Deploy phát là dùng được ngay.
 
-**Công nghệ:** Next.js 14 (App Router) · TypeScript · Tailwind CSS · React Flow ·
-Supabase (PostgreSQL + Auth + Storage) · Lucide Icons · Zod · Vercel · Cloudflare.
+**Công nghệ:** Next.js 14 · TypeScript · Tailwind CSS · React Flow · Zustand · Lucide.
 
-> **Không có dữ liệu bịa sẵn.** Khi chưa cấu hình Supabase, website **để trống**
-> và hiển thị lời mời thêm thành viên — không tự tạo người giả. Khi bạn thêm biến
-> môi trường Supabase, toàn bộ dữ liệu lấy từ database do **bạn tự nhập**.
-> (Có sẵn `supabase/seed.sql` — dữ liệu MẪU **tùy chọn** để thử giao diện, có thể
-> bỏ qua.)
+## 💾 Dữ liệu lưu ở đâu?
 
----
+Toàn bộ dữ liệu (thành viên, chi họ) được lưu **ngay trong trình duyệt của bạn**
+(localStorage). Không có máy chủ, không tài khoản, không đăng nhập.
 
-## ✅ Đã có (Phase 1–3 + nền tảng)
+- ✅ Ưu điểm: chạy ngay, riêng tư, không lộ dữ liệu ra ngoài.
+- ⚠️ Lưu ý: dữ liệu nằm trên **trình duyệt/máy này**. Đổi máy hay xóa dữ liệu
+  trình duyệt sẽ mất. Dùng nút **Xuất** để sao lưu ra tệp `.json`, và **Nhập**
+  để mở lại trên máy khác.
 
-- Trang chủ trang trọng: hero, thống kê, giới thiệu, sự kiện sắp tới, tổ tiên.
-- **Cây gia phả tương tác** (React Flow): nhiều đời, quan hệ cha/mẹ/con và vợ/chồng,
-  zoom, kéo, nút "toàn cây" / "đặt lại", tìm người trong cây, thu gọn/mở rộng nhánh,
-  phân biệt nam/nữ, ảnh đại diện, trạng thái còn sống/đã mất, click mở hồ sơ.
-- Danh sách **thành viên** + tìm kiếm/lọc theo chi, theo đời.
-- **Hồ sơ thành viên** `/member/[id]`: thông tin, tiểu sử, quan hệ (cha/mẹ/vợ chồng),
-  danh sách con, anh chị em, **QR code**, SEO riêng.
-- **Chi họ**, **Lịch sử dòng họ** (timeline), **Sự kiện**, **Lịch giỗ**, **Thư viện**.
-- **Đăng nhập** Email + Google (Supabase Auth).
-- **Trang quản trị `/admin`**: Dashboard thống kê; **thêm/sửa/xóa thành viên** và
-  **chi họ**, ghi thẳng vào Supabase — có validation (Zod), **chống quan hệ vòng lặp**,
-  đồng bộ vợ/chồng hai chiều, toast thông báo và xác nhận trước khi xóa.
-- **Database schema đầy đủ** + **Row Level Security** cho toàn bộ bảng.
-- SEO: metadata, Open Graph, `sitemap.xml`, `robots.txt`. Dark mode. Responsive.
+## 🚀 Dùng
 
-## ✍️ Nhập dữ liệu — hai cách
+Vào trang **Quản lý** (`/quan-ly`) để:
+- Thêm chi họ (nên tạo chi trước).
+- Thêm thủy tổ (đời 1, để trống cha/mẹ), rồi thêm con cháu và chọn cha/mẹ, vợ/chồng.
+- Sửa / xóa thành viên. **Xuất / Nhập** để sao lưu.
 
-**Cách A — Trang quản trị (khuyên dùng):** đăng nhập tài khoản admin → vào `/admin`
-→ *Chi họ* (tạo chi trước) → *Thành viên* → **Thêm thành viên**. Thêm thủy tổ (đời 1,
-để trống cha/mẹ) trước, rồi thêm con cháu và chọn cha/mẹ.
+Rồi xem **Cây gia phả** (`/tree`): phóng to, kéo, tìm người, thu gọn/mở rộng nhánh,
+bấm vào người để mở hồ sơ.
 
-**Cách B — Nhập thẳng trong Supabase:** mở **Table Editor** trong Supabase, thêm dòng
-vào bảng `branches` rồi `members` (đặt `father_id` / `mother_id` / `spouse_id` trỏ tới
-`id` của người tương ứng). Cả hai cách dùng chung một database.
+Hệ thống tự **chống quan hệ vòng lặp** (không cho A là cha B rồi B là cha A) và
+**đồng bộ vợ/chồng hai chiều**.
 
-> Muốn trở thành admin: sau khi đăng nhập lần đầu, chạy trong SQL Editor:
-> `update profiles set role = 'admin' where id = '<user-uuid>';`
+## 🗂 Các trang
 
-## 🧭 Lộ trình tiếp theo (Phase 5–9)
+| Đường dẫn | Nội dung |
+|---|---|
+| `/` | Trang chủ + thống kê |
+| `/tree` | Cây gia phả tương tác |
+| `/members` | Danh sách + tìm kiếm/lọc thành viên |
+| `/member/[id]` | Hồ sơ từng người + QR |
+| `/branches` | Các chi họ |
+| `/history` | Lịch sử (lấy từ tiểu sử thủy tổ) |
+| `/memorial` | Lịch giỗ (từ người đã mất) |
+| `/quan-ly` | **Thêm/sửa/xóa** thành viên & chi họ, Xuất/Nhập |
 
-Upload ảnh/tài liệu qua Supabase Storage · hệ thống duyệt thay đổi (change requests) ·
-thông báo · thống kê biểu đồ · Export Excel/CSV/PDF/PNG & Import · bản đồ quê quán/mộ
-phần · tích hợp AI hỏi–đáp gia phả.
-
----
-
-## 🗂 Cấu trúc
-
-```
-app/                 # Các trang (App Router)
-  page.tsx           # Trang chủ
-  tree/              # Cây gia phả
-  members/           # Danh sách thành viên
-  member/[id]/       # Hồ sơ thành viên
-  branches/ history/ events/ memorial/ library/ login/
-components/           # Navbar, Footer, MemberCard, StatCard, ...
-  tree/              # FamilyTree (React Flow) + MemberNode
-  ui/                # button, card, badge, input (kiểu shadcn)
-lib/                 # data.ts (data layer), demo-data, tree-layout, supabase clients, utils
-types/               # Kiểu TypeScript dùng chung
-supabase/
-  migrations/0001_init.sql   # Schema + RLS
-  seed.sql                   # Dữ liệu demo
-```
-
-## 🚀 Chạy local
+## 🛠 Chạy trên máy tính
 
 ```bash
 npm install
-cp .env.example .env.local   # (tùy chọn) điền khóa Supabase
-npm run dev                  # http://localhost:3000
+npm run dev     # http://localhost:3000
 ```
 
-Không có `.env.local` vẫn chạy được ở chế độ demo.
+## ☁️ Deploy lên Vercel
 
----
+1. Vào [vercel.com](https://vercel.com) → **Add New → Project → Import** repo `Vdear`.
+2. **Production Branch = `main`**.
+3. Bấm **Deploy**. Xong — **không cần biến môi trường gì cả**.
 
-## ☁️ Deploy lên Vercel (làm trước, chưa cần Supabase)
+## 🧩 Cấu trúc
 
-1. Push code lên GitHub (đã xong ở nhánh này).
-2. Vào [vercel.com](https://vercel.com) → **Add New… → Project** → chọn repo `Vdear`.
-3. Framework tự nhận **Next.js**. Bấm **Deploy**.
-4. Sau ~1 phút bạn có URL `https://<tên>.vercel.app` chạy **chế độ demo**.
+```
+app/          # Các trang (đều là client component, đọc từ store)
+components/   # Navbar, Footer, MemberCard, tree/ (React Flow), ui/, manage/
+lib/
+  store.ts       # Zustand + localStorage (thêm/sửa/xóa, chống vòng lặp)
+  genealogy.ts   # Hàm quan hệ thuần (cha/mẹ/con/anh em/vòng lặp)
+  tree-layout.ts # Bố cục cây theo cặp vợ chồng
+types/        # Kiểu TypeScript dùng chung
+```
 
-> Muốn dùng dữ liệu thật: làm tiếp phần Supabase bên dưới rồi thêm 2 biến môi
-> trường trong Vercel (**Settings → Environment Variables**) và **Redeploy**.
-
-## 🗄️ Cấu hình Supabase (dữ liệu thật)
-
-1. Tạo project tại [supabase.com](https://supabase.com).
-2. **SQL Editor** → dán nội dung `supabase/migrations/0001_init.sql` → **Run**.
-3. (Tùy chọn) dán `supabase/seed.sql` → **Run** nếu muốn dữ liệu MẪU để thử. Bỏ
-   qua bước này nếu muốn tự nhập dữ liệu thật của dòng họ.
-4. **Storage** → tạo bucket `photos` (và `documents`) cho ảnh/tài liệu.
-5. **Authentication → Providers**: bật **Email** và **Google** (điền OAuth client).
-6. **Project Settings → API**: copy `Project URL` và `anon public key`.
-7. Đặt biến môi trường (local `.env.local` và trên Vercel):
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=...
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-   ```
-8. Đặt tài khoản của bạn làm admin (sau khi đăng nhập lần đầu):
-   ```sql
-   update profiles set role = 'admin' where id = '<user-uuid>';
-   ```
-9. **Redeploy** trên Vercel.
-
-## 🌐 Cloudflare (domain / CDN)
-
-1. Thêm domain vào Cloudflare, trỏ nameserver theo hướng dẫn.
-2. Trong Vercel **Settings → Domains** thêm domain của bạn.
-3. Tại Cloudflare tạo bản ghi **CNAME** trỏ về `cname.vercel-dns.com`
-   (proxy có thể để **DNS only** để tránh xung đột SSL, hoặc theo hướng dẫn Vercel).
-
----
-
-## 🔒 Bảo mật
-
-- **Row Level Security** bật cho mọi bảng; chỉ admin ghi dữ liệu lõi.
-- Thông tin người còn sống có 3 mức: `public` / `family` / `private`.
-- Chỉ dùng `anon key` ở frontend; **không** đưa `service_role` ra client.
-- `audit_logs` ghi nhật ký; `change_requests` cho quy trình duyệt thay đổi.
-
-## 🛠 Ghi chú kỹ thuật
-
-- `next.config.mjs` tạm bật `ignoreBuildErrors`/`ignoreDuringBuilds` để **deploy lần
-  đầu chắc chắn thành công**. Sau khi ổn định nên đặt lại `false` để bật kiểm tra
-  nghiêm ngặt.
-- Quan hệ gia phả có **chống vòng lặp** (không cho A là cha của B rồi B là cha của A)
-  ở tầng nhập liệu (sẽ hoàn thiện trong Phase 4 khi làm CRUD admin).
-
-<!-- build: trigger redeploy 2026-08-21T17:15Z -->
+> Muốn nâng cấp thành nền tảng nhiều người dùng chung (đăng nhập, lưu đám mây),
+> có thể gắn lại Supabase sau — nhưng bản hiện tại cố tình giữ đơn giản, chạy ngay.

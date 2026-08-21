@@ -32,10 +32,10 @@ export function Footer() {
           </ul>
         </div>
         <div>
-          <h4 className="mb-3 font-semibold">Tài khoản</h4>
+          <h4 className="mb-3 font-semibold">Công cụ</h4>
           <ul className="space-y-2 text-sm text-clan-brown/70 dark:text-clan-cream/60">
-            <li><Link href="/login" className="hover:text-clan-red">Đăng nhập</Link></li>
-            <li><Link href="/admin" className="hover:text-clan-red">Trang quản trị</Link></li>
+            <li><Link href="/quan-ly" className="hover:text-clan-red">Quản lý gia phả</Link></li>
+            <li><Link href="/tree" className="hover:text-clan-red">Cây gia phả</Link></li>
           </ul>
         </div>
       </div>
