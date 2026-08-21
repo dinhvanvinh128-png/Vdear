@@ -105,7 +105,8 @@
     const conf = `<div class="sc-conf">
       <span class="cf ${s.rsiNote ? 'on' : ''}" title="RSI đảo chiều">RSI</span>
       <span class="cf ${s.srNear ? 'on' : ''}" title="Gần vùng S&amp;R">S&amp;R</span>
-      <span class="cf ${s.paMatch ? 'on' : ''}" title="Xác nhận Price Action">PA</span></div>`;
+      <span class="cf ${s.paMatch ? 'on' : ''}" title="Xác nhận Price Action">PA</span>
+      <span class="cf ${s.breakout ? 'on' : ''}" title="Xác nhận breakout">BO</span></div>`;
     return `<a class="scan-card ${isLong ? 'long' : 'short'} ${s.valid ? 'valid' : ''}" href="${coinLink(c.base)}">
       <div class="sc-top">
         <img class="sc-logo" alt="" data-logo="${c.base}">

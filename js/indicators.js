@@ -200,6 +200,23 @@
     return null;
   }
 
+  // Xác nhận BREAKOUT: nến i đóng cửa vượt hẳn cực trị `lookback` nến ngay trước,
+  // theo hướng lệnh (LONG: đóng > đỉnh gần & nến xanh; SHORT: đóng < đáy gần & nến đỏ).
+  function breakoutConfirm(candles, i, dir, lookback) {
+    const B = CFG.strategy.breakout || {};
+    lookback = lookback || B.lookback || 3;
+    if (i < lookback) return false;
+    const c = candles[i];
+    if (dir === 'bullish' || dir === 'LONG') {
+      let hh = -Infinity;
+      for (let k = i - lookback; k < i; k++) if (candles[k].high > hh) hh = candles[k].high;
+      return c.close > hh && c.close > c.open;
+    }
+    let ll = Infinity;
+    for (let k = i - lookback; k < i; k++) if (candles[k].low < ll) ll = candles[k].low;
+    return c.close < ll && c.close < c.open;
+  }
+
   // Bắt đảo chiều RSI trong "lookback" nến gần nhất (giống rsi_reversal_direction).
   function rsiReversal(rsiSeries, idx, lookback) {
     const R = CFG.rsi;
@@ -261,19 +278,21 @@
     const pa = priceAction(candles, last);
     const base = signalScore(candles); // điểm nền + winRate
 
-    // Hội tụ: RSI đảo chiều + PA cùng hướng + gần vùng S&R
+    // Hội tụ: RSI đảo chiều + PA cùng hướng + gần vùng S&R + xác nhận BREAKOUT
     let dir = rev ? rev.dir : (base.side === 'LONG' ? 'bullish' : base.side === 'SHORT' ? 'bearish' : null);
     const paMatch = pa && dir && pa === dir;
-    const confluence = (rev ? 1 : 0) + (srNear ? 1 : 0) + (paMatch ? 1 : 0);
-    const valid = !!rev && confluence >= 2; // "thực chiến": cần RSI đảo chiều + ≥1 xác nhận khác
+    const boOn = (CFG.strategy.breakout || {}).enabled;
+    const bo = dir ? breakoutConfirm(candles, last, dir) : false;
+    const confluence = (rev ? 1 : 0) + (srNear ? 1 : 0) + (paMatch ? 1 : 0) + (bo ? 1 : 0);
+    // "thực chiến": RSI đảo chiều + ≥1 xác nhận khác; nếu bật breakout thì BẮT BUỘC có breakout.
+    const valid = !!rev && confluence >= 2 && (!boOn || bo);
 
     const side = dir === 'bullish' ? 'LONG' : dir === 'bearish' ? 'SHORT' : 'NEUTRAL';
-    // win-rate điều chỉnh theo số xác nhận
     const winRate = Math.min(95, Math.round(base.winRate + confluence * 4 + (valid ? 6 : 0)));
     const plan = side !== 'NEUTRAL' ? tradePlan(price, side) : null;
 
     return {
-      side, valid, confluence, srNear, paMatch: !!paMatch,
+      side, valid, confluence, srNear, paMatch: !!paMatch, breakout: !!bo,
       rsi: base.rsi, rsiNote: rev ? rev.note : base.zone.label,
       zone: base.zone, score: base.score, winRate, price, plan,
     };
@@ -330,6 +349,7 @@
       if (!rev) continue;
       if (!nearLevel(closes[i], levels)) continue;
       if (priceAction(candles, i) !== rev.dir) continue;
+      if ((CFG.strategy.breakout || {}).enabled && !breakoutConfirm(candles, i, rev.dir)) continue;
       const r = simulateDCA(candles, i, rev.dir, leverage);
       if (r) { trades++; if (r.win) wins++; nextIdx = r.resolveIdx + 1; }
     }
@@ -363,7 +383,7 @@
   window.VdearTA = {
     rsiSeries, lastRSI, rsiZone, emaSeries, supportResistance,
     averageTrueRange, signalScore, pivots,
-    priceAction, rsiReversal, swingLevels, nearLevel, tradePlan, combatSignal,
+    priceAction, rsiReversal, breakoutConfirm, swingLevels, nearLevel, tradePlan, combatSignal,
     fundingCost, simulateDCA, miniBacktest, bestLeverage,
   };
 })();

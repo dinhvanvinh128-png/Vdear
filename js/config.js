@@ -105,6 +105,9 @@ window.VDEAR_CONFIG = {
     rsiLookback: 5,                  // số nến nhìn lại để bắt đảo chiều RSI
     minSRMatch: 2,                   // tối thiểu số khung khớp S&R
     minPAMatch: 1,                   // tối thiểu số khung xác nhận PA
+    // Xác nhận BREAKOUT: chỉ vào lệnh khi nến đóng cửa vượt hẳn vùng vài nến gần
+    // nhất theo hướng lệnh (LONG phá lên / SHORT phá xuống) -> lọc tín hiệu giả.
+    breakout: { enabled: true, lookback: 3 },
   },
 
   // Quản lý vốn (giống hệt backtest): TP +100% margin, DCA khi -50%, sau DCA SL/TP mới.

@@ -11,6 +11,9 @@ TÓM TẮT PHƯƠNG PHÁP (1 khung thời gian, mặc định 4H, hàng futures)
         (mức swing = đỉnh/đáy pivot, cửa sổ 5 nến hai bên)
     (3) NẾN PRICE ACTION cùng chiều: nến nhấn chìm (engulfing) HOẶC pin bar
         (bóng nến > 2x thân và > 50% biên độ)
+    (4) XÁC NHẬN BREAKOUT (mới): nến đóng cửa vượt hẳn cực trị 3 nến trước theo
+        hướng lệnh (LONG: đóng > đỉnh 3 nến & nến xanh; SHORT: đóng < đáy & nến đỏ).
+        -> tránh "bắt dao rơi", giảm tỉ lệ thua. Tắt bằng USE_BREAKOUT = False.
 
   QUẢN LÝ VỐN (DCA) — giống hệt web:
     - TP gốc: +100% margin  -> giá đi 1/L
@@ -59,6 +62,11 @@ RSI_LOOKBACK = 5
 SWING_WINDOW = 5
 SR_TOLERANCE = 0.006          # 0.6%
 SR_NO_LOOKAHEAD = True        # True = sạch; False = khớp đúng số web
+
+# --- XÁC NHẬN BREAKOUT (mới): chỉ vào lệnh khi nến đóng cửa vượt hẳn cực trị
+#     `BREAKOUT_LOOKBACK` nến trước theo hướng lệnh -> lọc tín hiệu giả, giảm thua.
+USE_BREAKOUT = True
+BREAKOUT_LOOKBACK = 3
 
 # --- QUẢN LÝ VỐN (khớp CFG.money) ---
 TP_MARGIN_PCT = 100
@@ -247,6 +255,15 @@ def backtest_symbol(df, leverage):
         pa = price_action(o[i], h[i], l[i], c[i], o[i - 1], c[i - 1])
         if pa != rev:
             continue
+        if USE_BREAKOUT:
+            hh = h[i - BREAKOUT_LOOKBACK:i].max()
+            ll = l[i - BREAKOUT_LOOKBACK:i].min()
+            if rev == "bullish":
+                if not (c[i] > hh and c[i] > o[i]):   # đóng cửa phá lên đỉnh gần + nến xanh
+                    continue
+            else:
+                if not (c[i] < ll and c[i] < o[i]):   # đóng cửa phá xuống đáy gần + nến đỏ
+                    continue
         res, ridx = simulate_dca(df, i, rev, leverage)
         if res:
             res["dir"] = "LONG" if rev == "bullish" else "SHORT"

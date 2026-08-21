@@ -121,6 +121,7 @@
         <span class="cf-item ${sig.rsiNote ? 'on' : ''}">RSI đảo chiều: <b>${sig.rsiNote || '—'}</b></span>
         <span class="cf-item ${okSR ? 'on' : ''}">Hợp tụ S&amp;R: <b>${srTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
         <span class="cf-item ${okPA ? 'on' : ''}">Price Action: <b>${paTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
+        <span class="cf-item ${sig.breakout ? 'on' : ''}">Breakout: <b>${sig.breakout ? 'đã xác nhận ✓' : 'chưa'}</b></span>
       </div>
       <div class="lev-box">
         <div class="lev-head"><span>Đòn bẩy: <b id="levVal">x${combatLev}</b></span>
