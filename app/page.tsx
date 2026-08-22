@@ -15,6 +15,7 @@ import { useStore, useHydrated } from "@/lib/store";
 import { computeStats } from "@/lib/genealogy";
 import { StatCard } from "@/components/stat-card";
 import { MemberCard } from "@/components/member-card";
+import { InstallButton } from "@/components/install-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -66,6 +67,7 @@ export default function HomePage() {
                   Quản lý gia phả
                 </Button>
               </Link>
+              <InstallButton className="h-12 px-6 text-base" />
             </div>
           </div>
         </div>

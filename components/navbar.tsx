@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Menu, X, TreePine, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { InstallButton } from "@/components/install-button";
 
 const nav = [
   { href: "/", label: "Trang chủ" },
@@ -63,6 +64,7 @@ export function Navbar() {
             <Sun className="hidden h-5 w-5 dark:block" />
             <Moon className="h-5 w-5 dark:hidden" />
           </button>
+          <InstallButton className="hidden sm:inline-flex" />
           <Link href="/quan-ly" className="hidden sm:block">
             <Button size="sm">Quản lý</Button>
           </Link>
@@ -97,6 +99,7 @@ export function Navbar() {
             <Link href="/quan-ly" onClick={() => setOpen(false)} className="mt-2">
               <Button className="w-full">Quản lý</Button>
             </Link>
+            <InstallButton className="mt-2 w-full" />
           </div>
         </nav>
       )}
