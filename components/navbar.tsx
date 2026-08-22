@@ -27,14 +27,14 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-clan-brown/15 bg-clan-cream/95 backdrop-blur dark:bg-clan-ink/95 dark:border-white/10">
+    <header className="sticky top-0 z-40 border-b border-clan-gold/30 bg-clan-cream/95 backdrop-blur dark:bg-clan-ink/95">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 text-clan-red dark:text-clan-gold">
-          <TreePine className="h-7 w-7" />
+        <Link href="/" className="flex items-center gap-2.5">
+          <span className="seal flex h-9 w-9 text-base font-semibold">Lê</span>
           <div className="leading-tight">
-            <div className="font-serif text-lg font-bold">Gia Phả</div>
-            <div className="text-[11px] text-clan-brown/70 dark:text-clan-cream/60">
-              Dòng họ Lê
+            <div className="font-serif text-lg font-semibold text-clan-red dark:text-clan-gold">Gia Phả Họ Lê</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-clan-brown/60 dark:text-clan-cream/50">
+              Uống nước nhớ nguồn
             </div>
           </div>
         </Link>

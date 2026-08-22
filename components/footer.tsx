@@ -3,12 +3,12 @@ import { TreePine } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="mt-16 border-t border-clan-brown/15 bg-clan-brown/5 dark:border-white/10 dark:bg-black/20">
+    <footer className="mt-16 border-t border-clan-gold/30 bg-clan-brown/5 dark:bg-black/25">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <div className="flex items-center gap-2 text-clan-red dark:text-clan-gold">
-            <TreePine className="h-6 w-6" />
-            <span className="font-serif text-lg font-bold">Gia Phả</span>
+          <div className="flex items-center gap-2.5">
+            <span className="seal flex h-8 w-8 text-sm font-semibold">Lê</span>
+            <span className="font-serif text-lg font-semibold text-clan-red dark:text-clan-gold">Gia Phả Họ Lê</span>
           </div>
           <p className="mt-3 text-sm text-clan-brown/70 dark:text-clan-cream/60">
             Lưu giữ cội nguồn — Kết nối các thế hệ dòng họ Lê.

@@ -4,7 +4,7 @@
 
 :root {
   --font-sans: "Be Vietnam Pro", system-ui, sans-serif;
-  --font-serif: "Playfair Display", Georgia, serif;
+  --font-serif: "Lora", Georgia, serif;
 }
 
 html {
@@ -12,20 +12,76 @@ html {
 }
 
 body {
-  @apply bg-clan-cream text-clan-ink antialiased dark:bg-[#1a1512] dark:text-clan-cream;
+  @apply bg-clan-cream text-clan-ink antialiased dark:bg-[#17110E] dark:text-clan-cream;
 }
 
-/* Hoa văn nền nhẹ cho cảm giác truyền thống */
+/* Giấy dó — thớ giấy nhẹ cho nền */
 .paper-texture {
-  background-image: radial-gradient(circle at 1px 1px, rgba(92, 68, 51, 0.06) 1px, transparent 0);
-  background-size: 22px 22px;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(74, 59, 46, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
+/* Sơn mài — nền đỏ có chiều sâu cho khối trang trọng */
+.lacquer {
+  background:
+    radial-gradient(120% 120% at 50% -10%, #8f2323 0%, #7e1c1c 45%, #571313 100%);
+}
+
+/* Tiêu đề mục kiểu chữ khắc */
 .section-title {
-  @apply font-serif text-2xl font-bold text-clan-ink dark:text-clan-cream sm:text-3xl;
+  @apply font-serif text-2xl font-semibold tracking-tight text-clan-ink dark:text-clan-cream sm:text-3xl;
 }
 
-/* React Flow: nền trong suốt để ăn theo theme */
+/* Nhãn nhỏ (eyebrow) chữ thưa */
+.eyebrow {
+  @apply text-[11px] font-semibold uppercase tracking-[0.22em];
+}
+
+/* Đường chỉ vàng có hạt kim cương ở giữa — như hoành phi */
+.rule-gold {
+  position: relative;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c6a15b 18%, #c6a15b 82%, transparent);
+}
+.rule-gold::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  background: #c6a15b;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Khung viền đôi kiểu bảng hoành phi */
+.frame-gold {
+  border: 1px solid rgba(198, 161, 91, 0.55);
+  box-shadow: inset 0 0 0 4px rgba(198, 161, 91, 0.14);
+}
+
+/* Con triện (seal) */
+.seal {
+  font-family: var(--font-serif);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #a83232;
+  color: #fbe9c9;
+  border: 2px solid #e4c879;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Câu đối dọc */
+.cau-doi {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 0.35em;
+}
+
+/* React Flow */
 .react-flow__attribution {
   display: none;
 }

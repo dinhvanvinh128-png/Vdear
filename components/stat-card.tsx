@@ -1,31 +1,22 @@
 import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
 export function StatCard({
   icon: Icon,
   label,
-  value,
-  accent
+  value
 }: {
   icon: LucideIcon;
   label: string;
   value: string | number;
-  accent?: string;
 }) {
   return (
-    <Card className="flex items-center gap-4 p-5">
-      <div
-        className={cn(
-          "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-clan-red/10 text-clan-red dark:bg-clan-gold/15 dark:text-clan-gold",
-          accent
-        )}
-      >
-        <Icon className="h-6 w-6" />
-      </div>
-      <div>
-        <div className="font-serif text-2xl font-bold leading-none">{value}</div>
-        <div className="mt-1 text-sm text-clan-brown/70 dark:text-clan-cream/60">{label}</div>
+    <Card className="relative overflow-hidden p-5 text-center">
+      <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-clan-gold to-transparent" />
+      <Icon className="mx-auto mb-2 h-5 w-5 text-clan-gold" />
+      <div className="font-serif text-3xl font-semibold leading-none">{value}</div>
+      <div className="mt-1.5 text-xs uppercase tracking-wider text-clan-brown/70 dark:text-clan-cream/55">
+        {label}
       </div>
     </Card>
   );

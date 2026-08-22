@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
+import { Be_Vietnam_Pro, Lora } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -10,9 +10,9 @@ const sans = Be_Vietnam_Pro({
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans"
 });
-const serif = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+const serif = Lora({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-serif"
 });
 

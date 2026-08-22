@@ -32,26 +32,41 @@ export default function HomePage() {
 
   return (
     <div className="paper-texture">
-      <section className="relative overflow-hidden bg-gradient-to-b from-clan-red to-clan-red-dark text-white">
-        <div className="mx-auto max-w-5xl px-4 py-20 text-center sm:py-28">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border-2 border-clan-gold bg-white/10">
-            <TreePine className="h-10 w-10 text-clan-gold" />
-          </div>
-          <p className="font-serif text-clan-gold-light">Uống nước nhớ nguồn</p>
-          <h1 className="mt-2 font-serif text-4xl font-bold sm:text-6xl">Gia Phả Dòng Họ Lê</h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-white/85">
-            Nơi lưu giữ cội nguồn, kết nối các thế hệ và trực quan hóa toàn bộ
-            cây phả hệ của dòng họ qua nhiều đời, nhiều chi.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/tree">
-              <Button size="lg" variant="gold">Xem cây gia phả <ArrowRight className="h-5 w-5" /></Button>
-            </Link>
-            <Link href="/quan-ly">
-              <Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10">
-                Quản lý gia phả
-              </Button>
-            </Link>
+      <section className="lacquer relative overflow-hidden text-clan-cream">
+        {/* Câu đối dọc hai bên (chỉ hiện màn hình lớn) */}
+        <span className="cau-doi absolute left-6 top-1/2 hidden -translate-y-1/2 font-serif text-sm text-clan-gold/80 xl:block">
+          Cây có cội · nước có nguồn
+        </span>
+        <span className="cau-doi absolute right-6 top-1/2 hidden -translate-y-1/2 font-serif text-sm text-clan-gold/80 xl:block">
+          Con một nhà · muôn đời ghi
+        </span>
+
+        <div className="mx-auto max-w-3xl px-4 py-20 sm:py-28">
+          <div className="frame-gold relative rounded-lg bg-black/10 px-6 py-12 text-center sm:px-12">
+            {/* Con triện */}
+            <span className="seal absolute -right-3 -top-3 h-14 w-14 animate-seal-in text-lg font-semibold sm:-right-4 sm:-top-4 sm:h-16 sm:w-16 sm:text-xl">
+              Lê
+            </span>
+
+            <p className="eyebrow text-clan-gold-light">Gia phả · dòng họ</p>
+            <h1 className="mt-3 font-serif text-5xl font-semibold leading-none text-clan-gold-light sm:text-7xl">
+              Họ Lê
+            </h1>
+            <div className="rule-gold mx-auto my-6 w-40" />
+            <p className="mx-auto max-w-xl font-serif text-lg italic text-clan-cream/85">
+              Uống nước nhớ nguồn — lưu giữ cội rễ, nối liền các thế hệ qua từng đời,
+              từng chi của dòng họ.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link href="/tree">
+                <Button size="lg" variant="gold">Xem cây gia phả <ArrowRight className="h-5 w-5" /></Button>
+              </Link>
+              <Link href="/quan-ly">
+                <Button size="lg" variant="outline" className="border-clan-gold/50 text-clan-cream hover:bg-white/10">
+                  Quản lý gia phả
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

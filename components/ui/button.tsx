@@ -7,7 +7,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-clan-red text-white hover:bg-clan-red-dark",
+        default: "bg-clan-red text-clan-cream ring-1 ring-inset ring-clan-gold/40 hover:bg-clan-red-dark",
         gold: "bg-clan-gold text-clan-ink hover:bg-clan-gold-light",
         outline:
           "border border-clan-brown/30 bg-transparent hover:bg-clan-cream text-clan-ink dark:text-clan-cream dark:hover:bg-white/10",
