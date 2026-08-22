@@ -4,43 +4,25 @@ import { useEffect, useRef } from "react";
 import { getSupabase } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { useStore } from "@/lib/store";
+import { clerkEnabled } from "@/lib/config";
 
 /**
- * Đồng bộ đám mây (local-first) + theo dõi đăng nhập Supabase:
- * - Cập nhật trạng thái đăng nhập vào useAuth.
- * - Ai cũng KÉO dữ liệu dùng chung; đã đăng nhập thì ĐẨY thay đổi lên.
- * Nếu chưa cấu hình Supabase → chạy cục bộ.
+ * Đồng bộ đám mây (local-first):
+ * - Ai cũng KÉO dữ liệu dùng chung từ Supabase (bảng clan_data 'main').
+ * - Khi đã đăng nhập (Clerk), mọi thay đổi được ĐẨY lên đám mây.
+ * Nếu chưa cấu hình Supabase → chỉ chạy cục bộ.
  */
 export function CloudSync() {
   const applying = useRef<string>("");
   const userId = useAuth((s) => s.userId);
   const ready = useAuth((s) => s.ready);
 
-  // Khởi tạo phiên + lắng nghe đăng nhập/đăng xuất
+  // Nếu Clerk không bật thì không có ClerkBridge để set ready → tự set tại đây
   useEffect(() => {
-    const sb = getSupabase();
-    if (!sb) {
-      useAuth.getState().setReady(true);
-      return;
-    }
-    let mounted = true;
-    sb.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      const u = data.session?.user;
-      useAuth.getState().setAuth(u ? { id: u.id, email: u.email ?? null } : null);
-      useAuth.getState().setReady(true);
-    });
-    const { data: sub } = sb.auth.onAuthStateChange((_e, session) => {
-      const u = session?.user;
-      useAuth.getState().setAuth(u ? { id: u.id, email: u.email ?? null } : null);
-    });
-    return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
-    };
+    if (!clerkEnabled) useAuth.getState().setReady(true);
   }, []);
 
-  // Kéo dữ liệu dùng chung
+  // Kéo dữ liệu dùng chung (khi sẵn sàng và mỗi lần đăng nhập/đăng xuất)
   useEffect(() => {
     const sb = getSupabase();
     if (!sb || !ready) return;
@@ -67,7 +49,7 @@ export function CloudSync() {
     };
   }, [ready, userId]);
 
-  // Đẩy thay đổi (khi đã đăng nhập)
+  // Đẩy thay đổi lên đám mây (chỉ khi đã đăng nhập)
   useEffect(() => {
     const sb = getSupabase();
     if (!sb) return;

@@ -9,7 +9,7 @@ export function supabaseConfigured(): boolean {
   return cloudEnabled;
 }
 
-/** Supabase client (auth + dữ liệu). null nếu chưa cấu hình. */
+/** Supabase client dùng để LƯU DỮ LIỆU (không dùng cho auth). null nếu chưa cấu hình. */
 export function getSupabase(): SupabaseClient | null {
   if (cached !== undefined) return cached;
   if (!cloudEnabled) {
@@ -17,7 +17,7 @@ export function getSupabase(): SupabaseClient | null {
     return null;
   }
   cached = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    auth: { persistSession: false }
   });
   return cached;
 }

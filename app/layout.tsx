@@ -6,6 +6,9 @@ import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/toast";
 import { PWARegister } from "@/components/pwa-register";
 import { CloudSync } from "@/components/cloud-sync";
+import { Providers } from "@/components/providers";
+import { ClerkBridge } from "@/components/clerk-bridge";
+import { clerkEnabled } from "@/lib/config";
 
 const sans = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -61,12 +64,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" className={`${sans.variable} ${serif.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <Toaster />
-        <PWARegister />
-        <CloudSync />
+        <Providers>
+          {clerkEnabled && <ClerkBridge />}
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <Toaster />
+          <PWARegister />
+          <CloudSync />
+        </Providers>
       </body>
     </html>
   );
