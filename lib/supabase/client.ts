@@ -1,26 +1,23 @@
 "use client";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, cloudEnabled } from "@/lib/config";
 
 let cached: SupabaseClient | null | undefined;
 
 export function supabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return cloudEnabled;
 }
 
-/** Supabase client phía trình duyệt. null nếu chưa cấu hình biến môi trường. */
+/** Supabase client dùng để LƯU DỮ LIỆU (không dùng cho auth). null nếu chưa cấu hình. */
 export function getSupabase(): SupabaseClient | null {
   if (cached !== undefined) return cached;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) {
+  if (!cloudEnabled) {
     cached = null;
     return null;
   }
-  cached = createClient(url, key, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  cached = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false }
   });
   return cached;
 }

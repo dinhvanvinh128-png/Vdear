@@ -13,12 +13,12 @@ import { Input } from "@/components/ui/input";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { lifeSpan } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-store";
-import { supabaseConfigured } from "@/lib/supabase/client";
+import { clerkEnabled } from "@/lib/config";
+import { SignInButton } from "@clerk/clerk-react";
 import type { Member } from "@/types";
 
 export default function ManagePage() {
   const hydrated = useHydrated();
-  const configured = supabaseConfigured();
   const userId = useAuth((s) => s.userId);
   const authReady = useAuth((s) => s.ready);
   const members = useStore((s) => s.members);
@@ -34,12 +34,12 @@ export default function ManagePage() {
   const [showEditor, setShowEditor] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  if (!hydrated || (configured && !authReady)) {
+  if (!hydrated || (clerkEnabled && !authReady)) {
     return <div className="p-10 text-center text-clan-brown/60">Đang tải…</div>;
   }
 
-  // Khi đã bật đám mây: bắt buộc đăng nhập mới được sửa (ai cũng xem được ở các trang khác)
-  if (configured && !userId) {
+  // Khi đã bật đăng nhập: bắt buộc đăng nhập mới được sửa (ai cũng vẫn xem được)
+  if (clerkEnabled && !userId) {
     return (
       <div className="mx-auto max-w-md px-4 py-20">
         <Card>
@@ -50,7 +50,9 @@ export default function ManagePage() {
               Gia phả được lưu chung trên đám mây. Hãy đăng nhập để thêm/sửa thành viên;
               mọi người khác vẫn xem được bình thường.
             </p>
-            <Link href="/login"><Button>Đăng nhập</Button></Link>
+            <SignInButton mode="modal">
+              <Button>Đăng nhập</Button>
+            </SignInButton>
           </CardContent>
         </Card>
       </div>

@@ -41,22 +41,29 @@ Hệ thống tự **chống quan hệ vòng lặp** (không cho A là cha B rồ
 | `/memorial` | Lịch giỗ (từ người đã mất) |
 | `/quan-ly` | **Thêm/sửa/xóa** thành viên & chi họ, Xuất/Nhập |
 
-## 🔐 Đăng nhập & lưu đám mây (tùy chọn)
+## 🔐 Đăng nhập (Clerk) & lưu đám mây (Supabase)
 
 Mặc định web chạy **cục bộ** (lưu trong máy), không cần đăng nhập. Muốn **nhiều
-người cùng sửa và thấy dữ liệu chung** thì bật Supabase:
+người cùng sửa, dữ liệu dùng chung** thì bật **đăng nhập bằng Clerk** + lưu **Supabase**.
+Cả hai khóa đều là **khóa công khai**, nhúng thẳng vào `lib/config.ts` — **không cần
+biến môi trường Vercel**.
 
-1. Supabase → **SQL Editor** → chạy `supabase/migrations/0002_clan_data.sql`.
-2. Thêm 2 biến vào Vercel rồi **Redeploy**:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. Supabase → **Authentication → URL Configuration**: Site URL + Redirect URL =
-   `https://<domain>/quan-ly` (cần cho đăng nhập Google).
-4. Xong: nút **Đăng nhập** xuất hiện. Ai cũng **xem** được gia phả; **đăng nhập**
-   mới **sửa** được. Dữ liệu lưu chung (bảng `clan_data`, 1 tài liệu JSON), tự
-   đồng bộ giữa các máy.
+1. **Clerk:** tạo tài khoản tại [clerk.com](https://clerk.com) → tạo Application →
+   **API Keys** → copy **Publishable key** (`pk_...`).
+2. **Supabase:** tạo project → **SQL Editor** → chạy `supabase/migrations/0003_clan_clerk.sql`
+   → **Project Settings → API** lấy **Project URL** và **anon/publishable key**.
+3. Mở `lib/config.ts`, điền 3 giá trị vào giữa hai dấu ngoặc kép:
+   - `CLERK_PUBLISHABLE_KEY` = `pk_...`
+   - `SUPABASE_URL` = `https://xxxx.supabase.co`
+   - `SUPABASE_ANON_KEY` = `sb_publishable_...` (hoặc anon key)
+4. Commit & push → Vercel tự deploy. Xong.
 
-> Cơ chế đơn giản “ai lưu sau thắng”. Hợp cho nhóm nhỏ vài người biên tập.
+Kết quả: nút **Đăng nhập** (Clerk) xuất hiện; ai cũng **xem** được; **đăng nhập mới
+sửa**; dữ liệu lưu chung (bảng `clan_data`, 1 tài liệu JSON) tự đồng bộ giữa các máy.
+
+> Ghi chú bảo mật: việc chặn sửa nằm ở **giao diện** (Clerk). Ở tầng database, khóa
+> anon được phép ghi — phù hợp cho gia phả nội bộ dòng họ, không phải dữ liệu nhạy cảm.
+> Cơ chế đồng bộ “ai lưu sau thắng”, hợp cho nhóm nhỏ biên tập.
 
 ## 📱 Cài như App (PWA)
 
