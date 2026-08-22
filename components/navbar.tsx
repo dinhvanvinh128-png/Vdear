@@ -7,8 +7,8 @@ import { Menu, X, TreePine, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { InstallButton } from "@/components/install-button";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
-import { clerkEnabled } from "@/lib/config";
+import { useAuth } from "@/lib/auth-store";
+import { supabaseConfigured, getSupabase } from "@/lib/supabase/client";
 
 const nav = [
   { href: "/", label: "Trang chủ" },
@@ -24,9 +24,16 @@ const nav = [
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const userId = useAuth((s) => s.userId);
+  const configured = supabaseConfigured();
 
   function toggleDark() {
     document.documentElement.classList.toggle("dark");
+  }
+
+  async function signOut() {
+    await getSupabase()?.auth.signOut();
+    window.location.href = "/";
   }
 
   return (
@@ -67,18 +74,16 @@ export function Navbar() {
             <Moon className="h-5 w-5 dark:hidden" />
           </button>
           <InstallButton className="hidden sm:inline-flex" />
-          {clerkEnabled && (
-            <div className="hidden items-center sm:flex">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button size="sm" variant="outline">Đăng nhập</Button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-            </div>
-          )}
+          {configured &&
+            (userId ? (
+              <Button size="sm" variant="outline" className="hidden sm:inline-flex" onClick={signOut}>
+                Đăng xuất
+              </Button>
+            ) : (
+              <Link href="/login" className="hidden sm:block">
+                <Button size="sm" variant="outline">Đăng nhập</Button>
+              </Link>
+            ))}
           <Link href="/quan-ly" className="hidden sm:block">
             <Button size="sm">Quản lý</Button>
           </Link>
@@ -113,20 +118,14 @@ export function Navbar() {
             <Link href="/quan-ly" onClick={() => setOpen(false)} className="mt-2">
               <Button className="w-full">Quản lý</Button>
             </Link>
-            {clerkEnabled && (
-              <div className="mt-2">
-                <SignedOut>
-                  <SignInButton mode="modal">
-                    <Button variant="outline" className="w-full">Đăng nhập</Button>
-                  </SignInButton>
-                </SignedOut>
-                <SignedIn>
-                  <div className="flex items-center gap-2 px-1">
-                    <UserButton /> <span className="text-sm text-clan-brown/70">Tài khoản</span>
-                  </div>
-                </SignedIn>
-              </div>
-            )}
+            {configured &&
+              (userId ? (
+                <Button variant="outline" className="mt-2 w-full" onClick={signOut}>Đăng xuất</Button>
+              ) : (
+                <Link href="/login" onClick={() => setOpen(false)} className="mt-2">
+                  <Button variant="outline" className="w-full">Đăng nhập</Button>
+                </Link>
+              ))}
             <InstallButton className="mt-2 w-full" />
           </div>
         </nav>
