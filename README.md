@@ -70,8 +70,17 @@ Add env vars to unlock accounts (Supabase) and richer liquidation data
 
 Set `COINGLASS_API_KEY` (server-only). Liquidation map/heatmap then use live
 CoinGlass data; otherwise they fall back to exchange-derived estimates. We do
-**not** scrape CoinGlass or copy its UI — integration is via its API only
-(`lib/coinglass`).
+**not** scrape CoinGlass or copy its UI — integration is via its official v4 API
+only (`lib/coinglass`):
+
+- `GET /api/futures/liquidation/map` → Liquidation Map
+- `GET /api/futures/liquidation/heatmap/model3` → pair Liquidation Heatmap
+
+> ⚠️ Both endpoints require a CoinGlass **Professional or Enterprise** plan
+> (Hobbyist/Startup/Standard do not include them). With no key — or a lower plan
+> — the map/heatmap show a clearly-labelled *estimate* derived from open
+> interest, plus a message explaining why. Optionally set `COINGLASS_EXCHANGE`
+> (default `Binance`).
 
 ---
 

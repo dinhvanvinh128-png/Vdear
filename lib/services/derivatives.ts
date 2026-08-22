@@ -10,8 +10,9 @@ import { ADAPTERS } from '@/lib/exchanges/registry';
 import { cached, TTL } from '@/lib/cache';
 import { fanOut, envelope } from '@/lib/aggregate';
 import { getAggregatedTicker } from '@/lib/services/market';
-import { coinglassConfigured, getLiquidationMap } from '@/lib/coinglass';
+import { coinglassConfigured, getLiquidationMap, DEFAULT_EXCHANGE } from '@/lib/coinglass';
 import { estimateMap, type LiquidationMapData } from '@/lib/liquidations';
+import type { LiquidationZone } from '@/lib/types';
 
 export async function getFunding(symbol: string): Promise<Envelope<{ perExchange: FundingRate[]; average: number | null }>> {
   const usable = ADAPTERS.filter((a) => a.supports.funding);
@@ -72,30 +73,49 @@ export async function getLiquidationMapData(coin: string): Promise<Envelope<Liqu
     const ok: ExchangeId[] = Array.from(new Set([...tickerEnv.meta.sources, ...oiEnv.meta.sources]));
     const errors = [...tickerEnv.meta.errors, ...oiEnv.meta.errors];
 
-    // Prefer real CoinGlass data when configured (best-effort mapping).
+    // Prefer real CoinGlass data when configured (Professional+ plan).
     if (coinglassConfigured()) {
-      const cg = await getLiquidationMap(coin.toUpperCase());
-      if (cg.configured && cg.available && Array.isArray(cg.data) && cg.data.length) {
-        const longZones = cg.data.filter((z) => z.side === 'long');
-        const shortZones = cg.data.filter((z) => z.side === 'short');
+      const symbolUsdt = `${coin.toUpperCase()}USDT`;
+      const cg = await getLiquidationMap(symbolUsdt, DEFAULT_EXCHANGE, '1d');
+      if (cg.configured && cg.available && cg.data.length) {
+        // Split CoinGlass levels into long (below price) / short (above price).
+        const maxVal = Math.max(1, ...cg.data.map((l) => l.levelUsd));
+        const toZone = (l: { price: number; levelUsd: number }, side: 'long' | 'short'): LiquidationZone => ({
+          price: l.price, side, estValueUsd: l.levelUsd, intensity: l.levelUsd / maxVal,
+        });
+        const longZones = cg.data.filter((l) => l.price < price)
+          .sort((a, b) => b.levelUsd - a.levelUsd).slice(0, 40)
+          .map((l) => toZone(l, 'long')).sort((a, b) => b.price - a.price);
+        const shortZones = cg.data.filter((l) => l.price >= price)
+          .sort((a, b) => b.levelUsd - a.levelUsd).slice(0, 40)
+          .map((l) => toZone(l, 'short')).sort((a, b) => a.price - b.price);
         const map: LiquidationMapData = {
           coin: coin.toUpperCase(), currentPrice: price, longZones, shortZones,
-          totalOiUsd: oi, estimated: true,
+          totalOiUsd: oi, estimated: false,
         };
         return {
-          data: { map, source: 'coinglass' as const, note: 'Live CoinGlass liquidation levels.' },
+          data: { map, source: 'coinglass' as const, note: `Live CoinGlass liquidation levels (via ${DEFAULT_EXCHANGE}).` },
           ok, errors,
         };
       }
+      // Configured but unavailable (plan too low / error) → fall through to estimate,
+      // surfacing the reason so the user knows to upgrade the plan or check the key.
+      const reason = cg.configured && !('available' in cg && cg.available)
+        ? ('message' in cg ? cg.message : 'unavailable') : 'unavailable';
+      const map = estimateMap(coin.toUpperCase(), price, oi);
+      return {
+        data: {
+          map, source: 'estimated' as const,
+          note: `CoinGlass configured but map unavailable (${reason}). The Liquidation Map endpoint needs a CoinGlass Professional/Enterprise plan. Showing exchange-derived ESTIMATE from open interest.`,
+        },
+        ok, errors,
+      };
     }
     const map = estimateMap(coin.toUpperCase(), price, oi);
     return {
       data: {
-        map,
-        source: 'estimated' as const,
-        note: coinglassConfigured()
-          ? 'CoinGlass unavailable — showing exchange-derived ESTIMATE from open interest.'
-          : 'CoinGlass not configured — showing exchange-derived ESTIMATE from open interest.',
+        map, source: 'estimated' as const,
+        note: 'CoinGlass not configured — showing exchange-derived ESTIMATE from open interest. Set COINGLASS_API_KEY (Professional+ plan) for real liquidation levels.',
       },
       ok, errors,
     };

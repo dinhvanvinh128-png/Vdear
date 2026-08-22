@@ -31,7 +31,7 @@ export interface LiquidationMapData {
   longZones: LiquidationZone[]; // below price
   shortZones: LiquidationZone[]; // above price
   totalOiUsd: number;
-  estimated: true;
+  estimated: boolean;
 }
 
 function tierPrice(price: number, lev: number, side: 'long' | 'short'): number {

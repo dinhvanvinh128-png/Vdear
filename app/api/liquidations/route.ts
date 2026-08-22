@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAllAggregated } from '@/lib/services/market';
-import { coinglassConfigured, getLiquidationHistory } from '@/lib/coinglass';
+import { coinglassConfigured, getLiquidationHistory, DEFAULT_EXCHANGE } from '@/lib/coinglass';
 import { envelope } from '@/lib/aggregate';
 
 export const runtime = 'nodejs';
@@ -31,7 +31,7 @@ export async function GET() {
 
   let history: unknown = null;
   if (coinglassConfigured()) {
-    const cg = await getLiquidationHistory('BTC', '24h');
+    const cg = await getLiquidationHistory('BTCUSDT', DEFAULT_EXCHANGE, '24h');
     if (cg.configured && cg.available) history = cg.data;
   }
 
