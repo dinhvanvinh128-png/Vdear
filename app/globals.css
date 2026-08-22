@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * VDEAR Crypto — theme tokens.
+ * Dark-first. Colors are RGB triples so Tailwind's <alpha-value> works.
+ * Semantic tokens (up/down/warn/info) are the ONLY place these hues live —
+ * components never hard-code green/red (spec §28, §46).
+ */
+:root {
+  --bg: 9 11 17;          /* near-black navy */
+  --panel: 17 20 30;      /* card */
+  --panel-2: 23 27 40;    /* nested */
+  --border: 38 44 62;
+  --muted: 138 148 166;
+  --text: 232 236 244;
+  --brand: 99 102 241;    /* indigo — VDEAR accent */
+  --brand-2: 34 211 238;  /* cyan */
+  --up: 22 199 132;
+  --down: 255 76 97;
+  --warn: 245 191 66;
+  --info: 96 165 250;
+}
+
+/* Optional light theme (toggled by adding data-theme="light" on <html>). */
+:root[data-theme='light'] {
+  --bg: 244 246 251;
+  --panel: 255 255 255;
+  --panel-2: 246 248 252;
+  --border: 223 228 238;
+  --muted: 100 112 133;
+  --text: 17 22 34;
+  --brand: 79 70 229;
+  --brand-2: 8 145 178;
+  --up: 13 160 105;
+  --down: 220 44 68;
+  --warn: 202 138 4;
+  --info: 37 99 235;
+}
+
+html, body {
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+}
+
+body {
+  font-feature-settings: 'tnum' 1, 'cv01' 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numeric alignment for tables. */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Thin scrollbars in the terminal aesthetic. */
+* { scrollbar-width: thin; scrollbar-color: rgb(var(--border)) transparent; }
+*::-webkit-scrollbar { height: 8px; width: 8px; }
+*::-webkit-scrollbar-thumb { background: rgb(var(--border)); border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* Subtle aurora backdrop for hero areas. */
+.aurora {
+  background:
+    radial-gradient(60% 120% at 15% 0%, rgb(var(--brand) / 0.18), transparent 60%),
+    radial-gradient(50% 120% at 100% 0%, rgb(var(--brand-2) / 0.12), transparent 55%);
+}
+
+.hairline { border-color: rgb(var(--border)); }

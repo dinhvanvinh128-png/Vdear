@@ -1,78 +1,121 @@
-# Vdear — Crypto Intelligence Terminal
+# VDEAR Crypto — Real-Time Crypto Market Intelligence
 
-Bảng điều khiển crypto chuyên nghiệp (cảm hứng giao diện Nansen), chạy hoàn toàn
-**tĩnh** (HTML/CSS/JS thuần) — không cần backend, deploy thẳng lên **Vercel Drop**
-hoặc bất kỳ static host nào. **Không nhúng widget TradingView**, mọi biểu đồ được
-vẽ bằng canvas tự viết nên **không bị màn hình đen** khi deploy.
+A multi-exchange crypto market intelligence dashboard: prices, futures, funding,
+open interest, long/short, liquidations and heatmaps aggregated from **Binance,
+OKX, Bybit and Bitget** — with a pluggable **CoinGlass** layer for liquidation
+data and Supabase-backed accounts.
 
-## ✨ Tính năng
+Built with **Next.js (App Router) · TypeScript · Tailwind CSS · Lightweight
+Charts · Recharts · Supabase**. Deploys to **Vercel**.
 
-> **Chế độ FUTURES**: dữ liệu lấy từ hợp đồng vĩnh cửu (USDⓈ-M perpetual) của
-> Binance/Bybit/OKX/Bitget, quét **TOÀN BỘ coin futures** (không giới hạn top 50).
-> Có **funding rate**: hiển thị ở bảng biến động, trang coin, và ước tính **chi phí
-> funding** cho lệnh trong panel chiến lược.
+> VDEAR provides market data and analytics for informational purposes only —
+> **not financial advice.**
 
-### Trang thị trường (`index.html`)
-- **Thanh ticker 50px**: nền đen, coin chạy ngang liên tục, logo + giá + %
-  tăng/giảm màu xanh/đỏ, tốc độ ổn định, dừng khi rê chuột. Không có nút/link TradingView.
-- **Thang tâm lý thị trường 0–100** báo nên LONG hay SHORT.
-- **Tín hiệu thực chiến · toàn bộ Futures · khung 4H** — mô phỏng theo chiến lược
-  backtest confluence: **RSI H4 đảo chiều** (quá mua/bán rồi quay đầu) xác định hướng,
-  xác nhận thêm bằng **hỗ trợ/kháng cự** và **Price Action**. Mỗi thẻ có 3 chấm xác
-  nhận `RSI · S&R · PA`; coin đạt **hội tụ ✓** được ưu tiên lên đầu. Nút **Xem thêm**
-  mở rộng (mặc định 12, tối đa ~30 tín hiệu).
-- **Phân loại mảng coin (sector)**: Layer 1/2, DeFi, Meme, AI, Gaming, CEX, Payments, RWA, Privacy…
-- **Bảng biến động 24h**: sắp xếp theo +% / −% / Volume, kèm **icon volume** (🔥 rất cao,
-  💧 cao, 📊 khá) cho ~15 coin.
-- **TradFi**: XAU (vàng), XAG (bạc), CL (dầu WTI), BZ (dầu Brent).
+---
 
-### Trang phân tích coin (`coin.html?c=BTC`)
-- **Biểu đồ nến** + EMA20/EMA50 + **sub-chart RSI** với dải quá mua/quá bán.
-- **Chú thích RSI nhấn mạnh**:
-  - 🔴 RSI 70–80: quá mua → chú ý đảo chiều giảm (nên **SHORT**)
-  - 🔴 RSI > 80: quá mua mạnh hơn
-  - 🟢 RSI 20–30: quá bán → chú ý đảo chiều tăng (nên **LONG**)
-  - 🟢 RSI < 20: quá bán mạnh hơn
-- **Thang đo 0–100** đánh giá nên LONG/SHORT cho khung đang chọn + win-rate ước lượng.
-- **Đa khung thời gian**: 5m, 15m, 30m, 1h, 2h, 4h, 10h, 12h, 1 ngày, 1 tuần, 1 tháng.
-  Khung có khả năng **đảo chiều cao nhất** được đánh ⭐ và xếp lên đầu.
-- **Vùng hỗ trợ / kháng cự**: mỗi vùng có **dải giá đảo chiều mạnh**, nhãn
-  **LONG (khung xanh)** / **SHORT (đỏ)**, và **đánh giá 1–5 ★** độ an toàn vào lệnh.
-  **Bấm vào một vùng** để highlight ngay trên chart.
-- **Chiến lược thực chiến (⚔️)**: bảng hội tụ đa khung (RSI + S&R + Price Action) và
-  **kế hoạch vào lệnh DCA** — Entry, TP +100% margin, mốc DCA −50%, giá TB sau DCA,
-  TP/SL sau DCA — đồng thời **vẽ các mức này lên chart**.
-- **Giá đa sàn (futures)**: Binance · Bybit · OKX · Bitget.
+## Architecture
 
-## 🔌 Nguồn dữ liệu (REST công khai, gọi trực tiếp từ trình duyệt)
-- **Binance** — ticker 24h + klines (nến): nguồn chính cho biểu đồ và quét.
-- **Bybit / OKX / Bitget** — giá tham chiếu để so sánh đa sàn.
-- **Logo coin** — bộ icon `cryptocurrency-icons`, tự động fallback sang avatar chữ.
-- **TradFi** — XAU/XAG lấy realtime khi khả dụng; CL/BZ hiển thị chỉ báo tham khảo
-  (gắn nhãn `~`) khi nguồn realtime bị giới hạn CORS.
+```
+Exchange public APIs (Binance · OKX · Bybit · Bitget)
+        │   one adapter per exchange — lib/exchanges/<name>
+        ▼
+Normalization layer (lib/aggregate.ts) → one canonical VDEAR model (lib/types.ts)
+        │   VDEAR index (equal / volume / exchange weighted), spread, provenance
+        ▼
+Cache + single-flight (lib/cache.ts)   ← short TTLs, fail-soft (serve stale)
+        ▼
+Service layer (lib/services/*)          ← market / chart / derivatives / health
+        ▼
+API routes (app/api/*)                  ← thin, typed, fail-soft wrappers
+        ▼
+React UI (app/*, components/*)          ← every payload shows freshness + sources
+```
 
-> ⚠️ Tất cả chỉ mang tính tham khảo, **không phải lời khuyên đầu tư**.
+Design rules that make it extensible and robust:
 
-## 🚀 Chạy & Deploy
+- **One adapter per exchange.** Add Coinbase/Kraken/Gate/Hyperliquid/Deribit by
+  implementing `ExchangeAdapter` (`lib/exchanges/types.ts`) and adding one line
+  to `lib/exchanges/registry.ts`. Nothing else changes.
+- **Never crash on a dead source.** Every fan-out uses `Promise.allSettled`; a
+  failing exchange becomes a red dot on `/status` and an "N/A", not an error.
+  The cache serves stale data if an upstream momentarily fails.
+- **No secrets in the client.** Public market data needs no keys. Service-role /
+  CoinGlass / provider keys are read only in server code.
+- **No fabricated data.** Where a real source isn't available (e.g. liquidation
+  totals without CoinGlass), the UI says so and shows a clearly-labelled
+  *estimate* derived from open interest — never invented numbers.
+
+---
+
+## Getting started
+
 ```bash
-# Chạy thử cục bộ (bất kỳ static server nào)
-python3 -m http.server 8080
-# rồi mở http://localhost:8080
+npm install
+cp .env.example .env.local   # fill in what you have (all optional to start)
+npm run dev                  # http://localhost:3000
 ```
-**Vercel Drop**: kéo–thả cả thư mục này (hoặc file zip) vào https://vercel.com/new —
-không cần cấu hình build. `vercel.json` đã bật `cleanUrls`.
 
-## 📁 Cấu trúc
+Public market data works with **zero configuration** — no API keys required.
+Add env vars to unlock accounts (Supabase) and richer liquidation data
+(CoinGlass). See `.env.example` for the full list and which are public vs secret.
+
+### Supabase (accounts, watchlist, portfolio, alerts)
+
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in the SQL editor (creates tables + RLS).
+3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+4. (Optional) `SUPABASE_SERVICE_ROLE_KEY` for privileged server tasks — secret.
+
+### CoinGlass (optional)
+
+Set `COINGLASS_API_KEY` (server-only). Liquidation map/heatmap then use live
+CoinGlass data; otherwise they fall back to exchange-derived estimates. We do
+**not** scrape CoinGlass or copy its UI — integration is via its API only
+(`lib/coinglass`).
+
+---
+
+## Build phases & status
+
+| Phase | Scope | Status |
+|------|-------|--------|
+| 1 | Next.js + TS + Tailwind + Supabase setup | ✅ |
+| 2 | Exchange connectors (Binance/OKX/Bybit/Bitget) | ✅ |
+| 3 | Dashboard: price, volume, trending, gainers/losers | ✅ |
+| 4 | Coin detail: chart, multi-exchange comparison | ✅ (order book UI: partial) |
+| 5 | Futures: funding, open interest, long/short | ✅ |
+| 6 | Liquidations: map, heatmap, exposure | ✅ (estimated w/o CoinGlass) |
+| 7 | CoinGlass integration (abstraction + key server-side) | ✅ abstraction; live path on key |
+| 8 | Accounts: login, watchlist, portfolio, alerts | ✅ (alerts: browser notifications) |
+| 9 | Whale, news, fear & greed, market heatmap | ✅ (news needs provider key) |
+| 10 | Prod: security, caching, WebSocket, SEO, mobile | ⏳ REST+cache+SEO done; WS streaming is the next upgrade |
+
+**Known follow-ups (Phase 10):** swap the in-memory cache for Upstash/Redis on
+serverless; add public WebSocket subscriptions (per each adapter's `wsPublic`)
+for sub-second ticker/trade/liquidation streams; wire a licensed news provider;
+admin dashboard beyond `/status`.
+
+---
+
+## Project structure
+
 ```
-index.html          # Dashboard thị trường
-coin.html           # Trang phân tích 1 coin
-css/styles.css      # Theme tối chuyên nghiệp
-js/config.js        # Cấu hình sàn, sector, khung giờ, ngưỡng RSI
-js/api.js           # Gom dữ liệu 4 sàn, klines, logo, tradfi
-js/indicators.js    # RSI, EMA, hỗ trợ/kháng cự, chấm điểm tín hiệu
-js/chart.js         # Engine vẽ nến + RSI bằng canvas
-js/ticker.js        # Thanh ticker 50px
-js/dashboard.js     # Logic trang thị trường
-js/coin.js          # Logic trang coin
-vercel.json         # Cấu hình static host
+app/            App Router pages + /api routes
+components/      UI (layout, tables, charts, coin, liquidation views)
+components/ui/   shadcn-style primitives (card, button, badge)
+hooks/          useApi (polling), useUser, useFavorites
+lib/
+  exchanges/    adapter interface + binance/okx/bybit/bitget + registry
+  services/     market, chart, derivatives, health
+  coinglass/    CoinGlass abstraction (server-only)
+  aggregate.ts  fan-out + VDEAR index + envelope
+  cache.ts      TTL cache + single-flight
+  types.ts      canonical data model
+supabase/       schema.sql (tables + RLS)
+legacy-static/  the previous static site, preserved
 ```
+
+> A note on data limits: exchange **REST** APIs don't publish historical
+> liquidation totals — those need a WebSocket liquidation stream or a provider
+> like CoinGlass. VDEAR is honest about this: it shows OI-based exposure and
+> labelled estimates until such a source is configured.
