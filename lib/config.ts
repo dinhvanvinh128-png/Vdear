@@ -6,9 +6,9 @@
  * └─────────────────────────────────────────────────────────────────┘
  */
 
-const CLERK = "";   // ← dán Clerk Publishable key:  pk_test_....  (Clerk → API Keys)
-const URL   = "";   // ← dán Supabase Project URL:   https://xxxx.supabase.co
-const ANON  = "";   // ← dán Supabase anon/publishable key: sb_publishable_....
+const CLERK = "pk_test_Z2VudGxlLXN0b3JrLTI3MjIuY2xlcmsuYWNjb3VudHMuZGV2JA";
+const URL   = "https://gqfyfquweikosrnwacqs.supabase.co";
+const ANON  = "sb_publishable_Ewv_SsAarl-0I45fXwSbGg_oc10zmP0";
 
 /* ───────── Không cần sửa phần dưới ───────── */
 
