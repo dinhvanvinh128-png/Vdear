@@ -12,10 +12,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { lifeSpan } from "@/lib/utils";
+import { useAuth } from "@/lib/auth-store";
+import { supabaseConfigured } from "@/lib/supabase/client";
 import type { Member } from "@/types";
 
 export default function ManagePage() {
   const hydrated = useHydrated();
+  const configured = supabaseConfigured();
+  const userId = useAuth((s) => s.userId);
+  const authReady = useAuth((s) => s.ready);
   const members = useStore((s) => s.members);
   const branches = useStore((s) => s.branches);
   const deleteMember = useStore((s) => s.deleteMember);
@@ -29,8 +34,27 @@ export default function ManagePage() {
   const [showEditor, setShowEditor] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  if (!hydrated) {
+  if (!hydrated || (configured && !authReady)) {
     return <div className="p-10 text-center text-clan-brown/60">Đang tải…</div>;
+  }
+
+  // Khi đã bật đám mây: bắt buộc đăng nhập mới được sửa (ai cũng xem được ở các trang khác)
+  if (configured && !userId) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-20">
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+            <span className="seal flex h-12 w-12 text-lg font-semibold">Lê</span>
+            <h1 className="font-serif text-xl font-bold">Cần đăng nhập để chỉnh sửa</h1>
+            <p className="text-sm text-clan-brown/70 dark:text-clan-cream/60">
+              Gia phả được lưu chung trên đám mây. Hãy đăng nhập để thêm/sửa thành viên;
+              mọi người khác vẫn xem được bình thường.
+            </p>
+            <Link href="/login"><Button>Đăng nhập</Button></Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const branchName = (id?: string | null) => branches.find((b) => b.id === id)?.name ?? "—";

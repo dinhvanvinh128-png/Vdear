@@ -41,6 +41,23 @@ Hệ thống tự **chống quan hệ vòng lặp** (không cho A là cha B rồ
 | `/memorial` | Lịch giỗ (từ người đã mất) |
 | `/quan-ly` | **Thêm/sửa/xóa** thành viên & chi họ, Xuất/Nhập |
 
+## 🔐 Đăng nhập & lưu đám mây (tùy chọn)
+
+Mặc định web chạy **cục bộ** (lưu trong máy), không cần đăng nhập. Muốn **nhiều
+người cùng sửa và thấy dữ liệu chung** thì bật Supabase:
+
+1. Supabase → **SQL Editor** → chạy `supabase/migrations/0002_clan_data.sql`.
+2. Thêm 2 biến vào Vercel rồi **Redeploy**:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. Supabase → **Authentication → URL Configuration**: Site URL + Redirect URL =
+   `https://<domain>/quan-ly` (cần cho đăng nhập Google).
+4. Xong: nút **Đăng nhập** xuất hiện. Ai cũng **xem** được gia phả; **đăng nhập**
+   mới **sửa** được. Dữ liệu lưu chung (bảng `clan_data`, 1 tài liệu JSON), tự
+   đồng bộ giữa các máy.
+
+> Cơ chế đơn giản “ai lưu sau thắng”. Hợp cho nhóm nhỏ vài người biên tập.
+
 ## 📱 Cài như App (PWA)
 
 Web đã là **PWA** — cài vào màn hình chính, mở toàn màn hình như app, **chạy offline**.

@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/toast";
 import { PWARegister } from "@/components/pwa-register";
+import { CloudSync } from "@/components/cloud-sync";
 
 const sans = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Footer />
         <Toaster />
         <PWARegister />
+        <CloudSync />
       </body>
     </html>
   );
