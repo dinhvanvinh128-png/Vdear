@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Be_Vietnam_Pro, Lora } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/toast";
+import { PWARegister } from "@/components/pwa-register";
 
 const sans = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -36,7 +37,23 @@ export const metadata: Metadata = {
     siteName
   },
   twitter: { card: "summary_large_image", title: siteName, description },
-  robots: { index: true, follow: true }
+  robots: { index: true, follow: true },
+  applicationName: "Gia Phả Lê",
+  appleWebApp: { capable: true, title: "Gia Phả Lê", statusBarStyle: "default" },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" }
+    ],
+    apple: "/apple-touch-icon.png"
+  }
+};
+
+export const viewport: Viewport = {
+  themeColor: "#7E1C1C",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -47,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1">{children}</main>
         <Footer />
         <Toaster />
+        <PWARegister />
       </body>
     </html>
   );

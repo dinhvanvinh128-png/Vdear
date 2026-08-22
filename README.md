@@ -41,6 +41,17 @@ Hệ thống tự **chống quan hệ vòng lặp** (không cho A là cha B rồ
 | `/memorial` | Lịch giỗ (từ người đã mất) |
 | `/quan-ly` | **Thêm/sửa/xóa** thành viên & chi họ, Xuất/Nhập |
 
+## 📱 Cài như App (PWA)
+
+Web đã là **PWA** — cài vào màn hình chính, mở toàn màn hình như app, **chạy offline**.
+
+- **Android (Chrome):** mở web → menu ⋮ → **Cài đặt ứng dụng / Thêm vào màn hình chính**.
+- **iPhone (Safari):** mở web → nút **Chia sẻ** → **Thêm vào MH chính**.
+- **Máy tính (Chrome/Edge):** biểu tượng **Cài đặt** ở thanh địa chỉ.
+
+Muốn ra **file APK / lên CH Play**: dùng [PWABuilder](https://www.pwabuilder.com)
+→ dán URL web → **Package for stores** (Android). Không cần code thêm.
+
 ## 🛠 Chạy trên máy tính
 
 ```bash
