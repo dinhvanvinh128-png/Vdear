@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef, useState } from "react";
+import { ImagePlus, X } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { memberSchema } from "@/lib/validators";
 import { useToast } from "@/components/ui/toast";
@@ -9,6 +11,35 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import type { Member } from "@/types";
+
+const isDataUrl = (s: string) => s.startsWith("data:");
+
+/** Đọc ảnh, cắt vuông và thu nhỏ về 256px, trả về data URL JPEG. */
+function fileToAvatar(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const size = 256;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject();
+      const s = Math.min(img.width, img.height);
+      const sx = (img.width - s) / 2;
+      const sy = (img.height - s) / 2;
+      ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject();
+    };
+    img.src = url;
+  });
+}
 
 export function MemberEditor({
   member,
@@ -24,6 +55,26 @@ export function MemberEditor({
   const push = useToast((s) => s.push);
 
   const others = members.filter((m) => m.id !== member?.id);
+  const [avatar, setAvatar] = useState<string>(member?.avatar_url ?? "");
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      push("error", "Vui lòng chọn tệp ảnh.");
+      return;
+    }
+    setBusy(true);
+    try {
+      setAvatar(await fileToAvatar(file));
+    } catch {
+      push("error", "Không đọc được ảnh.");
+    }
+    setBusy(false);
+    e.target.value = "";
+  }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -39,7 +90,7 @@ export function MemberEditor({
       address: fd.get("address"),
       occupation: fd.get("occupation"),
       biography: fd.get("biography"),
-      avatar_url: fd.get("avatar_url"),
+      avatar_url: avatar,
       generation: fd.get("generation"),
       branch_id: fd.get("branch_id"),
       is_alive: fd.get("is_alive") === "on",
@@ -156,8 +207,38 @@ export function MemberEditor({
             <Input id="address" name="address" defaultValue={member?.address ?? ""} />
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor="avatar_url">Ảnh đại diện (URL)</Label>
-            <Input id="avatar_url" name="avatar_url" defaultValue={member?.avatar_url ?? ""} placeholder="https://... (để trống sẽ tự tạo ảnh)" />
+            <Label>Ảnh đại diện</Label>
+            <div className="flex items-center gap-4">
+              {avatar ? (
+                <img src={avatar} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-clan-gold/50" />
+              ) : (
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-clan-cream text-clan-brown/40 ring-2 ring-clan-gold/30 dark:bg-white/5">
+                  <ImagePlus className="h-6 w-6" />
+                </div>
+              )}
+              <div className="flex-1 space-y-2">
+                <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickFile} />
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => fileRef.current?.click()}>
+                    <ImagePlus className="h-4 w-4" /> {busy ? "Đang xử lý..." : "Tải ảnh lên"}
+                  </Button>
+                  {avatar && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setAvatar("")}>
+                      <X className="h-4 w-4" /> Xóa ảnh
+                    </Button>
+                  )}
+                </div>
+                <Input
+                  placeholder="hoặc dán đường dẫn ảnh (URL)..."
+                  value={isDataUrl(avatar) ? "" : avatar}
+                  onChange={(e) => setAvatar(e.target.value)}
+                  className="h-9"
+                />
+              </div>
+            </div>
+            <p className="mt-1 text-xs text-clan-brown/50">
+              Ảnh tự thu nhỏ ~256px và lưu trong máy. Để trống sẽ tự tạo ảnh minh họa.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <Label htmlFor="biography">Tiểu sử</Label>
