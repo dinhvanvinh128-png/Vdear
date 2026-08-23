@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  # The pure-logic layer (indicators, engines, scoring, quality, net) is verified
+  # WITHOUT installing anything, so a registry outage can never hide a regression
+  # in the maths that produces the scores.
+  logic:
+    name: Engines (no install)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx --yes typescript@5.5.4 tsc -p tsconfig.test.json --noEmit
+      - run: npx --yes typescript@5.5.4 tsc -p tsconfig.test.json
+      - run: node scripts/resolve-aliases.mjs .test-build
+      - run: node --test --test-reporter=spec .test-build/tests/*.test.js
+
+  app:
+    name: App (typecheck · lint · build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+        env:
+          # The build must succeed with NO provider keys — free-first is a
+          # hard requirement, not a nice-to-have.
+          NEXT_PUBLIC_SITE_URL: https://vdear-crypto.vercel.app

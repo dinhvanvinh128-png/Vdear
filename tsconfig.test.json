@@ -1,0 +1,39 @@
+{
+  // Offline typecheck + test build for the PURE-LOGIC layer (no React, no Next).
+  // Deliberately standalone (does not extend tsconfig.json) so it needs neither
+  // node_modules nor @types/* to run — see tests/types/env.d.ts for why.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022", "DOM"],
+    "types": [],
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "declaration": false,
+    "sourceMap": false,
+    "outDir": ".test-build",
+    "rootDir": ".",
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": [
+    "tests/**/*.ts",
+    "lib/net/**/*.ts",
+    "lib/indicators/**/*.ts",
+    "lib/engines/**/*.ts",
+    "lib/scoring/**/*.ts",
+    "lib/quality/**/*.ts",
+    "lib/analyst/**/*.ts",
+    "lib/providers/**/*.ts",
+    "lib/exchanges/**/*.ts",
+    "lib/types.ts",
+    "lib/aggregate.ts",
+    "lib/cache.ts",
+    "lib/symbols.ts",
+    "lib/format.ts",
+    "lib/liquidations.ts"
+  ],
+  "exclude": ["node_modules", ".next", ".test-build", "legacy-static"]
+}
