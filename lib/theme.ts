@@ -38,10 +38,18 @@ function triple(token: ThemeToken): string {
   return value || FALLBACK[token];
 }
 
-/** `themeColor('up')` -> `rgb(62 158 119)`; with alpha -> `rgb(62 158 119 / 0.4)`. */
+/**
+ * `themeColor('up')` -> `rgb(62, 158, 119)`; with alpha -> `rgba(62, 158, 119, 0.4)`.
+ *
+ * Deliberately the legacy comma form rather than the CSS Color 4 slash syntax the
+ * tokens are stored in. Browsers accept both, so canvas and SVG would not care —
+ * but Lightweight Charts parses colour strings itself instead of handing them to
+ * the browser, and a parser that only knows the comma form would fail at runtime,
+ * after a green build. The comma form is understood everywhere and costs nothing.
+ */
 export function themeColor(token: ThemeToken, alpha?: number): string {
-  const rgb = triple(token);
-  return alpha == null ? `rgb(${rgb})` : `rgb(${rgb} / ${alpha})`;
+  const [r = '0', g = '0', b = '0'] = triple(token).split(/[\s,/]+/).filter(Boolean);
+  return alpha == null ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 /** The app's monospace stack, for canvas `ctx.font` and chart layout options. */
