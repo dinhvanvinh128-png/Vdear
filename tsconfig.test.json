@@ -29,6 +29,7 @@
     "lib/providers/**/*.ts",
     "lib/services/**/*.ts",
     "lib/realtime/**/*.ts",
+    "lib/api/sanitize.ts",
     "lib/exchanges/**/*.ts",
     "lib/types.ts",
     "lib/aggregate.ts",

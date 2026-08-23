@@ -597,3 +597,47 @@ test('the phrase helpers themselves stay compliant', () => {
   assert.equal(describeBias(80), 'strongly favours upside');
   assert.equal(describeConfidence(85), 'a high-confidence reading');
 });
+
+/* ============================== SECURITY ================================== */
+
+test('credential-shaped query parameters are redacted before logging', async () => {
+  // Glassnode and Artemis authenticate via a query parameter, so a URL that
+  // reaches a log IS a leaked credential. HttpError already strips query
+  // strings; this is the defence for anything else that carries a raw URL.
+  const { redactSecrets } = await import('@/lib/api/sanitize');
+
+  const cases: [string, string][] = [
+    ['https://api.glassnode.com/v1/metrics/market/mvrv?a=BTC&api_key=SUPERSECRET',
+     'api_key=[redacted]'],
+    ['https://api.artemisxyz.com/data/DAU/?artemisIds=eth&APIKey=SUPERSECRET',
+     'APIKey=[redacted]'],
+    ['https://x.test/a?token=abc123&b=2', 'token=[redacted]'],
+    ['https://x.test/a?secret=abc123', 'secret=[redacted]'],
+  ];
+  for (const [input, expected] of cases) {
+    const out = redactSecrets(input);
+    assert.ok(out.includes(expected), `expected "${expected}" in "${out}"`);
+    assert.equal(out.includes('SUPERSECRET'), false, `secret survived in "${out}"`);
+    assert.equal(out.includes('abc123'), false, `secret survived in "${out}"`);
+  }
+  // Non-secret parameters must survive, or the log becomes useless.
+  assert.equal(redactSecrets('https://x.test/a?symbol=BTCUSDT&limit=50'),
+    'https://x.test/a?symbol=BTCUSDT&limit=50');
+});
+
+test('the symbol pattern rejects anything that could alter an upstream URL', async () => {
+  const { isValidSymbol, normalizeSymbol } = await import('@/lib/api/sanitize');
+
+  for (const good of ['BTC', 'btc', 'BTCUSDT', 'PEPE', '1000SATS']) {
+    assert.ok(isValidSymbol(good), `should accept ${good}`);
+  }
+  assert.equal(normalizeSymbol(' btc '), 'BTC', 'normalised to upper case and trimmed');
+
+  // Each of these would otherwise be interpolated straight into an upstream URL.
+  for (const bad of [
+    '../../etc/passwd', 'BTC&exchange=evil', 'BTC?x=1', 'BTC/USDT',
+    'BTC USDT', 'A', '', 'BTC#frag', 'BTC%2F', 'x'.repeat(21), 'BTC\nHost: evil',
+  ]) {
+    assert.equal(isValidSymbol(bad), false, `should reject ${JSON.stringify(bad)}`);
+  }
+});

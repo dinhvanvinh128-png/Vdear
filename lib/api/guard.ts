@@ -9,17 +9,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { toCanonical, splitSymbol } from '@/lib/symbols';
+import { isValidSymbol, normalizeSymbol, redactSecrets } from '@/lib/api/sanitize';
 
-/** Base+quote, letters and digits only. Deliberately strict. */
-const SYMBOL_PATTERN = /^[A-Z0-9]{2,20}$/;
+export { redactSecrets, isValidSymbol, normalizeSymbol };
 
 export const symbolSchema = z
   .string()
-  .trim()
-  .min(2)
-  .max(20)
-  .transform((s) => s.toUpperCase())
-  .refine((s) => SYMBOL_PATTERN.test(s), {
+  .transform(normalizeSymbol)
+  .refine(isValidSymbol, {
     message: 'Symbol must be 2-20 alphanumeric characters, e.g. BTC or BTCUSDT',
   });
 
@@ -74,8 +71,11 @@ export async function handle<T>(run: () => Promise<T>): Promise<NextResponse> {
         { status: 400 },
       );
     }
-    // Log server-side; return something safe.
-    console.error('[api]', e);
+    // Log server-side, with anything key-shaped redacted. HttpError already
+    // strips query strings (lib/exchanges/http safeUrl), but a different error
+    // could carry a raw URL — and Glassnode/Artemis authenticate via a query
+    // parameter, so a leaked URL would be a leaked credential.
+    console.error('[api]', redactSecrets(e instanceof Error ? e.message : String(e)));
     return NextResponse.json(
       { error: 'Upstream data is temporarily unavailable. Try again shortly.' },
       { status: 503 },
