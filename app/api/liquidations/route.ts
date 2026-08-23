@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAllAggregated } from '@/lib/services/market';
-import { coinglassConfigured, getLiquidationHistory, DEFAULT_EXCHANGE } from '@/lib/coinglass';
+import { coinglassConfigured, getLiquidationHistory, DEFAULT_EXCHANGE } from '@/lib/providers/coinglass';
 import { envelope } from '@/lib/aggregate';
 
 export const runtime = 'nodejs';

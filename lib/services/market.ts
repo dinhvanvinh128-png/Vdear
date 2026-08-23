@@ -10,8 +10,8 @@ import type { ExchangeAdapter } from '@/lib/exchanges/types';
 import { ADAPTERS } from '@/lib/exchanges/registry';
 import { cached, TTL } from '@/lib/cache';
 import { fanOut, mergeTickers, envelope } from '@/lib/aggregate';
-import { getGlobal } from '@/lib/external/coingecko';
-import { getFearGreed } from '@/lib/external/feargreed';
+import { getGlobal } from '@/lib/providers/coingecko';
+import { getFearGreed } from '@/lib/providers/feargreed';
 import { isStable, toCanonical } from '@/lib/symbols';
 
 /** Aggregate ONE symbol across the given adapters. */

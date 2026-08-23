@@ -1,7 +1,8 @@
 /**
  * Crypto Fear & Greed index (alternative.me, public, no key). Fails soft.
  */
-import { getJson, num } from '@/lib/exchanges/http';
+import { num } from '@/lib/exchanges/http';
+import { request as getJson } from '@/lib/net/request';
 
 export interface FearGreed {
   value: number; // 0..100

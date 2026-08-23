@@ -4,7 +4,7 @@
  * IMPORTANT: this is a transparent heuristic, NOT real liquidation data. It maps
  * open interest onto the price levels where common leverage tiers would be
  * force-liquidated. Every value it produces is flagged `estimated`. When a
- * CoinGlass key is configured, real data supersedes this (see lib/coinglass).
+ * CoinGlass key is configured, real data supersedes this (see lib/providers/coinglass).
  *
  * Model: assume a distribution of leverage among open positions; each tier's
  * liquidation price sits ~ (1/leverage) away from entry (entry ≈ current price

@@ -10,7 +10,7 @@ import { ADAPTERS } from '@/lib/exchanges/registry';
 import { cached, TTL } from '@/lib/cache';
 import { fanOut, envelope } from '@/lib/aggregate';
 import { getAggregatedTicker } from '@/lib/services/market';
-import { coinglassConfigured, getLiquidationMap, DEFAULT_EXCHANGE } from '@/lib/coinglass';
+import { coinglassConfigured, getLiquidationMap, DEFAULT_EXCHANGE } from '@/lib/providers/coinglass';
 import { estimateMap, type LiquidationMapData } from '@/lib/liquidations';
 import type { LiquidationZone } from '@/lib/types';
 

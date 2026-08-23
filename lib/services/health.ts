@@ -1,24 +1,38 @@
 /**
- * API health monitor (spec §37). Pings each exchange with a cheap public call
- * and reports online/error + latency. Never throws; a down exchange is just a
- * red dot, never a crashed dashboard.
+ * API health monitor (spec §37 / DATA QUALITY ENGINE).
+ *
+ * Pings every exchange with a cheap public call and every provider with its own
+ * health(), reporting online / error / not_configured plus latency. Never
+ * throws: a dead source is a red dot on /status and a missing input downstream,
+ * never a crashed dashboard.
+ *
+ * "not_configured" is a first-class, non-alarming state — the premium providers
+ * are optional by design, and the UI must not present their absence as a fault.
  */
 import type { ExchangeId } from '@/lib/types';
 import { ADAPTERS } from '@/lib/exchanges/registry';
-import { coinglassStatus } from '@/lib/coinglass';
+import { providerHealth, summarizeHealth } from '@/lib/providers/registry';
+import type { ProviderHealth } from '@/lib/providers/types';
 import { cacheStats } from '@/lib/cache';
+import { netStats } from '@/lib/net/request';
 
 export interface SourceHealth {
-  id: ExchangeId | 'coinglass';
+  id: ExchangeId;
   label: string;
-  status: 'online' | 'error' | 'not_configured';
+  status: 'online' | 'error';
   latencyMs: number | null;
   message?: string;
 }
 
 export interface HealthReport {
-  sources: SourceHealth[];
+  exchanges: SourceHealth[];
+  providers: ProviderHealth[];
+  summary: ReturnType<typeof summarizeHealth> & {
+    exchangesOnline: number;
+    exchangesTotal: number;
+  };
   cache: { entries: number; inflight: number };
+  net: ReturnType<typeof netStats>;
   checkedAt: number;
 }
 
@@ -26,7 +40,7 @@ export async function getHealth(): Promise<HealthReport> {
   const exchangeChecks = ADAPTERS.map(async (a): Promise<SourceHealth> => {
     const started = Date.now();
     try {
-      const t = await a.getTicker('BTCUSDT', a.supports.futures ? 'futures' : 'spot');
+      const t = await a.getTicker('BTCUSDT', a.supports.spot ? 'spot' : 'futures');
       const latencyMs = Date.now() - started;
       return t
         ? { id: a.id, label: a.label, status: 'online', latencyMs }
@@ -40,12 +54,22 @@ export async function getHealth(): Promise<HealthReport> {
     }
   });
 
-  const cgCheck = (async (): Promise<SourceHealth> => {
-    const s = await coinglassStatus();
-    if (!s.configured) return { id: 'coinglass', label: 'CoinGlass', status: 'not_configured', latencyMs: null, message: s.message };
-    return { id: 'coinglass', label: 'CoinGlass', status: s.reachable ? 'online' : 'error', latencyMs: null, message: s.message };
-  })();
+  const [exchanges, providers] = await Promise.all([
+    Promise.all(exchangeChecks),
+    providerHealth(),
+  ]);
 
-  const sources = await Promise.all([...exchangeChecks, cgCheck]);
-  return { sources, cache: cacheStats(), checkedAt: Date.now() };
+  const exchangesOnline = exchanges.filter((e) => e.status === 'online').length;
+  return {
+    exchanges,
+    providers,
+    summary: {
+      ...summarizeHealth(providers),
+      exchangesOnline,
+      exchangesTotal: exchanges.length,
+    },
+    cache: cacheStats(),
+    net: netStats(),
+    checkedAt: Date.now(),
+  };
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getFearGreed } from '@/lib/external/feargreed';
+import { getFearGreed } from '@/lib/providers/feargreed';
 import { cached, TTL } from '@/lib/cache';
 
 export const runtime = 'nodejs';

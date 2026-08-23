@@ -15,7 +15,7 @@
  *   GET /api/futures/liquidation/heatmap/model3 (Pro+)   params: exchange, symbol, range(12h|24h|3d|7d|30d|90d|180d|1y)
  *   GET /api/futures/supported-coins            (all)    used as a health probe
  */
-import { getJson } from '@/lib/exchanges/http';
+import { request as getJson } from '@/lib/net/request';
 
 const BASE = process.env.COINGLASS_API_BASE || 'https://open-api-v4.coinglass.com';
 export const DEFAULT_EXCHANGE = process.env.COINGLASS_EXCHANGE || 'Binance';

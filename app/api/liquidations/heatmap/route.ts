@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAggregatedTicker } from '@/lib/services/market';
 import { getOpenInterestAll } from '@/lib/services/derivatives';
-import { coinglassConfigured, getLiquidationHeatmap, DEFAULT_EXCHANGE } from '@/lib/coinglass';
+import { coinglassConfigured, getLiquidationHeatmap, DEFAULT_EXCHANGE } from '@/lib/providers/coinglass';
 import { estimateHeatmapColumn } from '@/lib/liquidations';
 import { cached, TTL } from '@/lib/cache';
 import { envelope } from '@/lib/aggregate';
