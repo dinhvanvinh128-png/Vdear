@@ -39,6 +39,7 @@ export class BitgetAdapter extends BaseAdapter {
   readonly supports: AdapterCapabilities = {
     spot: true, futures: true, funding: true, openInterest: true,
     longShort: false, orderBook: true, trades: true, klines: true,
+    takerVolume: false,
     wsPublic: 'wss://ws.bitget.com/v2/ws/public',
   };
 

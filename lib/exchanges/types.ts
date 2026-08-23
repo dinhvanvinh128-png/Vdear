@@ -10,6 +10,7 @@
  */
 import type {
   Candle,
+  FlowCandle,
   ExchangeId,
   FundingRate,
   LongShortRatio,
@@ -29,6 +30,12 @@ export interface AdapterCapabilities {
   orderBook: boolean;
   trades: boolean;
   klines: boolean;
+  /**
+   * Does this venue publish the TAKER-BUY volume split on its candles?
+   * Exact CVD depends on it; venues without it can only contribute
+   * short-horizon, trade-derived flow. See FlowCandle in lib/types.
+   */
+  takerVolume: boolean;
   /** Public WebSocket base URL, if the exchange exposes one (client uses it). */
   wsPublic?: string;
 }
@@ -46,6 +53,11 @@ export interface ExchangeAdapter {
   getOrderBook(symbol: string, market: MarketType, limit?: number): Promise<OrderBook | null>;
   getTrades(symbol: string, market: MarketType, limit?: number): Promise<Trade[]>;
   getKlines(symbol: string, interval: string, market: MarketType, limit?: number): Promise<Candle[]>;
+  /**
+   * Candles with the taker-buy split. Returns [] when `supports.takerVolume` is
+   * false — never a fabricated split.
+   */
+  getFlowCandles(symbol: string, interval: string, market: MarketType, limit?: number): Promise<FlowCandle[]>;
   getFundingRate(symbol: string): Promise<FundingRate | null>;
   getOpenInterest(symbol: string): Promise<OpenInterest | null>;
   getLongShort(symbol: string, interval?: string): Promise<LongShortRatio | null>;
@@ -70,6 +82,12 @@ export abstract class BaseAdapter implements ExchangeAdapter {
     return [];
   }
   async getKlines(_symbol: string, _interval: string, _market: MarketType, _limit?: number): Promise<Candle[]> {
+    return [];
+  }
+  /** Default: this venue does not publish a taker split, so we report none. */
+  async getFlowCandles(
+    _symbol: string, _interval: string, _market: MarketType, _limit?: number,
+  ): Promise<FlowCandle[]> {
     return [];
   }
   async getFundingRate(_symbol: string): Promise<FundingRate | null> {

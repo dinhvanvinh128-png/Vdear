@@ -6,7 +6,7 @@
 import { BaseAdapter, type AdapterCapabilities } from '@/lib/exchanges/types';
 import { getJson, num } from '@/lib/exchanges/http';
 import type {
-  Candle, ExchangeId, FundingRate, LongShortRatio, MarketType,
+  Candle, ExchangeId, FlowCandle, FundingRate, LongShortRatio, MarketType,
   OpenInterest, OrderBook, Ticker, Trade,
 } from '@/lib/types';
 import { splitSymbol } from '@/lib/symbols';
@@ -31,6 +31,7 @@ export class BinanceAdapter extends BaseAdapter {
   readonly supports: AdapterCapabilities = {
     spot: true, futures: true, funding: true, openInterest: true,
     longShort: true, orderBook: true, trades: true, klines: true,
+    takerVolume: true,
     wsPublic: 'wss://fstream.binance.com/ws',
   };
 
@@ -77,6 +78,36 @@ export class BinanceAdapter extends BaseAdapter {
     return rows.map((k) => ({
       time: Math.floor(num(k[0]) / 1000),
       open: num(k[1]), high: num(k[2]), low: num(k[3]), close: num(k[4]), volume: num(k[5]),
+    }));
+  }
+
+  /**
+   * Candles WITH the taker-buy split — the exact input for CVD.
+   *
+   * Binance's kline array carries more than OHLCV:
+   *   [0] openTime  [5] baseVolume  [7] quoteVolume  [8] tradeCount
+   *   [9] takerBuyBaseVolume  [10] takerBuyQuoteVolume
+   *
+   * Index 10 is aggressive BUY volume in USDT. Sell volume is therefore
+   * quoteVolume - takerBuyQuote exactly, with no assumption about the split.
+   * Docs: https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data
+   */
+  async getFlowCandles(
+    symbol: string, interval: string, market: MarketType, limit = 200,
+  ): Promise<FlowCandle[]> {
+    const iv = INTERVALS[interval];
+    if (!iv) return [];
+    const url = `${this.base(market)}${this.path(market, '/klines')}`
+      + `?symbol=${symbol}&interval=${iv}&limit=${Math.min(1000, limit)}`;
+    const rows = await getJson<unknown[][]>(url);
+    return rows.map((k) => ({
+      time: Math.floor(num(k[0]) / 1000),
+      open: num(k[1]), high: num(k[2]), low: num(k[3]), close: num(k[4]),
+      volume: num(k[5]),
+      quoteVolume: num(k[7]),
+      trades: num(k[8]),
+      takerBuyBase: num(k[9]),
+      takerBuyQuote: num(k[10]),
     }));
   }
 

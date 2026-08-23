@@ -47,6 +47,29 @@ export interface Candle {
   volume: number;
 }
 
+/**
+ * A candle that also carries the TAKER-BUY split.
+ *
+ * This is what makes exact, long-horizon CVD possible: aggressive buy volume is
+ * reported per candle, so buy/sell delta can be computed over any timeframe and
+ * as far back as klines go — instead of being limited to the last ~1000 fills a
+ * recent-trades endpoint returns.
+ *
+ * Only some venues publish it (Binance does; OKX, Bybit and Bitget do not), so
+ * `takerBuyQuote` is nullable and the flow engine reports which venues actually
+ * contributed rather than assuming a 50/50 split for the rest.
+ */
+export interface FlowCandle extends Candle {
+  /** Quote-currency (USDT) volume for the candle. */
+  quoteVolume: number;
+  /** Quote volume where the TAKER was the buyer. Null when unpublished. */
+  takerBuyQuote: number | null;
+  /** Base-asset volume where the taker was the buyer. Null when unpublished. */
+  takerBuyBase: number | null;
+  /** Number of trades in the candle, when reported. */
+  trades: number | null;
+}
+
 export interface OrderBookLevel {
   price: number;
   size: number;
