@@ -12,7 +12,7 @@ import { fmtPrice } from '@/lib/format';
 interface Alert { id: string; base: string; op: '>' | '<'; price: number; triggered?: boolean }
 const KEY = 'vdear-alerts';
 
-export default function AlertsPage() {
+export default function PriceAlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [form, setForm] = useState({ base: 'BTC', op: '>', price: '' });
   const [perm, setPerm] = useState<NotificationPermission>('default');

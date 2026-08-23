@@ -1,42 +1,18 @@
-'use client';
-import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
-import { CoinTable } from '@/components/CoinTable';
-import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import type { Metadata } from 'next';
+import { CoinsClient } from '@/app/coins/CoinsClient';
 
-function CoinsInner() {
-  const sp = useSearchParams();
-  const tab = sp.get('tab') || 'all';
-  const filter = tab === 'gainers'
-    ? (c: { priceChange24h: number; volume24h: number }) => c.priceChange24h > 0 && c.volume24h > 1_000_000
-    : tab === 'losers'
-      ? (c: { priceChange24h: number; volume24h: number }) => c.priceChange24h < 0 && c.volume24h > 1_000_000
-      : undefined;
+/**
+ * Server wrapper so this route can carry its own metadata. The interactive view
+ * lives in CoinsClient, which keeps its own Suspense boundary because
+ * useSearchParams() requires one during static prerender.
+ */
+export const metadata: Metadata = {
+  title: 'All Coins',
+  description:
+    'Every USDT market aggregated across Binance, OKX, Bybit and Bitget, with a composite index '
+    + 'price, cross-venue spread, funding and open interest. Filter to gainers or losers.',
+};
 
-  return (
-    <div className="space-y-4">
-      <PageHeader
-        title="All Coins"
-        subtitle="USDT markets aggregated across Binance, OKX, Bybit and Bitget"
-        right={
-          <div className="flex gap-1">
-            <Link href="/coins"><Button size="sm" active={tab === 'all'}>All</Button></Link>
-            <Link href="/coins?tab=gainers"><Button size="sm" active={tab === 'gainers'}>Gainers</Button></Link>
-            <Link href="/coins?tab=losers"><Button size="sm" active={tab === 'losers'}>Losers</Button></Link>
-          </div>
-        }
-      />
-      <CoinTable endpoint="/api/coins?market=futures&limit=400" showFunding pageSize={30} filter={filter} />
-    </div>
-  );
-}
-
-export default function CoinsPage() {
-  return (
-    <Suspense fallback={<div className="text-sm text-muted">Loading…</div>}>
-      <CoinsInner />
-    </Suspense>
-  );
+export default function Page() {
+  return <CoinsClient />;
 }

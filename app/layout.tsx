@@ -5,8 +5,9 @@ import { TopNav } from '@/components/layout/TopNav';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Footer } from '@/components/layout/Footer';
 import { TickerBar } from '@/components/TickerBar';
+import { siteUrl } from '@/lib/site';
 
-const SITE = 'https://vdear-crypto.vercel.app';
+const SITE = siteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),

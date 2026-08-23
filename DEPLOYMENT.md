@@ -45,7 +45,7 @@ Nothing here is required to run. Add only what you want to unlock.
 
 | Variable | Effect if unset |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | canonical URLs fall back to the default host |
+| `NEXT_PUBLIC_SITE_URL` | canonical/OG/sitemap URLs fall back to Vercel's own domain — see below. Correct without it |
 | `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` | no accounts, no history — scores still compute live |
 | `SUPABASE_SERVICE_ROLE_KEY` | cron cannot write; routes return `skipped` with a reason. **Server-only** |
 | `CRON_SECRET` | cron routes refuse to run rather than being publicly triggerable |
@@ -60,6 +60,25 @@ Nothing here is required to run. Add only what you want to unlock.
 
 > **Never** prefix a private key with `NEXT_PUBLIC_` — that exposes it to the
 > browser. Only the Supabase URL and anon key belong under that prefix.
+
+### Site URL resolution
+
+`lib/site.ts` is the single source of truth for `metadataBase`, `robots.ts` and
+`sitemap.ts`, so canonical tags, OpenGraph URLs and the sitemap can never point
+at different hosts. It resolves in this order:
+
+```
+NEXT_PUBLIC_SITE_URL             an explicit choice always wins
+VERCEL_PROJECT_PRODUCTION_URL    the stable production domain Vercel assigns
+VERCEL_URL                       this specific deployment (preview builds)
+http://localhost:3000            local development
+```
+
+Both `VERCEL_*` values are injected automatically, so **a fresh import with no
+configuration is already correct** — set `NEXT_PUBLIC_SITE_URL` only when you
+attach a custom domain. No real host is hard-coded anywhere: a placeholder would
+be worse than localhost, because it reads as valid in a canonical tag while
+pointing at a site that may not exist.
 
 ### Database (optional)
 

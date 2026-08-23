@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next';
 import { DEFAULT_BASES } from '@/lib/symbols';
+import { siteUrl } from '@/lib/site';
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://vdear-crypto.vercel.app';
+const SITE = siteUrl();
 
 /** Intelligence routes rank highest — they are what the product is for. */
 const INTELLIGENCE = [
