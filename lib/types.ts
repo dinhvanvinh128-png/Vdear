@@ -47,6 +47,8 @@ export interface Candle {
   volume: number;
 }
 
+import type { CrossSourceCheck } from '@/lib/quality/crossSource';
+
 /**
  * A candle that also carries the TAKER-BUY split.
  *
@@ -161,10 +163,16 @@ export interface AggregatedTicker {
   low24h: number;
   fundingRate?: number | null; // volume-weighted avg where available
   openInterest?: number | null; // summed
-  /** Per-exchange breakdown, one entry per source that responded. */
+  /** Per-exchange breakdown — only the venues KEPT after the anomaly check. */
   sources: Ticker[];
   /** Exchanges that were queried but failed/returned nothing. */
   missing: ExchangeId[];
+  /**
+   * Cross-venue agreement check. When `severity` is not 'none' the UI must show
+   * `quality.message`; any venue in `quality.outliers` has been excluded from
+   * every figure above.
+   */
+  quality: CrossSourceCheck;
   timestamp: number;
 }
 

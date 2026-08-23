@@ -9,6 +9,7 @@ import type { ExchangeAdapter } from '@/lib/exchanges/types';
 import type {
   AggregatedTicker, Envelope, ExchangeId, IndexMethod, MarketType, Ticker, DataSourceKind,
 } from '@/lib/types';
+import { checkCrossSource, filterOutliers, type CrossSourceCheck } from '@/lib/quality/crossSource';
 
 export interface FanOut<T> {
   results: T[];
@@ -71,13 +72,22 @@ export function computeIndex(tickers: Ticker[], method: IndexMethod): number {
   return vden ? vnum / vden : tickers.reduce((s, t) => s + t.price, 0) / tickers.length;
 }
 
-/** Merge per-exchange tickers for ONE symbol into a VDEAR aggregate. */
+/**
+ * Merge per-exchange tickers for ONE symbol into a VDEAR aggregate.
+ *
+ * Runs the cross-source check FIRST and builds the index only from venues that
+ * agree (see lib/quality/crossSource). A venue quoting far outside the median is
+ * excluded and surfaced in `quality`, never silently averaged in — the spec's
+ * "Không được âm thầm dùng dữ liệu sai".
+ */
 export function mergeTickers(
   symbol: string,
-  sources: Ticker[],
+  allSources: Ticker[],
   allTried: ExchangeId[],
   method: IndexMethod = 'volume',
 ): AggregatedTicker {
+  const quality = checkCrossSource(symbol, allSources);
+  const sources = filterOutliers(allSources, quality);
   const prices = sources.map((s) => s.price).filter((p) => p > 0);
   const avgPrice = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
   const maxP = prices.length ? Math.max(...prices) : 0;
@@ -116,6 +126,7 @@ export function mergeTickers(
     low24h: sources.length ? Math.min(...sources.map((s) => s.low24h).filter((n) => n > 0)) : 0,
     fundingRate, openInterest,
     sources, missing,
+    quality,
     timestamp: Date.now(),
   };
 }
