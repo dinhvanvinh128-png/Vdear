@@ -21,7 +21,7 @@ export function LivePrice({
 
   return (
     <span className={cn('inline-flex items-baseline gap-2', className)}>
-      <span className="tnum font-bold">{fmtUsd(value)}</span>
+      <span className="tnum font-semibold">{fmtUsd(value)}</span>
       {live ? (
         <span className="inline-flex items-center gap-1 text-[10px] text-up" title={
           Object.entries(prices)

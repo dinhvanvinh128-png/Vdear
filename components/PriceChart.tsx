@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { AggregatedTicker, Candle, Envelope } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { CHART_FONT_FAMILY, themeColor } from '@/lib/theme';
 
 const TFS = ['5m', '15m', '30m', '1h', '4h', '1d', '1w'];
 type ChartType = 'candles' | 'line' | 'area';
@@ -36,10 +37,10 @@ export function PriceChart({ base, market = 'futures' }: { base: string; market?
 
       wrap.current.innerHTML = '';
       chart = createChart(wrap.current, {
-        layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#8a94a6', fontFamily: 'Inter, sans-serif' },
-        grid: { vertLines: { color: 'rgba(38,44,62,0.5)' }, horzLines: { color: 'rgba(38,44,62,0.5)' } },
-        rightPriceScale: { borderColor: '#262c3e' },
-        timeScale: { borderColor: '#262c3e', timeVisible: true, secondsVisible: false },
+        layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: themeColor('muted'), fontFamily: CHART_FONT_FAMILY },
+        grid: { vertLines: { color: themeColor('border', 0.5) }, horzLines: { color: themeColor('border', 0.5) } },
+        rightPriceScale: { borderColor: themeColor('border') },
+        timeScale: { borderColor: themeColor('border'), timeVisible: true, secondsVisible: false },
         crosshair: { mode: 0 },
         height: 420,
         autoSize: true,
@@ -47,15 +48,20 @@ export function PriceChart({ base, market = 'futures' }: { base: string; market?
 
       if (type === 'candles') {
         const s = chart.addCandlestickSeries({
-          upColor: '#16c784', downColor: '#ff4c61', borderVisible: false,
-          wickUpColor: '#16c784', wickDownColor: '#ff4c61',
+          upColor: themeColor('up'), downColor: themeColor('down'), borderVisible: false,
+          wickUpColor: themeColor('up'), wickDownColor: themeColor('down'),
         });
         s.setData(candles.map((c) => ({ time: c.time as never, open: c.open, high: c.high, low: c.low, close: c.close })));
       } else if (type === 'line') {
-        const s = chart.addLineSeries({ color: '#6366f1', lineWidth: 2 });
+        const s = chart.addLineSeries({ color: themeColor('brand'), lineWidth: 2 });
         s.setData(candles.map((c) => ({ time: c.time as never, value: c.close })));
       } else {
-        const s = chart.addAreaSeries({ lineColor: '#6366f1', topColor: 'rgba(99,102,241,0.4)', bottomColor: 'rgba(99,102,241,0.02)', lineWidth: 2 });
+        const s = chart.addAreaSeries({
+          lineColor: themeColor('brand'),
+          topColor: themeColor('brand', 0.35),
+          bottomColor: themeColor('brand', 0.02),
+          lineWidth: 2,
+        });
         s.setData(candles.map((c) => ({ time: c.time as never, value: c.close })));
       }
 

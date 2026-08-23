@@ -48,7 +48,7 @@ export function OnChainClient() {
                 <div className="text-[11px] uppercase tracking-wide text-muted">
                   {LABELS[x.metric] ?? x.metric}
                 </div>
-                <div className="mt-1 text-xl font-bold tnum text-text">
+                <div className="mt-1 text-xl font-semibold tnum text-text">
                   {x.metric.includes('Usd') ? fmtCompact(x.latest, '$') : fmtCompact(x.latest)}
                 </div>
                 <div className="mt-0.5 text-[11px] text-muted">

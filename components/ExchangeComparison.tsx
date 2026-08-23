@@ -25,7 +25,7 @@ export function ExchangeComparison({ base }: { base: string }) {
             <div className="mb-3 flex items-baseline justify-between rounded-lg border border-brand/30 bg-brand/10 px-3 py-2">
               <div>
                 <div className="text-[11px] uppercase tracking-wide text-muted">VDEAR Index</div>
-                <div className="text-lg font-bold tnum text-brand">${fmtPrice(agg.vdearIndex)}</div>
+                <div className="text-lg font-semibold tnum text-brand">${fmtPrice(agg.vdearIndex)}</div>
               </div>
               <div className="text-right text-[11px] text-muted">
                 <div>{agg.indexMethod}-weighted</div>

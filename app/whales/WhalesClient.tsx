@@ -48,7 +48,7 @@ export function WhalesClient() {
                         score={w.whaleBuyRatio == null ? null : w.whaleBuyRatio * 100} />
             <div className="rounded-xl border border-border bg-panel px-4 py-3">
               <div className="text-[11px] uppercase tracking-wide text-muted">Net whale flow</div>
-              <div className={cn('mt-1 text-2xl font-bold tnum',
+              <div className={cn('mt-1 text-2xl font-semibold tnum',
                 w.whaleNetUsd >= 0 ? 'text-up' : 'text-down')}>
                 {fmtCompact(w.whaleNetUsd, '$')}
               </div>
@@ -60,7 +60,7 @@ export function WhalesClient() {
               <div className="text-[11px] uppercase tracking-wide text-muted">Exchange flow</div>
               {w.exchangeFlow ? (
                 <>
-                  <div className={cn('mt-1 text-2xl font-bold tnum',
+                  <div className={cn('mt-1 text-2xl font-semibold tnum',
                     w.exchangeFlow.netflowLatest <= 0 ? 'text-up' : 'text-down')}>
                     {w.exchangeFlow.netflowLatest <= 0 ? 'Outflow' : 'Inflow'}
                   </div>

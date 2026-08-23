@@ -7,17 +7,17 @@ import { cn } from '@/lib/utils';
 export function Sidebar() {
   const pathname = usePathname();
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-panel/60 backdrop-blur lg:flex">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-panel lg:flex">
       <Link href="/" className="flex items-center gap-2 px-5 py-4">
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-sm font-black text-white">V</span>
-        <span className="text-[15px] font-extrabold tracking-tight">
-          VDEAR<span className="text-brand"> Crypto</span>
+        <span className="grid h-8 w-8 place-items-center border border-brand/70 text-sm font-medium text-brand">V</span>
+        <span className="text-[13px] font-medium uppercase tracking-[0.18em]">
+          VDEAR<span className="text-muted"> CRYPTO</span>
         </span>
       </Link>
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-6">
         {NAV.map((group) => (
           <div key={group.title}>
-            <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted">
+            <div className="px-2 pb-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted">
               {group.title}
             </div>
             <ul className="space-y-0.5">
@@ -30,8 +30,10 @@ export function Sidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors',
-                        active ? 'bg-brand/15 text-text ring-1 ring-brand/30' : 'text-muted hover:bg-panel-2 hover:text-text',
+                        'flex items-center gap-2.5 border-l-2 px-2.5 py-1.5 text-[12px] transition-colors',
+                        active
+                          ? 'border-brand bg-panel-2 text-text'
+                          : 'border-transparent text-muted hover:border-border hover:text-text',
                       )}
                     >
                       <Icon className="h-4 w-4" strokeWidth={2} />

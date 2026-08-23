@@ -49,7 +49,7 @@ export function CvdChart({ points, height = 240 }: { points: CvdPoint[]; height?
         <Tooltip
           contentStyle={{
             background: 'rgb(var(--panel))', border: '1px solid rgb(var(--border))',
-            borderRadius: 8, fontSize: 12,
+            borderRadius: 3, fontSize: 12,
           }}
           labelStyle={{ color: 'rgb(var(--muted))' }}
           formatter={(value: number, name: string) => [
@@ -83,7 +83,7 @@ export function DeltaBars({ points, height = 120 }: { points: CvdPoint[]; height
         <Tooltip
           contentStyle={{
             background: 'rgb(var(--panel))', border: '1px solid rgb(var(--border))',
-            borderRadius: 8, fontSize: 12,
+            borderRadius: 3, fontSize: 12,
           }}
           formatter={(v: number) => [fmtCompact(v, '$'), 'Delta']}
         />

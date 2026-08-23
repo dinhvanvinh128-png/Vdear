@@ -19,10 +19,10 @@ export function RegimeBadge({
 }: { regime: MarketRegime; conviction?: number | null; className?: string }) {
   return (
     <span className={cn(
-      'inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide',
+      'inline-flex items-center gap-2 border px-2.5 py-1',
       REGIME_TONE[regime], className,
     )}>
-      {REGIME_LABELS[regime]}
+      <span className="font-serif text-sm leading-none">{REGIME_LABELS[regime]}</span>
       {conviction != null && (
         <span className="tnum text-[10px] font-normal opacity-80">
           {Math.round(conviction)} conviction
@@ -46,10 +46,10 @@ export function SignalBadge({
 }: { state: SignalState; confidence?: number | null; className?: string }) {
   return (
     <span className={cn(
-      'inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-semibold',
+      'inline-flex items-center gap-2 border px-2.5 py-1',
       SIGNAL_TONE[state], className,
     )}>
-      {SIGNAL_LABELS[state]}
+      <span className="font-serif text-sm leading-none">{SIGNAL_LABELS[state]}</span>
       {confidence != null && (
         <span className="tnum text-[10px] font-normal opacity-80">{Math.round(confidence)}/100</span>
       )}
@@ -66,10 +66,10 @@ const ACC_TONE: Record<string, string> = {
 export function AccDistBadge({ phase, strength }: { phase: string; strength?: number | null }) {
   return (
     <span className={cn(
-      'inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-semibold',
+      'inline-flex items-center gap-2 border px-2.5 py-1',
       ACC_TONE[phase] ?? ACC_TONE.NEUTRAL,
     )}>
-      {phase}
+      <span className="font-serif text-sm leading-none">{phase}</span>
       {strength != null && phase !== 'NEUTRAL' && (
         <span className="tnum text-[10px] font-normal opacity-80">{Math.round(strength)}</span>
       )}

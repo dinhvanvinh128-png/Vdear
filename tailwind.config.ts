@@ -2,8 +2,18 @@ import type { Config } from 'tailwindcss';
 
 /**
  * VDEAR Crypto — design tokens.
- * Dark-first terminal/trading aesthetic. Semantic colors (up/down/warn/info)
- * are CSS variables so themes can be swapped without touching components.
+ *
+ * The type system inverts the usual dashboard hierarchy on purpose: the DEFAULT
+ * face is monospace, not sans. Everything the instrument reports — nav, labels,
+ * tables, every number — is set in IBM Plex Mono. The serif is reserved for the
+ * few places a human judgement is being expressed: the regime name, the WHY /
+ * RISKS prose, the hero score. The machine speaks mono; the analyst speaks serif.
+ *
+ * No component declares a font family, so `sans` here is what the whole app
+ * inherits through preflight.
+ *
+ * Semantic colors (up/down/warn/info) are CSS variables so themes can be
+ * swapped without touching components.
  */
 const config: Config = {
   darkMode: 'class',
@@ -29,11 +39,18 @@ const config: Config = {
         info: 'rgb(var(--info) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        sans: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        serif: ['Newsreader', 'ui-serif', 'Georgia', 'serif'],
       },
-      boxShadow: {
-        glow: '0 0 0 1px rgb(var(--border) / 0.6), 0 8px 30px rgb(0 0 0 / 0.35)',
+      /* Machined edges, not app-store rounding. rounded-full is a separate key,
+         so dots and pills stay circular. */
+      borderRadius: {
+        DEFAULT: 'var(--radius)',
+        md: 'var(--radius)',
+        lg: '4px',
+        xl: '4px',
+        '2xl': '4px',
       },
       keyframes: {
         marquee: {

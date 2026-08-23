@@ -23,12 +23,12 @@ export function CoinHeader({ base }: { base: string }) {
             <Star className={cn('h-6 w-6', has(base) && 'fill-warn text-warn')} />
           </button>
           <div>
-            <h1 className="text-2xl font-extrabold">{base} <span className="text-muted">/ USDT</span></h1>
+            <h1 className="text-2xl font-semibold">{base} <span className="text-muted">/ USDT</span></h1>
             <div className="text-xs text-muted">Perpetual · aggregated</div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-3xl font-black tnum">${c ? fmtPrice(c.vdearIndex) : '—'}</div>
+          <div className="text-3xl font-semibold tnum">${c ? fmtPrice(c.vdearIndex) : '—'}</div>
           <div className={cn('text-sm font-semibold tnum', up ? 'text-up' : 'text-down')}>
             {c ? fmtPct(c.priceChange24h) : '—'} (24h)
           </div>

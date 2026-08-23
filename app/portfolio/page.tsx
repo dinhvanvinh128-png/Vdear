@@ -9,10 +9,12 @@ import { Stat } from '@/components/common';
 import { useApi } from '@/hooks/useApi';
 import type { AggregatedTicker, Envelope } from '@/lib/types';
 import { fmtUsd, fmtPct } from '@/lib/format';
+import { themeColor, type ThemeToken } from '@/lib/theme';
 
 interface Holding { base: string; qty: number; entry: number }
 const KEY = 'vdear-portfolio';
-const PIE = ['#6366f1', '#22d3ee', '#16c784', '#f5bf42', '#ff4c61', '#a78bfa', '#60a5fa', '#f472b6'];
+/* Allocation slices, drawn from the palette rather than an unrelated rainbow. */
+const PIE_TOKENS: ThemeToken[] = ['brand', 'info', 'up', 'warn', 'down', 'brand-2', 'muted', 'text'];
 
 export default function PortfolioPage() {
   const [holdings, setHoldings] = useState<Holding[]>([]);
@@ -132,10 +134,10 @@ export default function PortfolioPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={pie} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2}>
-                      {pie.map((_, i) => <Cell key={i} fill={PIE[i % PIE.length]} />)}
+                      {pie.map((_, i) => <Cell key={i} fill={themeColor(PIE_TOKENS[i % PIE_TOKENS.length])} />)}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ background: '#11141e', border: '1px solid #262c3e', borderRadius: 8, fontSize: 12 }}
+                      contentStyle={{ background: themeColor('panel'), border: `1px solid ${themeColor('border')}`, borderRadius: 3, fontSize: 12 }}
                       formatter={(v, n) => [fmtUsd(Number(v)), String(n)]}
                     />
                   </PieChart>

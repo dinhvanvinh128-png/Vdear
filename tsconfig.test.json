@@ -31,6 +31,7 @@
     "lib/realtime/**/*.ts",
     "lib/api/sanitize.ts",
     "lib/site.ts",
+    "lib/theme.ts",
     "lib/exchanges/**/*.ts",
     "lib/types.ts",
     "lib/aggregate.ts",

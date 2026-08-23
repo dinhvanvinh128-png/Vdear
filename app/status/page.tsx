@@ -44,7 +44,7 @@ function SourceCard({
             )}
           </div>
           <div className="shrink-0 text-right">
-            <div className={cn('text-xs font-bold', TEXT[status])}>{LABEL[status]}</div>
+            <div className={cn('text-xs font-semibold', TEXT[status])}>{LABEL[status]}</div>
             {latencyMs != null && <div className="text-[11px] text-muted tnum">{latencyMs}ms</div>}
             {docsUrl && (
               <a href={docsUrl} target="_blank" rel="noreferrer noopener"
@@ -75,27 +75,27 @@ export default function StatusPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-border bg-panel px-4 py-3">
               <div className="text-[11px] uppercase tracking-wide text-muted">Exchanges</div>
-              <div className={cn('mt-1 text-lg font-bold tnum',
+              <div className={cn('mt-1 text-lg font-semibold tnum',
                 data.summary.exchangesOnline === data.summary.exchangesTotal ? 'text-up' : 'text-warn')}>
                 {data.summary.exchangesOnline}/{data.summary.exchangesTotal} online
               </div>
             </div>
             <div className="rounded-xl border border-border bg-panel px-4 py-3">
               <div className="text-[11px] uppercase tracking-wide text-muted">Core providers</div>
-              <div className={cn('mt-1 text-lg font-bold tnum',
+              <div className={cn('mt-1 text-lg font-semibold tnum',
                 data.summary.degraded ? 'text-warn' : 'text-up')}>
                 {data.summary.coreOnline}/{data.summary.coreTotal} online
               </div>
             </div>
             <div className="rounded-xl border border-border bg-panel px-4 py-3">
               <div className="text-[11px] uppercase tracking-wide text-muted">Premium (optional)</div>
-              <div className="mt-1 text-lg font-bold tnum text-text">
+              <div className="mt-1 text-lg font-semibold tnum text-text">
                 {data.summary.premiumConfigured}/{data.summary.premiumTotal} configured
               </div>
             </div>
             <div className="rounded-xl border border-border bg-panel px-4 py-3">
               <div className="text-[11px] uppercase tracking-wide text-muted">Cache</div>
-              <div className="mt-1 text-lg font-bold tnum text-text">{data.cache.entries}</div>
+              <div className="mt-1 text-lg font-semibold tnum text-text">{data.cache.entries}</div>
               <div className="mt-0.5 text-xs text-muted">{data.cache.inflight} in-flight</div>
             </div>
           </div>

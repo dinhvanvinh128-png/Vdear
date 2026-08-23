@@ -29,7 +29,7 @@ export function MarketHeatmap({ limit = 80 }: { limit?: number }) {
             className="flex aspect-[4/3] flex-col items-center justify-center rounded-lg border border-border/60 p-1 text-center transition-transform hover:scale-[1.03]"
             style={{ background: color(c.change24h) }}
           >
-            <span className="text-xs font-bold">{c.base}</span>
+            <span className="text-xs font-semibold">{c.base}</span>
             <span className="text-[11px] tnum">{fmtPct(c.change24h)}</span>
           </Link>
         ))}

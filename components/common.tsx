@@ -40,7 +40,7 @@ export function Stat({
   return (
     <div className="rounded-xl border border-border bg-panel px-4 py-3">
       <div className="text-[11px] uppercase tracking-wide text-muted">{label}</div>
-      <div className={cn('mt-1 text-lg font-bold tnum', toneCls)}>{value}</div>
+      <div className={cn('mt-1 text-lg font-semibold tnum', toneCls)}>{value}</div>
       {sub != null && <div className="mt-0.5 text-xs text-muted">{sub}</div>}
     </div>
   );

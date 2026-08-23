@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { fmtCompact } from '@/lib/format';
 import { Skeleton } from '@/components/common';
+import { themeColor } from '@/lib/theme';
 
 const PERIODS = ['1h', '4h', '12h', '1d'];
 
@@ -42,11 +43,11 @@ export function OpenInterestChart({ base }: { base: string }) {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(38,44,62,0.5)" />
-                <XAxis dataKey="t" tick={{ fill: '#8a94a6', fontSize: 10 }} minTickGap={40} />
-                <YAxis tick={{ fill: '#8a94a6', fontSize: 10 }} width={54} tickFormatter={(v) => fmtCompact(Number(v), '$')} />
+                <XAxis dataKey="t" tick={{ fill: themeColor('muted'), fontSize: 10 }} minTickGap={40} />
+                <YAxis tick={{ fill: themeColor('muted'), fontSize: 10 }} width={54} tickFormatter={(v) => fmtCompact(Number(v), '$')} />
                 <Tooltip
-                  contentStyle={{ background: '#11141e', border: '1px solid #262c3e', borderRadius: 8, fontSize: 12 }}
-                  labelStyle={{ color: '#8a94a6' }}
+                  contentStyle={{ background: themeColor('panel'), border: `1px solid ${themeColor('border')}`, borderRadius: 3, fontSize: 12 }}
+                  labelStyle={{ color: themeColor('muted') }}
                   formatter={(v) => [fmtCompact(Number(v), '$'), 'Open Interest']}
                 />
                 <Area type="monotone" dataKey="oi" stroke="rgb(96,165,250)" fill="url(#oiFill)" strokeWidth={2} />

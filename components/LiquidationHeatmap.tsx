@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { fmtPrice, fmtCompact } from '@/lib/format';
 import { Skeleton, DataFreshness } from '@/components/common';
+import { CHART_FONT_FAMILY, themeColor } from '@/lib/theme';
 
 interface Heatmap {
   yAxis: number[];
@@ -81,13 +82,13 @@ export function LiquidationHeatmap({ coin }: { coin: string }) {
     // current price line
     const cy = priceToY(d.currentPrice);
     ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = 'rgba(99,102,241,0.9)';
+    ctx.strokeStyle = themeColor('brand', 0.9);
     ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(plotW, cy); ctx.stroke();
     ctx.setLineDash([]);
 
     // price axis labels
-    ctx.fillStyle = '#8a94a6';
-    ctx.font = '10px Inter, sans-serif';
+    ctx.fillStyle = themeColor('muted');
+    ctx.font = `10px ${CHART_FONT_FAMILY}`;
     ctx.textAlign = 'left';
     for (let i = 0; i <= 6; i++) {
       const p = minY + ((maxY - minY) * i) / 6;

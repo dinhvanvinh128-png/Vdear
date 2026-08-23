@@ -59,6 +59,10 @@ export function IntelligenceDashboard({ symbol = 'BTC' }: { symbol?: string }) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <ScoreGauge label="Money Flow" score={d.moneyFlow.score} size="lg"
                     confidence={d.moneyFlow.confidence} coverage={d.moneyFlow.coverage}
+                    components={{
+                      available: d.moneyFlow.components.filter((c) => c.score != null).length,
+                      total: d.moneyFlow.components.length,
+                    }}
                     sublabel={d.moneyFlow.direction} />
         <ScoreGauge label="Trend" score={d.trend?.score ?? null}
                     sublabel={d.trend?.rangebound ? 'trend strength is low — range' : undefined} />

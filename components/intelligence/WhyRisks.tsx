@@ -21,8 +21,8 @@ export function WhyRisks({ report }: { report: AnalystReport }) {
         <CardContent>
           <ul className="space-y-2">
             {report.why.map((line, i) => (
-              <li key={i} className="flex gap-2 text-sm leading-relaxed text-text">
-                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-up" />
+              <li key={i} className="flex gap-2 font-serif text-[15px] leading-relaxed text-text">
+                <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-up" />
                 <span>{line}</span>
               </li>
             ))}
@@ -39,8 +39,8 @@ export function WhyRisks({ report }: { report: AnalystReport }) {
         <CardContent>
           <ul className="space-y-2">
             {report.risks.map((line, i) => (
-              <li key={i} className="flex gap-2 text-sm leading-relaxed text-text">
-                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-warn" />
+              <li key={i} className="flex gap-2 font-serif text-[15px] leading-relaxed text-text">
+                <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-warn" />
                 <span>{line}</span>
               </li>
             ))}
@@ -58,7 +58,7 @@ export function WhyRisks({ report }: { report: AnalystReport }) {
           <CardContent>
             <ul className="space-y-1.5">
               {report.contradictions.map((line, i) => (
-                <li key={i} className="text-sm leading-relaxed text-muted">{line}</li>
+                <li key={i} className="font-serif text-[15px] leading-relaxed text-muted">{line}</li>
               ))}
             </ul>
           </CardContent>

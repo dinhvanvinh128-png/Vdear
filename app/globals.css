@@ -1,43 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /*
  * VDEAR Crypto — theme tokens.
- * Dark-first. Colors are RGB triples so Tailwind's <alpha-value> works.
- * Semantic tokens (up/down/warn/info) are the ONLY place these hues live —
- * components never hard-code green/red (spec §28, §46).
+ *
+ * The palette is instrument enamel: a desaturated petrol ground, brass for
+ * attention and uncertainty, jade/clay for direction. Brass is deliberately NOT
+ * a brand colour — it means "look here, this is uncertain", which is why --brand
+ * and --warn resolve to the same hue. On this page the brightest thing on screen
+ * is always data, never chrome.
+ *
+ * Colors are RGB triples so Tailwind's <alpha-value> works. Semantic tokens
+ * (up/down/warn/info) are the ONLY place these hues live — components never
+ * hard-code green/red (spec §28, §46).
  */
 :root {
-  --bg: 9 11 17;          /* near-black navy */
-  --panel: 17 20 30;      /* card */
-  --panel-2: 23 27 40;    /* nested */
-  --border: 38 44 62;
-  --muted: 138 148 166;
-  --text: 232 236 244;
-  --brand: 99 102 241;    /* indigo — VDEAR accent */
-  --brand-2: 34 211 238;  /* cyan */
-  --up: 22 199 132;
-  --down: 255 76 97;
-  --warn: 245 191 66;
-  --info: 96 165 250;
+  --bg: 10 17 19;         /* #0A1113 petrol ground */
+  --panel: 15 26 29;      /* #0F1A1D card face */
+  --panel-2: 20 34 38;    /* #142226 recessed channel */
+  --border: 30 51 57;     /* #1E3339 engraved rule */
+  --muted: 110 136 144;   /* #6E8890 etched label */
+  --text: 220 231 230;    /* #DCE7E6 */
+  --brand: 192 138 46;    /* #C08A2E brass — attention / error */
+  --brand-2: 78 143 133;  /* #4E8F85 patina — supporting info */
+  --up: 62 158 119;       /* #3E9E77 jade */
+  --down: 196 87 63;      /* #C4573F clay */
+  --warn: 192 138 46;     /* brass */
+  --info: 78 143 133;     /* patina */
+  --radius: 3px;
 }
 
-/* Optional light theme (toggled by adding data-theme="light" on <html>). */
+/* Light theme (toggled by adding data-theme="light" on <html>).
+   Technical card stock, faintly green — the same instrument in daylight. */
 :root[data-theme='light'] {
-  --bg: 244 246 251;
-  --panel: 255 255 255;
-  --panel-2: 246 248 252;
-  --border: 223 228 238;
-  --muted: 100 112 133;
-  --text: 17 22 34;
-  --brand: 79 70 229;
-  --brand-2: 8 145 178;
-  --up: 13 160 105;
-  --down: 220 44 68;
-  --warn: 202 138 4;
-  --info: 37 99 235;
+  --bg: 231 234 232;      /* #E7EAE8 */
+  --panel: 244 246 245;   /* #F4F6F5 */
+  --panel-2: 237 241 239; /* #EDF1EF */
+  --border: 201 210 207;  /* #C9D2CF */
+  --muted: 85 103 107;    /* #55676B */
+  --text: 16 26 28;       /* #101A1C */
+  --brand: 138 95 20;     /* #8A5F14 */
+  --brand-2: 46 110 102;  /* #2E6E66 */
+  --up: 33 110 82;        /* #216E52 */
+  --down: 156 61 42;      /* #9C3D2A */
+  --warn: 138 95 20;
+  --info: 46 110 102;
 }
 
 html, body {
@@ -46,24 +55,45 @@ html, body {
 }
 
 body {
-  font-feature-settings: 'tnum' 1, 'cv01' 1;
+  font-feature-settings: 'tnum' 1;
   -webkit-font-smoothing: antialiased;
 }
 
 /* Numeric alignment for tables. */
 .tnum { font-variant-numeric: tabular-nums; }
 
-/* Thin scrollbars in the terminal aesthetic. */
+/* Thin scrollbars in the instrument aesthetic. */
 * { scrollbar-width: thin; scrollbar-color: rgb(var(--border)) transparent; }
 *::-webkit-scrollbar { height: 8px; width: 8px; }
 *::-webkit-scrollbar-thumb { background: rgb(var(--border)); border-radius: 999px; }
 *::-webkit-scrollbar-track { background: transparent; }
 
-/* Subtle aurora backdrop for hero areas. */
-.aurora {
-  background:
-    radial-gradient(60% 120% at 15% 0%, rgb(var(--brand) / 0.18), transparent 60%),
-    radial-gradient(50% 120% at 100% 0%, rgb(var(--brand-2) / 0.12), transparent 55%);
+.hairline { border-color: rgb(var(--border)); }
+
+/*
+ * Confidence Rail — minor graduations.
+ *
+ * Drawn as a gradient rather than 20 elements: the ticks are a printed scale on
+ * the instrument, not content. Ten intervals over the 0..100 domain, so each
+ * tick is 10 score points. `background-size: 10% 100%` keeps them correct at any
+ * rail width, and the trailing 100% edge is drawn by the rail's own end caps.
+ */
+.rail-ticks {
+  background-image: linear-gradient(to right, rgb(var(--border)) 1px, transparent 1px);
+  background-size: 10% 100%;
+  background-repeat: repeat-x;
 }
 
-.hairline { border-color: rgb(var(--border)); }
+/* Keyboard focus is brass, the same colour the instrument uses for "look here". */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

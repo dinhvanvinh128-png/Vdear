@@ -1,5 +1,6 @@
 'use client';
 import { cn } from '@/lib/utils';
+import { ConfidenceRail, CoveragePips } from '@/components/intelligence/ScoreGauge';
 import type { MoneyFlowScore } from '@/lib/scoring/moneyFlow';
 
 /**
@@ -9,6 +10,10 @@ import type { MoneyFlowScore } from '@/lib/scoring/moneyFlow';
  * hidden. That is the visible counterpart of the renormalisation rule: the user
  * can see that a component was dropped, and why, instead of a composite that
  * quietly absorbed a default value.
+ *
+ * Each component gets the same rail as the composite score, at a smaller size,
+ * so reading down the breakdown is reading the same instrument repeatedly rather
+ * than switching between two visual languages.
  */
 export function ScoreBreakdown({ moneyFlow }: { moneyFlow: MoneyFlowScore }) {
   const available = moneyFlow.components.filter((c) => c.score != null);
@@ -16,10 +21,9 @@ export function ScoreBreakdown({ moneyFlow }: { moneyFlow: MoneyFlowScore }) {
 
   return (
     <div className="space-y-3">
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {available.map((c) => {
           const score = c.score as number;
-          const tone = score >= 60 ? 'bg-up' : score <= 40 ? 'bg-down' : 'bg-warn';
           const text = score >= 60 ? 'text-up' : score <= 40 ? 'text-down' : 'text-warn';
           return (
             <div key={c.component} className="grid grid-cols-[1fr_auto] items-center gap-3">
@@ -30,11 +34,9 @@ export function ScoreBreakdown({ moneyFlow }: { moneyFlow: MoneyFlowScore }) {
                     {c.effectiveWeight.toFixed(0)}% weight
                   </span>
                 </div>
-                <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-panel-2">
-                  <div className={cn('h-full rounded-full', tone)} style={{ width: `${score}%` }} />
-                </div>
+                <ConfidenceRail score={score} compact className="mt-1" />
               </div>
-              <span className={cn('tnum w-8 text-right text-sm font-semibold', text)}>
+              <span className={cn('tnum w-8 text-right text-sm font-medium', text)}>
                 {Math.round(score)}
               </span>
             </div>
@@ -43,11 +45,11 @@ export function ScoreBreakdown({ moneyFlow }: { moneyFlow: MoneyFlowScore }) {
       </div>
 
       {missing.length > 0 && (
-        <div className="rounded-lg border border-border bg-panel-2/40 px-3 py-2">
-          <div className="text-[11px] font-medium uppercase tracking-wide text-muted">
+        <div className="border border-border bg-panel-2/40 px-3 py-2">
+          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted">
             Not available — excluded and weights renormalised
           </div>
-          <ul className="mt-1 space-y-0.5">
+          <ul className="mt-1.5 space-y-0.5">
             {missing.map((c) => (
               <li key={c.component} className="text-[11px] leading-snug text-muted">
                 <span className="text-text">{c.label}</span>
@@ -58,7 +60,12 @@ export function ScoreBreakdown({ moneyFlow }: { moneyFlow: MoneyFlowScore }) {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-2 text-[11px] text-muted">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-2 text-[11px] text-muted">
+        <CoveragePips
+          available={available.length}
+          total={moneyFlow.components.length}
+          title={`${available.length} of ${moneyFlow.components.length} components available`}
+        />
         <span>Coverage <span className="tnum text-text">{Math.round(moneyFlow.coverage * 100)}%</span></span>
         <span>Confidence <span className="tnum text-text">{Math.round(moneyFlow.confidence)}/100</span></span>
         <span>Direction <span className="text-text">{moneyFlow.direction}</span></span>

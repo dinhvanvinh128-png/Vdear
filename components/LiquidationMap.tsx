@@ -54,7 +54,7 @@ export function LiquidationMap({ coin }: { coin: string }) {
 
             <div className="my-3 flex items-center justify-between rounded-lg border border-brand/40 bg-brand/10 px-3 py-2">
               <span className="text-xs font-semibold uppercase tracking-wide text-muted">Current price</span>
-              <span className="text-lg font-bold tnum text-brand">${fmtPrice(map.currentPrice)}</span>
+              <span className="text-lg font-semibold tnum text-brand">${fmtPrice(map.currentPrice)}</span>
             </div>
 
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-up">Long liquidation zones ▼</div>

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="space-y-8">
-      <section className="aurora -mx-4 -mt-5 px-4 pb-5 pt-6">
+      <section className="-mx-4 -mt-5 border-b border-border px-4 pb-6 pt-6">
         <div className="mx-auto max-w-7xl">
           <PageHeader
             title="VDEAR — Crypto Market Intelligence"

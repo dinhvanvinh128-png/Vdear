@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 export function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 flex h-14 items-stretch border-t border-border bg-panel/95 backdrop-blur lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 flex h-14 items-stretch border-t border-border bg-panel lg:hidden">
       {BOTTOM_NAV.map((item) => {
         const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
         const Icon = item.icon;
