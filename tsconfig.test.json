@@ -27,6 +27,7 @@
     "lib/quality/**/*.ts",
     "lib/analyst/**/*.ts",
     "lib/providers/**/*.ts",
+    "lib/services/**/*.ts",
     "lib/exchanges/**/*.ts",
     "lib/types.ts",
     "lib/aggregate.ts",
