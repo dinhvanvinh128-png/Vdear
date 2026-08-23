@@ -5,7 +5,8 @@ import type { Envelope } from '@/lib/types';
 import type { Intelligence } from '@/lib/services/intelligence';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataFreshness, Skeleton, ErrorState, PctChange } from '@/components/common';
-import { fmtCompact, fmtUsd } from '@/lib/format';
+import { fmtCompact } from '@/lib/format';
+import { LivePrice } from '@/components/intelligence/LivePrice';
 import { ScoreGauge } from '@/components/intelligence/ScoreGauge';
 import { ScoreBreakdown } from '@/components/intelligence/ScoreBreakdown';
 import { AccDistBadge, RegimeBadge, SignalBadge } from '@/components/intelligence/RegimeBadge';
@@ -41,7 +42,7 @@ export function IntelligenceDashboard({ symbol = 'BTC' }: { symbol?: string }) {
           <div>
             <div className="text-xs uppercase tracking-wide text-muted">{d.symbol}</div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold tnum text-text">{fmtUsd(d.price)}</span>
+              <LivePrice base={d.symbol} fallback={d.price} className="text-2xl text-text" />
               <PctChange value={d.priceChange24h} />
             </div>
           </div>
