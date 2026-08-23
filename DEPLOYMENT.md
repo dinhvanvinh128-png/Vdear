@@ -48,7 +48,7 @@ Nothing here is required to run. Add only what you want to unlock.
 | `NEXT_PUBLIC_SITE_URL` | canonical/OG/sitemap URLs fall back to Vercel's own domain — see below. Correct without it |
 | `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` | no accounts, no history — scores still compute live |
 | `SUPABASE_SERVICE_ROLE_KEY` | cron cannot write; routes return `skipped` with a reason. **Server-only** |
-| `CRON_SECRET` | cron routes refuse to run rather than being publicly triggerable |
+| `CRON_SECRET` | cron routes refuse to run rather than being publicly triggerable. Only needed once you attach schedules (see Cron below) |
 | `COINGECKO_API_KEY` | free tier, tighter rate limit |
 | `DEFI_LLAMA_API_KEY` | free endpoints, tighter rate limit |
 | `COINMETRICS_API_KEY` | community tier (sufficient for the on-chain score) |
@@ -89,22 +89,58 @@ psql "$DATABASE_URL" -f supabase/migrations/0002_market_intelligence.sql
 
 See `DATABASE_SCHEMA.md`. Both files are safe to re-run.
 
-### Cron
+### Cron — not declared by default, and that is deliberate
 
-Already in `vercel.json`:
+`vercel.json` ships with **no `crons` block**. The four cron routes exist and work; they simply
+have no schedule attached.
 
-| Route | Schedule |
-|---|---|
-| `/api/cron/ingest` | every 15 min |
-| `/api/cron/scores` | hourly |
-| `/api/cron/alerts` | every 15 min |
-| `/api/cron/prune` | daily 04:00 UTC |
+Two reasons:
 
-Test one manually:
+1. **They do nothing without a database.** Every cron route checks `dbWritable()` first and returns
+   `{ "skipped": true, "reason": "..." }` when Supabase is not configured. Scheduling them before
+   you have a database produces nothing but skipped invocations.
+2. **The Hobby plan would reject the deployment.** Hobby allows at most **2 cron jobs**, each
+   running **at most once per day**. Declaring four — three of them sub-daily — fails deployment
+   *after* a successful build, which is confusing because the build log looks perfectly clean.
+
+Nothing is lost meanwhile: every score is computed live per request. Cron only adds *history*
+(score series, breadth over time, alert de-duplication across restarts).
+
+**Trigger a route manually at any time:**
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" https://your-app.vercel.app/api/cron/scores
 ```
+
+#### Turning schedules on — Hobby
+
+Once a database is configured. Two jobs, daily only — the maximum Hobby permits. Pick the two that
+matter most: recording the daily score snapshot, and pruning old rows.
+
+```jsonc
+// vercel.json — add alongside "headers"
+"crons": [
+  { "path": "/api/cron/scores", "schedule": "0 1 * * *" },
+  { "path": "/api/cron/prune",  "schedule": "0 4 * * *" }
+]
+```
+
+A once-daily score snapshot gives you a daily history series — coarse, but real.
+
+#### Turning schedules on — Pro
+
+The full set, at the cadence the engines were designed for:
+
+```jsonc
+"crons": [
+  { "path": "/api/cron/ingest", "schedule": "*/15 * * * *" },
+  { "path": "/api/cron/scores", "schedule": "0 * * * *" },
+  { "path": "/api/cron/alerts", "schedule": "*/15 * * * *" },
+  { "path": "/api/cron/prune",  "schedule": "0 4 * * *" }
+]
+```
+
+Set `CRON_SECRET` either way, or the routes refuse to run rather than being publicly triggerable.
 
 ---
 
