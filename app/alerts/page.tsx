@@ -1,124 +1,108 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, Trash2 } from 'lucide-react';
-import { PageHeader } from '@/components/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Bell } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
-import type { AggregatedTicker, Envelope } from '@/lib/types';
-import { fmtPrice } from '@/lib/format';
+import { PageHeader } from '@/components/PageHeader';
+import { CoinPicker } from '@/components/CoinPicker';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataFreshness, Skeleton, ErrorState } from '@/components/common';
+import { ago } from '@/lib/format';
+import { cn } from '@/lib/utils';
+import type { Envelope } from '@/lib/types';
+import type { Alert } from '@/lib/engines/alerts';
+import type { AlertRow } from '@/lib/db/repositories';
 
-interface Alert { id: string; base: string; op: '>' | '<'; price: number; triggered?: boolean }
-const KEY = 'vdear-alerts';
+const SEVERITY: Record<string, string> = {
+  info: 'border-info/30 bg-info/5 text-info',
+  warning: 'border-warn/40 bg-warn/5 text-warn',
+  critical: 'border-down/50 bg-down/10 text-down',
+};
+
+interface AlertsPayload {
+  live: Alert[];
+  history: (AlertRow & { triggered_at: string })[];
+  persistence: string;
+}
 
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [form, setForm] = useState({ base: 'BTC', op: '>', price: '' });
-  const [perm, setPerm] = useState<NotificationPermission>('default');
-  const fired = useRef<Set<string>>(new Set());
-  const { data } = useApi<Envelope<AggregatedTicker[]>>('/api/coins?market=futures&limit=500', 8000);
-
-  useEffect(() => {
-    try { const r = localStorage.getItem(KEY); if (r) setAlerts(JSON.parse(r)); } catch { /* ignore */ }
-    if (typeof Notification !== 'undefined') setPerm(Notification.permission);
-  }, []);
-  const persist = (next: Alert[]) => {
-    setAlerts(next);
-    try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* ignore */ }
-  };
-
-  const priceMap = useMemo(() => {
-    const m = new Map<string, number>();
-    (data?.data ?? []).forEach((c) => m.set(c.base, c.vdearIndex));
-    return m;
-  }, [data]);
-
-  // Check alerts on each price refresh (client-side, while the page is open).
-  useEffect(() => {
-    if (priceMap.size === 0) return;
-    let changed = false;
-    const next = alerts.map((a) => {
-      if (a.triggered) return a;
-      const p = priceMap.get(a.base.toUpperCase());
-      if (p == null) return a;
-      const hit = a.op === '>' ? p >= a.price : p <= a.price;
-      if (hit && !fired.current.has(a.id)) {
-        fired.current.add(a.id);
-        changed = true;
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          new Notification(`VDEAR alert: ${a.base} ${a.op} $${fmtPrice(a.price)}`, { body: `Now $${fmtPrice(p)}` });
-        }
-        return { ...a, triggered: true };
-      }
-      return a;
-    });
-    if (changed) persist(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priceMap]);
-
-  const add = (e: React.FormEvent) => {
-    e.preventDefault();
-    const base = form.base.trim().toUpperCase().replace(/USDT$/, '');
-    const price = parseFloat(form.price);
-    if (!base || !(price > 0)) return;
-    persist([...alerts, { id: crypto.randomUUID(), base, op: form.op as '>' | '<', price }]);
-    setForm({ ...form, price: '' });
-  };
-
-  const askPerm = async () => {
-    if (typeof Notification === 'undefined') return;
-    setPerm(await Notification.requestPermission());
-  };
+  const [symbol, setSymbol] = useState('BTC');
+  const { data, loading, error } = useApi<Envelope<AlertsPayload>>(
+    `/api/alerts?symbol=${symbol}`, 30_000,
+  );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <PageHeader
-        title="Price Alerts"
-        subtitle="Browser alerts fire while VDEAR is open. Email/Telegram delivery is a later phase."
-        right={perm !== 'granted'
-          ? <Button size="sm" variant="outline" onClick={askPerm}><Bell className="h-4 w-4" /> Enable notifications</Button>
-          : <Badge variant="up">Notifications on</Badge>}
+        title="Market Alerts"
+        subtitle="Conditions detected from the live engine output — CVD spikes, volume anomalies, whale flow, breadth shifts and regime changes."
+        right={<CoinPicker value={symbol} onChange={setSymbol} />}
       />
-      <Card>
-        <CardHeader><CardTitle>New alert</CardTitle></CardHeader>
-        <CardContent>
-          <form onSubmit={add} className="flex flex-wrap items-center gap-2">
-            <input value={form.base} onChange={(e) => setForm({ ...form, base: e.target.value })} placeholder="Coin"
-              className="h-9 w-24 rounded-lg border border-border bg-panel-2 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand/40" />
-            <select value={form.op} onChange={(e) => setForm({ ...form, op: e.target.value })}
-              className="h-9 rounded-lg border border-border bg-panel-2 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand/40">
-              <option value=">">rises above</option>
-              <option value="<">falls below</option>
-            </select>
-            <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Price $"
-              className="h-9 w-32 rounded-lg border border-border bg-panel-2 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand/40" />
-            <Button type="submit" variant="primary" size="sm">Add alert</Button>
-          </form>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader><CardTitle>Active alerts</CardTitle></CardHeader>
-        <CardContent className="space-y-1">
-          {alerts.length === 0 && <div className="py-6 text-center text-sm text-muted">No alerts yet.</div>}
-          {alerts.map((a) => {
-            const p = priceMap.get(a.base.toUpperCase());
-            return (
-              <div key={a.id} className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm">
-                <span className="font-semibold">{a.base} {a.op === '>' ? '≥' : '≤'} ${fmtPrice(a.price)}</span>
-                <span className="flex items-center gap-3">
-                  <span className="text-muted">{p != null ? `now $${fmtPrice(p)}` : '—'}</span>
-                  {a.triggered && <Badge variant="up">Triggered</Badge>}
-                  <button onClick={() => persist(alerts.filter((x) => x.id !== a.id))} className="text-muted hover:text-down">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </span>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+      {loading && !data && <Skeleton className="h-56 w-full" />}
+      {error && !data && <ErrorState message={error} />}
+
+      {data && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-4 w-4" /> Currently detected
+              </CardTitle>
+              <DataFreshness meta={data.meta} />
+            </CardHeader>
+            <CardContent>
+              {data.data.live.length === 0 ? (
+                <div className="py-6 text-center text-sm text-muted">
+                  No alert conditions are currently met for {symbol}.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {data.data.live.map((a) => (
+                    <div key={a.dedupeKey}
+                         className={cn('rounded-lg border px-3 py-2', SEVERITY[a.severity])}>
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="text-xs font-semibold uppercase tracking-wide">
+                          {a.asset} · {a.kind.replace(/_/g, ' ')}
+                        </span>
+                        <span className="tnum text-[10px] opacity-80">
+                          {a.severity} · confidence {Math.round(a.confidence)}/100 · {ago(a.timestamp)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm leading-relaxed text-text">{a.reason}</p>
+                      <p className="mt-1 text-[11px] opacity-80">Source: {a.source}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="mt-3 text-[11px] leading-relaxed text-muted">{data.data.persistence}</p>
+            </CardContent>
+          </Card>
+
+          {data.data.history.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle>History</CardTitle></CardHeader>
+              <CardContent>
+                <div className="space-y-1.5">
+                  {data.data.history.map((h, i) => (
+                    <div key={i} className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border/50 pb-1.5 last:border-0">
+                      <span className="text-xs text-text">{h.reason}</span>
+                      <span className="tnum shrink-0 text-[10px] text-muted">
+                        {ago(Date.parse(h.triggered_at))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <p className="text-[11px] text-muted">
+            Looking for personal price alerts?{' '}
+            <Link href="/price-alerts" className="underline underline-offset-2">Price alerts</Link>
+          </p>
+        </>
+      )}
     </div>
   );
 }

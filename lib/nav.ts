@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, Coins, TrendingUp, TrendingDown, Flame, LineChart,
   Percent, Layers, Droplets, Grid3x3, Fish, Newspaper, Star, Wallet, Bell, Activity,
+  Waves, Network, Boxes, Radar, Gauge,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -16,9 +17,23 @@ export interface NavGroup {
 
 export const NAV: NavGroup[] = [
   {
-    title: 'Market',
+    // Intelligence leads: the product's claim is about flow and evidence, and
+    // the navigation should say so before price does.
+    title: 'Intelligence',
     items: [
       { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+      { label: 'Money Flow', href: '/money-flow', icon: Waves },
+      { label: 'Breadth', href: '/breadth', icon: Radar },
+      { label: 'Liquidity', href: '/liquidity', icon: Gauge },
+      { label: 'Whales', href: '/whales', icon: Fish },
+      { label: 'On-chain', href: '/onchain', icon: Network },
+      { label: 'Sectors', href: '/sectors', icon: Boxes },
+      { label: 'Alerts', href: '/alerts', icon: Bell },
+    ],
+  },
+  {
+    title: 'Market',
+    items: [
       { label: 'Coins', href: '/coins', icon: Coins },
       { label: 'Gainers', href: '/coins?tab=gainers', icon: TrendingUp },
       { label: 'Losers', href: '/coins?tab=losers', icon: TrendingDown },
@@ -42,8 +57,8 @@ export const NAV: NavGroup[] = [
     items: [
       { label: 'Watchlist', href: '/watchlist', icon: Star },
       { label: 'Portfolio', href: '/portfolio', icon: Wallet },
-      { label: 'Alerts', href: '/alerts', icon: Bell },
-      { label: 'Whale', href: '/whale', icon: Fish },
+      { label: 'Price alerts', href: '/price-alerts', icon: Bell },
+      { label: 'Whale trades', href: '/whale', icon: Fish },
       { label: 'News', href: '/news', icon: Newspaper },
       { label: 'API Status', href: '/status', icon: Activity },
     ],
@@ -53,8 +68,8 @@ export const NAV: NavGroup[] = [
 /** Bottom-nav (mobile) — the 5 most-used destinations. */
 export const BOTTOM_NAV: NavItem[] = [
   { label: 'Home', href: '/', icon: LayoutDashboard },
+  { label: 'Flow', href: '/money-flow', icon: Waves },
+  { label: 'Breadth', href: '/breadth', icon: Radar },
   { label: 'Market', href: '/coins', icon: Coins },
-  { label: 'Futures', href: '/futures', icon: LineChart },
-  { label: 'Liquidations', href: '/liquidations', icon: Droplets },
   { label: 'Watchlist', href: '/watchlist', icon: Star },
 ];

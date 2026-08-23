@@ -3,17 +3,37 @@ import { DEFAULT_BASES } from '@/lib/symbols';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://vdear-crypto.vercel.app';
 
+/** Intelligence routes rank highest — they are what the product is for. */
+const INTELLIGENCE = [
+  '/money-flow', '/breadth', '/liquidity', '/whales', '/onchain', '/sectors', '/alerts',
+];
+
+const MARKET = [
+  '/markets', '/coins', '/heatmap',
+];
+
+const DERIVATIVES = [
+  '/futures', '/funding', '/open-interest', '/long-short',
+  '/liquidations', '/liquidations/map', '/liquidations/heatmap',
+];
+
+const TOOLS = ['/watchlist', '/portfolio', '/price-alerts', '/whale', '/news', '/status'];
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  const routes = [
-    '', '/coins', '/futures', '/funding', '/open-interest', '/long-short',
-    '/liquidations', '/liquidations/map', '/liquidations/heatmap', '/heatmap',
-    '/watchlist', '/portfolio', '/alerts', '/whale', '/news', '/status',
-  ].map((r) => ({ url: `${SITE}${r}`, lastModified: now, changeFrequency: 'hourly' as const, priority: r === '' ? 1 : 0.7 }));
+  const entry = (path: string, priority: number) => ({
+    url: `${SITE}${path}`,
+    lastModified: now,
+    changeFrequency: 'hourly' as const,
+    priority,
+  });
 
-  const coins = DEFAULT_BASES.map((b) => ({
-    url: `${SITE}/coin/${b}`, lastModified: now, changeFrequency: 'hourly' as const, priority: 0.6,
-  }));
-
-  return [...routes, ...coins];
+  return [
+    entry('', 1),
+    ...INTELLIGENCE.map((r) => entry(r, 0.9)),
+    ...MARKET.map((r) => entry(r, 0.8)),
+    ...DERIVATIVES.map((r) => entry(r, 0.6)),
+    ...TOOLS.map((r) => entry(r, 0.4)),
+    ...DEFAULT_BASES.map((b) => entry(`/coin/${b}`, 0.7)),
+  ];
 }

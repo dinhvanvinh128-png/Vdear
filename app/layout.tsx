@@ -11,18 +11,25 @@ const SITE = 'https://vdear-crypto.vercel.app';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: 'VDEAR Crypto — Real-Time Crypto Market Intelligence',
-    template: '%s · VDEAR Crypto',
+    default: 'VDEAR — Crypto Market Intelligence',
+    template: '%s · VDEAR',
   },
   description:
-    'Real-time multi-exchange crypto market intelligence: prices, futures, funding, open interest, long/short, liquidations and heatmaps aggregated from Binance, OKX, Bybit and Bitget.',
-  keywords: ['crypto', 'futures', 'funding rate', 'open interest', 'liquidation', 'heatmap', 'Binance', 'OKX', 'Bybit', 'Bitget'],
+    'Spot-flow-driven crypto market intelligence: cumulative volume delta, market breadth, '
+    + 'stablecoin liquidity, on-chain activity, whale flow and market regime — scored from live '
+    + 'Binance, OKX, Bybit and Bitget data with derivatives used only as confirmation.',
+  keywords: [
+    'crypto market intelligence', 'CVD', 'cumulative volume delta', 'spot flow',
+    'market breadth', 'stablecoin liquidity', 'money flow', 'market regime',
+    'accumulation distribution', 'on-chain', 'whale flow', 'Binance', 'OKX', 'Bybit', 'Bitget',
+  ],
   openGraph: {
-    title: 'VDEAR Crypto — Real-Time Crypto Market Intelligence',
-    description: 'Multi-exchange crypto market intelligence dashboard.',
-    url: SITE, siteName: 'VDEAR Crypto', type: 'website',
+    title: 'VDEAR — Crypto Market Intelligence',
+    description:
+      'Data to evidence to score to regime. Spot flow first; derivatives confirm.',
+    url: SITE, siteName: 'VDEAR', type: 'website',
   },
-  twitter: { card: 'summary_large_image', title: 'VDEAR Crypto' },
+  twitter: { card: 'summary_large_image', title: 'VDEAR — Crypto Market Intelligence' },
   robots: { index: true, follow: true },
 };
 
