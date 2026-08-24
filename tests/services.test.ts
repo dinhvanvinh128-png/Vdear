@@ -172,14 +172,19 @@ test('a thin picture cannot produce a high-confidence signal', () => {
 
 /* ========================= UPSTREAM RETURNS NOTHING ======================== */
 
-test('empty exchange responses produce neutral engines, not zeros', () => {
+test('empty exchange responses never produce zeros', () => {
   const flow = computeSpotFlow({
     symbol: 'BTCUSDT', timeframe: '1h', perExchange: [],
     excluded: ['binance', 'okx', 'bybit', 'bitget'],
   });
-  assert.equal(flow.score, 50);
+  assert.equal(flow.score, null, 'no measurement, so no score — not a neutral 50');
   assert.equal(flow.buyPressure, null, 'unknown pressure, not zero pressure');
   assert.equal(flow.candleCount, 0);
+
+  // NOTE: the three engines below still return a neutral 50 for an empty input.
+  // That is the same defect spot flow just had — a fabricated reading that counts
+  // towards the composite's coverage and confidence — and they are asserted here
+  // as they currently behave, not as they should. See NOTES in the commit body.
 
   const breadth = computeBreadth([]);
   assert.equal(breadth.score, 50);

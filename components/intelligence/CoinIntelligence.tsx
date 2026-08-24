@@ -73,7 +73,7 @@ export function CoinIntelligence({ base }: { base: string }) {
             {flow && (
               <>
                 <div className="mt-2 grid grid-cols-2 gap-3 border-t border-border pt-2 text-xs sm:grid-cols-4">
-                  <Stat label="CVD" value={fmtCompact(flow.cvd, '$')} />
+                  <Stat label="CVD" value={flow.cvd == null ? '—' : fmtCompact(flow.cvd, '$')} />
                   <Stat label="Buy pressure"
                         value={flow.buyPressure == null ? '—' : `${(flow.buyPressure * 100).toFixed(1)}%`} />
                   <Stat label="Volume anomaly" value={flow.volumeAnomaly.label ?? 'insufficient history'} />

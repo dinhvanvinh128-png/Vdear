@@ -105,17 +105,18 @@ test('spot flow records excluded venues instead of imputing them', () => {
   assert.deepEqual(flow.excluded, ['okx', 'bybit', 'bitget']);
   assert.equal(flow.buyPressure, 0.8);
   assert.equal(flow.sellPressure, 0.2);
-  assert.ok(flow.score > 60, 'heavy buying scores above neutral');
+  assert.ok(flow.score! > 60, 'heavy buying scores above neutral');
 });
 
-test('spot flow on an empty series is neutral and admits it', () => {
+test('spot flow on an empty series reports nothing, and says which venue it wanted', () => {
   const flow = computeSpotFlow({
     symbol: 'BTCUSDT', timeframe: '1h', perExchange: [], excluded: ['binance'],
   });
-  assert.equal(flow.score, 50);
+  assert.equal(flow.score, null, 'unmeasured is not the same as neutral');
   assert.equal(flow.buyPressure, null, 'no trades is unknown pressure, not zero');
   assert.equal(flow.candleCount, 0);
   assert.deepEqual(flow.sources, []);
+  assert.deepEqual(flow.excluded, ['binance'], 'the reader is told what was missing');
 });
 
 test('balanced flow scores 50, one-sided flow scores toward the extreme', () => {
@@ -123,10 +124,37 @@ test('balanced flow scores 50, one-sided flow scores toward the extreme', () => 
   assert.equal(scoreSpotFlow(balanced), 50);
 
   const buying = buildCvd(Array.from({ length: 20 }, (_, i) => fc(i, 100, 1000, 900)));
-  assert.ok(scoreSpotFlow(buying) > 80);
+  assert.ok(scoreSpotFlow(buying)! > 80);
 
   const selling = buildCvd(Array.from({ length: 20 }, (_, i) => fc(i, 100, 1000, 100)));
-  assert.ok(scoreSpotFlow(selling) < 20);
+  assert.ok(scoreSpotFlow(selling)! < 20);
+});
+
+test('no taker split is null, NOT a neutral 50', () => {
+  // The distinction this whole engine exists to protect. A pair nobody publishes
+  // a taker split for must not arrive at the composite looking like a measured,
+  // perfectly balanced market — that would inflate coverage and confidence with
+  // evidence that was never gathered.
+  assert.equal(scoreSpotFlow([]), null);
+
+  // Candles that exist but carry no volume are equally unmeasured.
+  const empty = buildCvd(Array.from({ length: 5 }, (_, i) => fc(i, 100, 0, 0)));
+  assert.equal(scoreSpotFlow(empty), null);
+});
+
+test('a flow with no usable venue reports absence rather than zero', () => {
+  const flow = computeSpotFlow({
+    symbol: 'SPKUSDT', timeframe: '1h', excluded: ['okx', 'bybit', 'bitget'], perExchange: [],
+  });
+  // Every headline figure is null. $0.00 would read as "buying and selling
+  // cancelled out", which is a claim about the market we are in no position
+  // to make.
+  assert.equal(flow.cvd, null);
+  assert.equal(flow.volumeDelta, null);
+  assert.equal(flow.cvdChange, null);
+  assert.equal(flow.score, null);
+  assert.equal(flow.candleCount, 0);
+  assert.deepEqual(flow.excluded, ['okx', 'bybit', 'bitget']);
 });
 
 test('decelerating buying scores below accelerating buying at equal pressure', () => {
@@ -139,7 +167,7 @@ test('decelerating buying scores below accelerating buying at equal pressure', (
     ...Array.from({ length: 10 }, (_, i) => fc(i, 100, 1000, 850)),
     ...Array.from({ length: 10 }, (_, i) => fc(10 + i, 100, 1000, 550)),
   ]);
-  assert.ok(scoreSpotFlow(accelerating) > scoreSpotFlow(decelerating));
+  assert.ok(scoreSpotFlow(accelerating)! > scoreSpotFlow(decelerating)!);
 });
 
 test('volume anomaly is detected against the trailing window', () => {

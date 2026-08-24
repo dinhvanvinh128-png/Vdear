@@ -51,12 +51,19 @@ export interface SpotFlow {
   timeframe: FlowTimeframe;
   points: CvdPoint[];
 
-  /** Cumulative delta over the whole window (quote currency). */
-  cvd: number;
-  /** Delta of the most recent closed candle. */
-  volumeDelta: number;
-  /** CVD change over the last N candles, for divergence detection. */
-  cvdChange: number;
+  /**
+   * Cumulative delta over the whole window (quote currency), or null when no
+   * venue published a taker split for this pair.
+   *
+   * Null rather than 0 on purpose. A CVD of exactly zero means buying and
+   * selling cancelled out — a real, informative reading. "We could not measure
+   * it" is a different statement and must not borrow that number.
+   */
+  cvd: number | null;
+  /** Delta of the most recent closed candle. Null when unmeasured. */
+  volumeDelta: number | null;
+  /** CVD change over the last N candles, for divergence detection. Null when unmeasured. */
+  cvdChange: number | null;
 
   totalBuyVolume: number;
   totalSellVolume: number;
@@ -70,8 +77,12 @@ export interface SpotFlow {
   vwap: number | null;
   vwapDeviationPct: number | null;
 
-  /** 0..100 — aggressive buying vs selling, 50 = balanced. */
-  score: number;
+  /**
+   * 0..100 — aggressive buying vs selling, 50 = balanced. Null when no taker
+   * split was available, so the composite drops this component and renormalises
+   * the remaining weights instead of scoring it neutral.
+   */
+  score: number | null;
 
   /** Which venues supplied a real taker split. */
   sources: ExchangeId[];
@@ -158,13 +169,17 @@ export function detectVolumeAnomaly(
  * buying that is already decelerating is a different market from strong buying
  * that is accelerating.
  */
-export function scoreSpotFlow(points: readonly CvdPoint[]): number {
-  if (points.length === 0) return 50;
+export function scoreSpotFlow(points: readonly CvdPoint[]): number | null {
+  // No measurement is not a neutral measurement. Returning 50 here would hand
+  // the composite a confident "balanced" reading for a pair nobody published
+  // taker data for, and it would count towards coverage and confidence as if it
+  // were evidence. Null makes the component drop out and the weights renormalise.
+  if (points.length === 0) return null;
 
   const totalBuy = points.reduce((s, p) => s + p.buyVolume, 0);
   const totalSell = points.reduce((s, p) => s + p.sellVolume, 0);
   const total = totalBuy + totalSell;
-  if (total <= 0) return 50;
+  if (total <= 0) return null;
 
   // 1) Overall imbalance. 50% buy = 50 points; each 10pp of skew moves it 20.
   const buyShare = totalBuy / total;
@@ -223,14 +238,14 @@ export function computeSpotFlow(input: ComputeFlowInput): SpotFlow {
   const recentCount = Math.max(1, Math.min(points.length, 10));
   const cvdChange = points.length > 0
     ? points[points.length - 1]!.cumulative - points[points.length - recentCount]!.cumulative
-    : 0;
+    : null;
 
   return {
     symbol,
     timeframe,
     points,
-    cvd: points.length > 0 ? points[points.length - 1]!.cumulative : 0,
-    volumeDelta: points.length > 0 ? points[points.length - 1]!.delta : 0,
+    cvd: points.length > 0 ? points[points.length - 1]!.cumulative : null,
+    volumeDelta: points.length > 0 ? points[points.length - 1]!.delta : null,
     cvdChange,
     totalBuyVolume,
     totalSellVolume,

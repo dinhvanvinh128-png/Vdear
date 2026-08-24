@@ -91,7 +91,7 @@ export function detectAlerts(input: AlertInput): Alert[] {
 
     // CVD spike: a large delta relative to the bar's own turnover.
     const turnover = flow.totalBuyVolume + flow.totalSellVolume;
-    if (turnover > 0) {
+    if (turnover > 0 && flow.volumeDelta != null) {
       const intensity = flow.volumeDelta / turnover;
       if (Math.abs(intensity) >= 0.05) {
         const buying = intensity > 0;

@@ -96,10 +96,10 @@ export function IntelligenceDashboard({ symbol = 'BTC' }: { symbol?: string }) {
             <CvdChart points={flow?.points ?? []} />
             {flow && (
               <div className="mt-2 grid grid-cols-2 gap-3 border-t border-border pt-2 text-xs sm:grid-cols-4">
-                <Stat label="CVD" value={fmtCompact(flow.cvd, '$')} />
+                <Stat label="CVD" value={flow.cvd == null ? '—' : fmtCompact(flow.cvd, '$')} />
                 <Stat label="Buy pressure"
                       value={flow.buyPressure == null ? '—' : `${(flow.buyPressure * 100).toFixed(1)}%`} />
-                <Stat label="Volume" value={flow.volumeAnomaly.label ?? 'unknown'} />
+                <Stat label="Volume" value={flow.volumeAnomaly.label ?? '—'} />
                 <Stat label="VWAP dev"
                       value={flow.vwapDeviationPct == null ? '—' : `${flow.vwapDeviationPct.toFixed(2)}%`} />
               </div>
