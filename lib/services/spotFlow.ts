@@ -5,7 +5,7 @@
  * lib/engines/spotFlow.ts for why that matters), fetches flow candles from the
  * ones that do, and records the rest as EXCLUDED rather than imputing them.
  */
-import type { ExchangeId, FlowCandle, MarketType } from '@/lib/types';
+import type { Candle, ExchangeId, FlowCandle, MarketType } from '@/lib/types';
 import { ADAPTERS } from '@/lib/exchanges/registry';
 import { cached, TTL } from '@/lib/cache';
 import { envelope } from '@/lib/aggregate';
@@ -33,6 +33,7 @@ export async function getSpotFlow(
 
     const errors: { exchange: ExchangeId; message: string }[] = [];
     const perExchange: { exchange: ExchangeId; candles: FlowCandle[] }[] = [];
+    let mfiSource: ExchangeId | null = null;
 
     await Promise.all(capable.map(async (a) => {
       try {
@@ -44,8 +45,33 @@ export async function getSpotFlow(
       }
     }));
 
-    const flow = computeSpotFlow({ symbol, timeframe, perExchange, excluded });
-    return { flow, ok: perExchange.map((p) => p.exchange), errors };
+    /*
+     * OHLCV for the MFI fallback.
+     *
+     * Only fetched when no venue gave us a taker split, because CVD is the
+     * better instrument and there is no reason to pay for a second round trip
+     * when we already have it. Any venue will do here — MFI needs nothing a
+     * plain kline does not carry — so the first one to answer wins.
+     */
+    let ohlcv: Candle[] = [];
+    if (perExchange.length === 0) {
+      for (const a of ADAPTERS) {
+        if (!a.supports[market === 'spot' ? 'spot' : 'futures']) continue;
+        try {
+          const candles = await a.getKlines(symbol, timeframe, market, CANDLE_LIMIT[timeframe]);
+          if (candles.length > 0) { ohlcv = candles; mfiSource = a.id; break; }
+        } catch {
+          // Already recorded above for capable venues; a fallback miss is not
+          // a new error to report, just one less place to look.
+        }
+      }
+    }
+
+    const flow = computeSpotFlow({ symbol, timeframe, perExchange, excluded, ohlcv });
+    const ok = perExchange.length > 0
+      ? perExchange.map((p) => p.exchange)
+      : mfiSource ? [mfiSource] : [];
+    return { flow, ok, errors };
   });
 
   return envelope(res.flow, res.ok, res.errors, {

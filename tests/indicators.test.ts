@@ -15,6 +15,7 @@ import { atr, trueRange, atrPercent, type Bar } from '@/lib/indicators/atr';
 import { adx } from '@/lib/indicators/adx';
 import { vwap, vwapDeviation, typicalPrice, type VwapBar } from '@/lib/indicators/vwap';
 import { rollingZScore, latestZScore, classifyAnomaly } from '@/lib/indicators/zscore';
+import { mfi, scoreMfi } from '@/lib/indicators/mfi';
 import { analyzeStructure, findSwings, type StructureBar } from '@/lib/indicators/structure';
 import { last, nth, mean, stdev, pctChange, clamp, scale, scaleAround } from '@/lib/indicators/series';
 
@@ -180,7 +181,10 @@ const vb = (time: number, price: number, volume: number): VwapBar =>
   ({ time, high: price, low: price, close: price, volume });
 
 test('typical price is the HLC3 average', () => {
-  assert.equal(typicalPrice({ time: 0, high: 12, low: 6, close: 9, volume: 1 }), 9);
+  assert.equal(typicalPrice({ high: 12, low: 6, close: 9 }), 9);
+  // A full VWAP bar still satisfies it — the parameter was widened to the three
+  // fields it actually reads so MFI could share this one definition.
+  assert.equal(typicalPrice(vb(0, 9, 1)), 9);
 });
 
 test('VWAP is volume-weighted, not a simple average', () => {
@@ -314,4 +318,51 @@ test('structure reports `undefined` rather than guessing on too little data', ()
   const r = analyzeStructure(zigzag([100, 110]), 2);
   assert.equal(r.label, 'undefined');
   assert.equal(r.strength, null);
+});
+
+/* ------------------------------- MFI --------------------------------------- */
+
+const mb = (high: number, low: number, close: number, volume: number) => ({ high, low, close, volume });
+
+test('mfi honours the warm-up contract', () => {
+  const bars = Array.from({ length: 20 }, (_, i) => mb(102 + i, 98 + i, 100 + i, 1000));
+  const out = mfi(bars, 14);
+  assert.equal(out.length, bars.length, 'same length as the input');
+  for (let i = 0; i < 14; i++) assert.equal(out[i], null, `bar ${i} is inside the warm-up`);
+  assert.ok(out[14] != null, 'first defined value lands at index period');
+});
+
+test('an unbroken advance is pure inflow, an unbroken decline pure outflow', () => {
+  const rising = Array.from({ length: 20 }, (_, i) => mb(102 + i, 98 + i, 100 + i, 1000));
+  assert.equal(last(mfi(rising, 14)), 100);
+
+  const falling = Array.from({ length: 20 }, (_, i) => mb(122 - i, 118 - i, 120 - i, 1000));
+  assert.equal(last(mfi(falling, 14)), 0);
+});
+
+test('mfi is volume-weighted, not just direction-counted', () => {
+  // Same up/down pattern in both, but the up bars carry far more volume in one.
+  const pattern = [0, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8, 10, 9, 11];
+  const heavyUp = pattern.map((d, i) =>
+    mb(102 + d, 98 + d, 100 + d, i > 0 && d > pattern[i - 1]! ? 5000 : 1000));
+  const flatVol = pattern.map((d) => mb(102 + d, 98 + d, 100 + d, 1000));
+  assert.ok(last(mfi(heavyUp, 14))! > last(mfi(flatVol, 14))!,
+    'weighting the advances more heavily must raise the reading');
+});
+
+test('a window with no price movement has no money flow to index', () => {
+  // Every typical price identical: neither inflow nor outflow exists.
+  const flat = Array.from({ length: 20 }, () => mb(102, 98, 100, 1000));
+  assert.equal(last(mfi(flat, 14)), null, 'null, never a neutral 50');
+});
+
+test('zero-volume bars leave the index undefined rather than neutral', () => {
+  const noVolume = Array.from({ length: 20 }, (_, i) => mb(102 + i, 98 + i, 100 + i, 0));
+  assert.equal(last(mfi(noVolume, 14)), null);
+});
+
+test('scoreMfi passes a real reading through and refuses a missing one', () => {
+  assert.equal(scoreMfi(73.2), 73.2);
+  assert.equal(scoreMfi(null), null);
+  assert.equal(scoreMfi(Number.NaN), null);
 });

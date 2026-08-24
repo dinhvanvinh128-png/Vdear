@@ -10,3 +10,4 @@ export * from '@/lib/indicators/adx';
 export * from '@/lib/indicators/vwap';
 export * from '@/lib/indicators/zscore';
 export * from '@/lib/indicators/structure';
+export * from '@/lib/indicators/mfi';

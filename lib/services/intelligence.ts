@@ -172,7 +172,10 @@ export async function getIntelligence(
     const contributing = ticker.value?.meta.sources ?? [];
     const quality = buildQualityReport({
       parts: [
-        spotFlow ? { value: 95, weight: 2 } : null,
+        // An MFI reading is real data, but a weaker instrument than an exact
+        // taker split — it is scored as derived rather than direct.
+        spotFlow?.method === 'cvd' ? { value: 95, weight: 2 }
+          : spotFlow?.method === 'mfi' ? { value: 85, weight: 2 } : null,
         breadthData ? { value: 90, weight: 1.5 } : null,
         stablecoin ? { value: 85, weight: 1.5 } : null,
         trend ? { value: 92, weight: 2 } : null,
@@ -189,7 +192,15 @@ export async function getIntelligence(
 
     /* ---- 6. Money Flow — missing components become REASONS, not values ---- */
     const reasons: Partial<Record<MoneyFlowComponent, string>> = {};
-    if (!spotFlow) reasons.spotFlow = flow.reason ?? 'spot flow unavailable';
+    if (!spotFlow || spotFlow.score == null) {
+      // A flow object with no score is still an absence, and it must land in
+      // `reasons` so the component is dropped and the weights renormalised
+      // rather than quietly scoring neutral.
+      reasons.spotFlow = !spotFlow
+        ? flow.reason ?? 'spot flow unavailable'
+        : `no taker split published for this pair (${spotFlow.excluded.join(', ')}) `
+          + 'and not enough OHLCV history for a Money Flow Index';
+    }
     if (!breadthData) reasons.marketBreadth = breadth.reason ?? 'breadth unavailable';
     if (!stablecoin) {
       reasons.stablecoinLiquidity = macro.value?.data.stablecoinReason ?? 'stablecoin data unavailable';

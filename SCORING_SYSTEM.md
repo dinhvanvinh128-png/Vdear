@@ -84,6 +84,39 @@ Timeframes: 5m · 15m · 1H · 4H · 1D.
 Both matter, because strong buying that is decelerating is a different market
 from strong buying that is accelerating.
 
+### When there is no taker split — the MFI fallback
+
+Only Binance publishes `takerBuyQuoteVolume`, so for most pairs the exact
+buy/sell breakdown does not exist anywhere. Rather than leaving the heaviest
+component permanently unmeasured, Spot Flow falls back to the **Money Flow
+Index**, computed from OHLCV alone:
+
+```
+typical  = (high + low + close) / 3
+raw      = typical × volume
+MFI      = 100 × Σ raw(typical↑) / (Σ raw(typical↑) + Σ raw(typical↓))
+```
+
+Three rules govern the fallback:
+
+1. **CVD always wins.** MFI runs only when no venue supplied a split. It is the
+   weaker instrument: a bar closing up counts entirely as inflow even if most of
+   its volume was aggressive selling into a bid-driven rally.
+2. **It is never disguised as CVD.** `SpotFlow.method` records which instrument
+   produced the score, the panel changes its title and stats accordingly, and the
+   `cvd` / `volumeDelta` fields stay `null` — they mean "exact taker split" and
+   nothing else may be written into them.
+3. **It costs confidence.** An MFI-derived reading enters the data-quality report
+   at 85 (derived) instead of 95 (direct CEX measurement), so the composite's
+   confidence reflects which instrument was actually used.
+
+A bar whose typical price is unchanged is counted as neither inflow nor outflow,
+and a window with no directional volume returns `null` — never a neutral 50.
+
+If neither instrument is available (a brand-new listing with no history), the
+component is **dropped and the remaining weights renormalised**. `score` is
+`null`, never 50.
+
 **Volume anomaly** is a z-score against the prior 30 bars, not a fixed
 threshold: `spike ≥2.5` · `expansion ≥1.0` · `contraction ≤−1.0` ·
 `drought ≤−2.0`. A fixed threshold cannot work — "$1B of volume" means something

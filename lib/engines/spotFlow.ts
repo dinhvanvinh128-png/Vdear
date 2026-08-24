@@ -23,6 +23,8 @@
 import type { ExchangeId, FlowCandle, Trade } from '@/lib/types';
 import { classifyAnomaly, latestZScore, type AnomalyLabel } from '@/lib/indicators/zscore';
 import { vwap, vwapDeviation, type VwapBar } from '@/lib/indicators/vwap';
+import { mfi as mfiOf, scoreMfi } from '@/lib/indicators/mfi';
+import { last } from '@/lib/indicators/series';
 import { clamp, scaleAround } from '@/lib/indicators/series';
 
 /** Timeframes the spec asks for. */
@@ -46,10 +48,34 @@ export interface VolumeAnomaly {
   averageVolume: number | null;
 }
 
+/**
+ * How the flow reading was actually measured.
+ *
+ * 'cvd' is the real instrument: an exact taker buy/sell split, published only by
+ * Binance. 'mfi' is the fallback for every pair that split does not exist for —
+ * it infers direction from where the typical price moved, which needs nothing
+ * but OHLCV. The two are never presented as the same measurement, and an MFI
+ * reading is worth less confidence to the composite.
+ */
+export type FlowMethod = 'cvd' | 'mfi';
+
+export interface MfiPoint {
+  time: number;
+  mfi: number;
+  close: number;
+}
+
 export interface SpotFlow {
   symbol: string;
   timeframe: FlowTimeframe;
   points: CvdPoint[];
+
+  /** Which measurement produced `score`. Null when neither was possible. */
+  method: FlowMethod | null;
+  /** Latest Money Flow Index, 0..100. Available with no taker split. */
+  mfi: number | null;
+  /** MFI against price, for charting when CVD cannot be drawn. */
+  mfiPoints: MfiPoint[];
 
   /**
    * Cumulative delta over the whole window (quote currency), or null when no
@@ -199,6 +225,11 @@ export function scoreSpotFlow(points: readonly CvdPoint[]): number | null {
 }
 
 export interface ComputeFlowInput {
+  /**
+   * Plain OHLCV for the same window, from any venue — including the ones with
+   * no taker split. Used only for the MFI fallback.
+   */
+  ohlcv?: readonly { time: number; high: number; low: number; close: number; volume: number }[];
   symbol: string;
   timeframe: FlowTimeframe;
   /** One entry per venue that reported a real taker split. */
@@ -240,10 +271,35 @@ export function computeSpotFlow(input: ComputeFlowInput): SpotFlow {
     ? points[points.length - 1]!.cumulative - points[points.length - recentCount]!.cumulative
     : null;
 
+  /*
+   * The fallback. CVD always wins when it exists — it knows who crossed the
+   * spread, which MFI can only guess at from where the typical price closed.
+   * MFI runs only when no venue published a split, and `method` records which
+   * instrument the reader is actually looking at so the panel can say so and
+   * the composite can discount it.
+   */
+  const cvdScore = scoreSpotFlow(points);
+  const mfiValues = input.ohlcv && input.ohlcv.length > 0 ? mfiOf(input.ohlcv) : [];
+  const mfiLatest = mfiValues.length > 0 ? last(mfiValues) : null;
+  const mfiPoints: MfiPoint[] = [];
+  if (input.ohlcv) {
+    for (let i = 0; i < mfiValues.length; i++) {
+      const v = mfiValues[i];
+      const bar = input.ohlcv[i];
+      if (v != null && bar) mfiPoints.push({ time: bar.time, mfi: v, close: bar.close });
+    }
+  }
+
+  const mfiScore = cvdScore == null ? scoreMfi(mfiLatest) : null;
+  const method: FlowMethod | null = cvdScore != null ? 'cvd' : mfiScore != null ? 'mfi' : null;
+
   return {
     symbol,
     timeframe,
     points,
+    method,
+    mfi: mfiLatest,
+    mfiPoints,
     cvd: points.length > 0 ? points[points.length - 1]!.cumulative : null,
     volumeDelta: points.length > 0 ? points[points.length - 1]!.delta : null,
     cvdChange,
@@ -254,7 +310,7 @@ export function computeSpotFlow(input: ComputeFlowInput): SpotFlow {
     volumeAnomaly,
     vwap: vwapValue,
     vwapDeviationPct: lastClose != null ? vwapDeviation(lastClose, vwapValue) : null,
-    score: scoreSpotFlow(points),
+    score: cvdScore ?? mfiScore,
     sources: usable.map((e) => e.exchange),
     excluded,
     candleCount: points.length,

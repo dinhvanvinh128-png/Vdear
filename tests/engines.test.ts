@@ -647,3 +647,55 @@ test('sector score is neutral without any change data', () => {
     change24h: null, change7d: null, turnover: null, memberCount: 0, topMovers: [],
   }), 50);
 });
+
+/* --------------------- MFI fallback inside spot flow ----------------------- */
+
+const ob = (time: number, price: number, volume: number) =>
+  ({ time, high: price + 2, low: price - 2, close: price, volume });
+
+test('with no taker split, spot flow falls back to MFI and says so', () => {
+  const flow = computeSpotFlow({
+    symbol: 'SPKUSDT', timeframe: '1h',
+    perExchange: [], excluded: ['okx', 'bybit', 'bitget'],
+    ohlcv: Array.from({ length: 30 }, (_, i) => ob(i, 100 + i, 1000)),
+  });
+  assert.equal(flow.method, 'mfi', 'the reader is told which instrument this is');
+  assert.ok(flow.score != null, 'a real reading, not a fabricated neutral');
+  assert.equal(flow.mfi, 100, 'an unbroken advance is pure inflow');
+  assert.ok(flow.mfiPoints.length > 0, 'there is something to draw');
+
+  // The CVD figures stay null. MFI is a different measurement and must never
+  // be quietly written into the fields that mean "exact taker split".
+  assert.equal(flow.cvd, null);
+  assert.equal(flow.volumeDelta, null);
+  assert.equal(flow.points.length, 0);
+});
+
+test('CVD always wins when it exists — MFI never overrides the better instrument', () => {
+  const flow = computeSpotFlow({
+    symbol: 'BTCUSDT', timeframe: '1h',
+    perExchange: [{
+      exchange: 'binance',
+      candles: Array.from({ length: 20 }, (_, i) => fc(i, 100 + i, 1000, 100)),
+    }],
+    excluded: ['okx'],
+    // Price rising hard would push MFI to 100, the opposite of what the taker
+    // split says. The split must win.
+    ohlcv: Array.from({ length: 30 }, (_, i) => ob(i, 100 + i, 1000)),
+  });
+  assert.equal(flow.method, 'cvd');
+  assert.ok(flow.score! < 20, 'heavy taker selling, regardless of the price trend');
+  assert.ok(flow.cvd != null);
+});
+
+test('neither instrument available leaves the score null', () => {
+  const flow = computeSpotFlow({
+    symbol: 'NEWUSDT', timeframe: '1h',
+    perExchange: [], excluded: ['binance', 'okx', 'bybit', 'bitget'],
+    ohlcv: [], // brand-new listing: no history at all
+  });
+  assert.equal(flow.method, null);
+  assert.equal(flow.score, null);
+  assert.equal(flow.mfi, null);
+  assert.deepEqual(flow.mfiPoints, []);
+});

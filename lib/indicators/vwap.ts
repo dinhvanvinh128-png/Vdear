@@ -20,7 +20,7 @@ export interface VwapBar {
 export type VwapAnchor = 'session' | 'daily' | 'weekly';
 
 /** Typical price — the standard VWAP input. */
-export function typicalPrice(b: VwapBar): number {
+export function typicalPrice(b: { high: number; low: number; close: number }): number {
   return (b.high + b.low + b.close) / 3;
 }
 

@@ -9,7 +9,7 @@ import { ScoreBreakdown } from '@/components/intelligence/ScoreBreakdown';
 import { AccDistBadge, RegimeBadge, SignalBadge } from '@/components/intelligence/RegimeBadge';
 import { WhyRisks, Scenarios } from '@/components/intelligence/WhyRisks';
 import { QualityNotice } from '@/components/intelligence/QualityNotice';
-import { CvdChart, DeltaBars } from '@/components/intelligence/CvdChart';
+import { CvdChart, DeltaBars, MfiChart } from '@/components/intelligence/CvdChart';
 import { fmtCompact } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { FLOW_TIMEFRAMES, type FlowTimeframe, type SpotFlow } from '@/lib/engines/spotFlow';
@@ -68,15 +68,29 @@ export function CoinIntelligence({ base }: { base: string }) {
             </div>
           </CardHeader>
           <CardContent>
-            <CvdChart points={flow?.points ?? []} />
-            <DeltaBars points={flow?.points ?? []} />
+            {/* Same rule as the dashboard: draw the instrument that was actually
+                available, never an MFI line under a CVD label. */}
+            {flow?.method === 'mfi' ? (
+              <MfiChart points={flow.mfiPoints} />
+            ) : (
+              <>
+                <CvdChart points={flow?.points ?? []} />
+                <DeltaBars points={flow?.points ?? []} />
+              </>
+            )}
             {flow && (
               <>
                 <div className="mt-2 grid grid-cols-2 gap-3 border-t border-border pt-2 text-xs sm:grid-cols-4">
-                  <Stat label="CVD" value={flow.cvd == null ? '—' : fmtCompact(flow.cvd, '$')} />
+                  {flow.method === 'mfi'
+                    ? <Stat label="Money Flow Index"
+                            value={flow.mfi == null ? '—' : flow.mfi.toFixed(1)}
+                            sub={flow.mfi == null ? undefined
+                              : flow.mfi >= 80 ? 'heavy inflow'
+                                : flow.mfi <= 20 ? 'heavy outflow' : 'balanced'} />
+                    : <Stat label="CVD" value={flow.cvd == null ? '—' : fmtCompact(flow.cvd, '$')} />}
                   <Stat label="Buy pressure"
                         value={flow.buyPressure == null ? '—' : `${(flow.buyPressure * 100).toFixed(1)}%`} />
-                  <Stat label="Volume anomaly" value={flow.volumeAnomaly.label ?? 'insufficient history'} />
+                  <Stat label="Volume anomaly" value={flow.volumeAnomaly.label ?? '—'} />
                   <Stat label="VWAP deviation"
                         value={flow.vwapDeviationPct == null ? '—' : `${flow.vwapDeviationPct.toFixed(2)}%`} />
                 </div>

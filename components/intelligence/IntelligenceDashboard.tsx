@@ -12,7 +12,7 @@ import { ScoreBreakdown } from '@/components/intelligence/ScoreBreakdown';
 import { AccDistBadge, RegimeBadge, SignalBadge } from '@/components/intelligence/RegimeBadge';
 import { WhyRisks, Scenarios } from '@/components/intelligence/WhyRisks';
 import { QualityNotice } from '@/components/intelligence/QualityNotice';
-import { CvdChart } from '@/components/intelligence/CvdChart';
+import { CvdChart, MfiChart } from '@/components/intelligence/CvdChart';
 import { BreadthPanel } from '@/components/intelligence/BreadthPanel';
 
 /**
@@ -85,18 +85,32 @@ export function IntelligenceDashboard({ symbol = 'BTC' }: { symbol?: string }) {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Cumulative Volume Delta — {flow?.timeframe ?? '1h'}</CardTitle>
+            <CardTitle>
+              {flow?.method === 'mfi' ? 'Money Flow Index' : 'Cumulative Volume Delta'}
+              {' — '}{flow?.timeframe ?? '1h'}
+            </CardTitle>
             {flow && flow.excluded.length > 0 && (
               <span className="text-[11px] text-muted">
-                {flow.excluded.join(', ')} excluded — no taker split published
+                {flow.method === 'mfi'
+                  ? `no taker split on this pair — reading MFI from price and volume instead`
+                  : `${flow.excluded.join(', ')} excluded — no taker split published`}
               </span>
             )}
           </CardHeader>
           <CardContent>
-            <CvdChart points={flow?.points ?? []} />
+            {/* Which instrument is on screen follows what could actually be
+                measured. The panel never draws an MFI line under a CVD label. */}
+            {flow?.method === 'mfi'
+              ? <MfiChart points={flow.mfiPoints} />
+              : <CvdChart points={flow?.points ?? []} />}
             {flow && (
               <div className="mt-2 grid grid-cols-2 gap-3 border-t border-border pt-2 text-xs sm:grid-cols-4">
-                <Stat label="CVD" value={flow.cvd == null ? '—' : fmtCompact(flow.cvd, '$')} />
+                {flow.method === 'mfi'
+                  ? <Stat label="MFI" value={flow.mfi == null ? '—' : flow.mfi.toFixed(1)}
+                          sub={flow.mfi == null ? undefined
+                            : flow.mfi >= 80 ? 'heavy inflow'
+                              : flow.mfi <= 20 ? 'heavy outflow' : 'balanced'} />
+                  : <Stat label="CVD" value={flow.cvd == null ? '—' : fmtCompact(flow.cvd, '$')} />}
                 <Stat label="Buy pressure"
                       value={flow.buyPressure == null ? '—' : `${(flow.buyPressure * 100).toFixed(1)}%`} />
                 <Stat label="Volume" value={flow.volumeAnomaly.label ?? '—'} />
