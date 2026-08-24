@@ -1,5 +1,7 @@
 # VDEAR — Crypto Market Intelligence
 
+**Live:** https://vdearcrypto-2.vercel.app
+
 A data-driven crypto intelligence platform. Not a price dashboard: VDEAR
 aggregates spot flow, market breadth, stablecoin liquidity, on-chain activity and
 whale flow into scored, explained judgements about where money is moving.
@@ -113,7 +115,7 @@ and asserts no other number appears in its output. A language guard throws on
 Next.js 14 (App Router) · TypeScript (strict) · Tailwind · Recharts ·
 Lightweight Charts · Supabase (optional) · Vercel.
 
-262 tests run on Node's built-in test runner with **zero dependencies**, so the
+270 tests run on Node's built-in test runner with **zero dependencies**, so the
 maths behind every published score stays verifiable even where the npm registry
 is unreachable.
 
