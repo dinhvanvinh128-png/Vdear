@@ -2,7 +2,7 @@
   "name": "vdear-crypto",
   "version": "2.0.0",
   "private": true,
-  "description": "VDEAR — Crypto Market Intelligence Platform",
+  "description": "VDEAR \u2014 Crypto Market Intelligence Platform",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test:types": "tsc -p tsconfig.test.json --noEmit",
     "test": "tsc -p tsconfig.test.json && node scripts/resolve-aliases.mjs .test-build && node --test --test-reporter=spec --test-concurrency=1 .test-build/tests/*.test.js",
-    "verify": "npm run test:types && npm run test"
+    "verify": "npm run test:types && npm run test",
+    "test:fast": "node --test --experimental-strip-types --import ./tests/register.mjs tests/*.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

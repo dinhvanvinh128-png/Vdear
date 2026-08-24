@@ -162,7 +162,11 @@ class FakeSocket implements WebSocketLike {
   onerror: ((ev: unknown) => void) | null = null;
   onclose: ((ev: unknown) => void) | null = null;
 
-  constructor(readonly url: string) { FakeSocket.instances.push(this); }
+  readonly url: string;
+  // Explicit field rather than a TS parameter property, so this suite also runs
+  // under `npm run test:fast` (node --experimental-strip-types), which cannot
+  // parse parameter properties.
+  constructor(url: string) { this.url = url; FakeSocket.instances.push(this); }
   send(data: string) { this.sent.push(data); }
   close() { this.closed = true; }
   open() { this.onopen?.({}); }

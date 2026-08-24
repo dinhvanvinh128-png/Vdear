@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { Flame, TrendingUp, TrendingDown, type LucideIcon } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 import type { Envelope } from '@/lib/types';
 import type { MarketOverview } from '@/lib/services/market';
@@ -8,10 +9,12 @@ import { fmtPrice, fmtPct } from '@/lib/format';
 import { Skeleton } from '@/components/common';
 import type { AggregatedTicker } from '@/lib/types';
 
-function List({ title, coins }: { title: string; coins: AggregatedTicker[] }) {
+function List({ title, icon: Icon, coins }: { title: string; icon: LucideIcon; coins: AggregatedTicker[] }) {
   return (
     <Card>
-      <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="flex items-center gap-1.5">
+        <Icon className="h-4 w-4 text-muted" aria-hidden /> {title}
+      </CardTitle></CardHeader>
       <CardContent className="space-y-1">
         {coins.length === 0 && <Skeleton className="h-24 w-full" />}
         {coins.map((c) => {
@@ -38,9 +41,9 @@ export function MoversPanel() {
   const o = data?.data;
   return (
     <div className="grid gap-3 md:grid-cols-3">
-      <List title="🔥 Trending (Volume)" coins={o?.trending ?? []} />
-      <List title="📈 Top Gainers" coins={o?.topGainers ?? []} />
-      <List title="📉 Top Losers" coins={o?.topLosers ?? []} />
+      <List title="Trending (Volume)" icon={Flame} coins={o?.trending ?? []} />
+      <List title="Top Gainers" icon={TrendingUp} coins={o?.topGainers ?? []} />
+      <List title="Top Losers" icon={TrendingDown} coins={o?.topLosers ?? []} />
     </div>
   );
 }

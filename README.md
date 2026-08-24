@@ -43,8 +43,15 @@ npm install
 cp .env.example .env.local
 npm run dev            # http://localhost:3000
 
-npm test               # 262 tests — no node_modules required
+npm test               # 270 tests: type-checks with tsc, then runs the suite
+npm run test:fast      # same 270 tests with NO build and NO node_modules
 ```
+
+`npm test` is the authoritative path — it type-checks first, so a type error
+fails the run. `test:fast` executes the TypeScript sources directly on Node's
+built-in runner (`--experimental-strip-types` plus a small `@/` resolve hook in
+`tests/register.mjs`). It skips type-checking, but it needs nothing installed,
+which makes the engines verifiable in restricted or offline environments.
 
 ---
 
@@ -122,3 +129,38 @@ is unreachable.
 | [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) | every route, parameter and response |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | optional Postgres schema and retention |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Vercel, env vars, cron, post-deploy checks |
+
+---
+
+## Design skills
+
+Two Claude Code skill packs are vendored under `.claude/skills/` so the design
+guidance travels with the repository:
+
+| Skill pack | Source | Role |
+|---|---|---|
+| `ui-ux-pro-max` (+ `design`, `design-system`, `ui-styling`, `brand`, `banner-design`, `slides`) | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | Searchable UI/UX intelligence: 119 UX guidelines, 192 palettes, 74 font pairings, 25 chart types, 22 stacks, plus a pre-delivery checklist. |
+| `taste-skill` (+ `minimalist`, `brutalist`, `soft`, `redesign`, `brandkit`, `stitch`, …) | [leonxlnx/taste-skill](https://github.com/leonxlnx/taste-skill) | Anti-slop frontend direction for marketing surfaces. |
+
+Query the design database directly:
+
+```bash
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py \
+  "crypto trading dashboard data terminal analytics" --design-system -p "VDEAR"
+```
+
+For this product it returns the **“Data-Dense Dashboard”** style — KPI cards,
+data tables, minimal padding, maximum data visibility — which matches the
+terminal direction already in place.
+
+**Where the skills are deliberately not followed.** The same query recommends a
+Fira Sans / Fira Code pairing. VDEAR keeps **IBM Plex Mono + Newsreader**: the
+mono-everywhere instrument feel is a deliberate identity choice, and the skill's
+own contract says its output is a recommendation, never an instruction that
+overrides repository decisions. `taste-skill` likewise self-scopes to *landing
+pages, portfolios and redesigns — not dashboards or data tables*, so it applies
+only to marketing surfaces, never to the terminal views.
+
+Checklist items enforced from the packs: no emoji as icons (Lucide SVG only),
+visible `:focus-visible` rings, global `prefers-reduced-motion`, semantic colour
+tokens rather than raw hex in components, and tabular numerics throughout.
