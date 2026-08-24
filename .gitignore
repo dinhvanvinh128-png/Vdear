@@ -2,7 +2,10 @@ node_modules/
 .DS_Store
 *.log
 .vercel
-vdear-crypto.zip
+# Delivery archives are build artifacts: regenerable, and large enough that
+# committing them would bloat the history. Was pinned to one filename, so any
+# other export name slipped through.
+*.zip
 __pycache__/
 *.pyc
 
