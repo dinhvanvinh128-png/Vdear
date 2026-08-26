@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Giới thiệu — Vdear</title>
-  <meta name="description" content="Vdear là gì và chúng tôi giúp bạn điều gì.">
+  <meta name="description" content="Vdear gộp dữ liệu Binance, OKX, Bybit, Bitget thành một bảng phân tích: phương pháp hoạt động và những giới hạn được nói rõ.">
   <meta property="og:title" content="Giới thiệu — Vdear">
-  <meta property="og:description" content="Vdear là gì và chúng tôi giúp bạn điều gì.">
+  <meta property="og:description" content="Vdear gộp dữ liệu Binance, OKX, Bybit, Bitget thành một bảng phân tích: phương pháp hoạt động và những giới hạn được nói rõ.">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#080a0f">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,18 +29,65 @@
   </header>
   <main class="doc">
     <a class="back" href="index.html">← Về ứng dụng</a>
-    <h1>Giới thiệu</h1>
-    <div class="doc-meta">Vdear là gì và chúng tôi giúp bạn điều gì.</div>
-    
-<p>Vdear là <b>radar tín hiệu phái sinh (futures)</b> dành cho nhà giao dịch crypto. Chúng tôi quét toàn bộ coin futures trên bốn sàn lớn — Binance, Bybit, OKX, Bitget — và làm nổi bật những cơ hội có xác suất cao theo một phương pháp nhất quán.</p>
-<h2>Chúng tôi làm gì</h2>
+    <h1>Giới thiệu Vdear</h1>
+    <div class="doc-meta">Công cụ theo dõi và phân tích thị trường tài sản số</div>
+
+<p class="doc-lead">Vdear đọc dữ liệu thị trường từ nhiều sàn cùng lúc, quy về một chuẩn chung, rồi trình bày
+lại sao cho bạn thấy được điều gì đang diễn ra mà không phải mở năm tab.</p>
+
+<h2>Vdear làm gì</h2>
 <ul>
-  <li><b>Quét toàn thị trường</b>: hàng trăm cặp futures, cập nhật realtime.</li>
-  <li><b>Chiến lược hội tụ</b>: kết hợp RSI (đảo chiều), vùng Hỗ trợ/Kháng cự đa khung và Price Action để lọc tín hiệu khung 4H.</li>
-  <li><b>Kế hoạch vào lệnh rõ ràng</b>: Entry / TP / DCA / SL theo đòn bẩy, kèm mô phỏng backtest ngay trên biểu đồ.</li>
+  <li><b>Gộp dữ liệu nhiều sàn.</b> Cùng một đồng coin được đọc từ Binance, OKX, Bybit và Bitget, rồi hợp
+  nhất. Khi các sàn lệch giá, bạn thấy mức lệch đó thay vì chỉ thấy một con số.</li>
+  <li><b>Quét toàn thị trường.</b> Thay vì soi từng đồng, hệ thống chạy cùng bộ tiêu chí trên toàn bộ danh
+  sách và đẩy lên đầu những gì đáng chú ý.</li>
+  <li><b>Chỉ báo kỹ thuật đa khung.</b> RSI, vùng hỗ trợ và kháng cự, mô hình nến, khối lượng, tính trên
+  nhiều khung thời gian.</li>
+  <li><b>Dữ liệu phái sinh.</b> Funding, khối lượng mở, tỉ lệ long/short khi sàn có công bố.</li>
+  <li><b>Ghi rõ nguồn và thời điểm.</b> Mỗi số liệu đi kèm nguồn lấy và độ mới, để bạn biết mình đang nhìn cái
+  gì.</li>
 </ul>
+
+<h2>Vdear không làm gì</h2>
+<ul>
+  <li>Không giữ tiền, không giữ tài sản, không kết nối ví của bạn.</li>
+  <li>Không đặt lệnh và không giao dịch thay bạn.</li>
+  <li>Không hỏi khoá API sàn hay khoá riêng tư của bạn — và sẽ không bao giờ hỏi.</li>
+  <li>Không đưa ra lời khuyên đầu tư, và không hứa hẹn lợi nhuận.</li>
+</ul>
+
+<h2>Phương pháp hoạt động thế nào</h2>
+<p>Tín hiệu "thực chiến" không đến từ một chỉ báo đơn lẻ, mà từ việc nhiều điều kiện độc lập cùng xảy ra:</p>
+<ul>
+  <li><b>RSI đảo chiều</b> khỏi vùng cực trị — xác định hướng đang xét;</li>
+  <li><b>Giá ở gần vùng hỗ trợ hoặc kháng cự</b> đã hình thành từ trước;</li>
+  <li><b>Nến xác nhận</b> cùng chiều (nhấn chìm hoặc bóng nến dài);</li>
+  <li><b>Phá vỡ được xác nhận</b> bằng giá đóng cửa, không phải chỉ chạm rồi bật lại;</li>
+  <li><b>Khối lượng đủ lớn</b> so với trung bình gần đây, để loại bớt phá vỡ giả.</li>
+</ul>
+<p>Càng nhiều điều kiện cùng thoả, tín hiệu càng được xếp cao. Điều đó <b>không</b> có nghĩa là nó sẽ đúng.</p>
+
+<h2>Những gì Vdear không nhìn thấy được</h2>
+<p>Trung thực về giới hạn quan trọng hơn là tỏ ra toàn năng:</p>
+<ul>
+  <li>Số liệu thanh lý thật cần nguồn dữ liệu trả phí. Khi chưa có, các mức hiển thị là <b>ước tính</b> từ
+  khối lượng mở và được ghi nhãn rõ ràng.</li>
+  <li>Dòng tiền on-chain và hoạt động của ví lớn cần nguồn riêng, chưa được bật thì hiển thị là chưa có.</li>
+  <li>Tin tức, quy định, sự kiện vĩ mô — những thứ thường quyết định thị trường nhất — nằm ngoài mọi chỉ báo
+  kỹ thuật.</li>
+  <li>Dữ liệu đến từ bên thứ ba nên có thể chậm hoặc sai.</li>
+</ul>
+
 <h2>Nguyên tắc</h2>
-<p>Chúng tôi tin vào sự minh bạch: mọi con số đều bắt nguồn từ dữ liệu thị trường công khai, và mọi tín hiệu đều đi kèm khuyến cáo rủi ro. Vdear là công cụ hỗ trợ ra quyết định — không thay thế phán đoán của bạn.</p>
+<ul>
+  <li><b>Thiếu dữ liệu thì nói là thiếu.</b> Không lấy số mặc định thay thế để bảng trông cho đầy.</li>
+  <li><b>Ước tính phải được gọi là ước tính.</b> Không trình bày số suy đoán như số đo được.</li>
+  <li><b>Không hứa lợi nhuận.</b> Không có "chắc chắn", không có tỉ lệ thắng được bảo đảm.</li>
+  <li><b>Một nguồn hỏng không làm sập cả trang.</b> Phần còn lại vẫn chạy và ghi rõ nguồn nào đang thiếu.</li>
+</ul>
+
+<div class="callout">Vdear là công cụ tham khảo, không phải cố vấn tài chính. Trước khi dùng bất kỳ con số nào
+để ra quyết định, hãy đọc <a href="risk.html">Khuyến cáo rủi ro</a>.</div>
 
   </main>
   <footer class="foot-wrap">

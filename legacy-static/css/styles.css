@@ -498,6 +498,7 @@ h1,h2,h3{margin:0;font-weight:700}
 .doc .callout{background:var(--panel);border:1px solid var(--line-2);border-left:3px solid var(--down);
   border-radius:10px;padding:14px 16px;margin:16px 0}
 .doc .back{display:inline-block;margin-bottom:18px;color:var(--muted);font-weight:600}
+.doc .doc-lead{font-size:16.5px;line-height:1.65;opacity:1;margin-bottom:6px}
 
 /* Hero band */
 .hero{max-width:1200px;margin:14px auto 0;padding:0 18px}

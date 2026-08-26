@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chính sách bảo mật — Vdear</title>
-  <meta name="description" content="Cập nhật lần cuối: 2026 · Bản mẫu, cần luật sư rà soát.">
+  <meta name="description" content="Vdear thu thập những gì, không thu thập những gì, ai được chia sẻ, và cách bạn yêu cầu xoá dữ liệu.">
   <meta property="og:title" content="Chính sách bảo mật — Vdear">
-  <meta property="og:description" content="Cập nhật lần cuối: 2026 · Bản mẫu, cần luật sư rà soát.">
+  <meta property="og:description" content="Vdear thu thập những gì, không thu thập những gì, ai được chia sẻ, và cách bạn yêu cầu xoá dữ liệu.">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#080a0f">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,26 +30,78 @@
   <main class="doc">
     <a class="back" href="index.html">← Về ứng dụng</a>
     <h1>Chính sách bảo mật</h1>
-    <div class="doc-meta">Cập nhật lần cuối: 2026 · Bản mẫu, cần luật sư rà soát.</div>
-    
-<div class="callout">Bản mẫu chính sách bảo mật. Nhờ luật sư rà soát và điền <b>[TÊN PHÁP LÝ]</b>, <b>[QUỐC GIA]</b> trước khi vận hành.</div>
-<h2>1. Dữ liệu chúng tôi thu thập</h2>
+    <div class="doc-meta">Cập nhật lần cuối: 2026</div>
+<!-- Ghi chú vận hành: Nếu sau này thêm analytics, quảng cáo, email marketing hay tính năng thu thập thêm dữ liệu, phải cập nhật mục 1-5 tương ứng và rà soát theo quy định bảo vệ dữ liệu áp dụng. -->
+
+<div class="callout"><b>Ngắn gọn:</b> Xem giá và phân tích thì không cần tài khoản và chúng tôi không thu
+thập danh tính bạn. Chỉ khi bạn tự nguyện đăng ký, chúng tôi mới lưu email để đồng bộ danh sách yêu thích.
+Chúng tôi <b>không bán</b> dữ liệu của bạn cho bất kỳ ai.</div>
+
+<h2>1. Dùng mà không đăng ký</h2>
+<p>Bạn có thể dùng gần như toàn bộ Vdear mà không cần tài khoản. Ở chế độ này chúng tôi không thu thập tên,
+email, số điện thoại hay bất kỳ thông tin định danh nào của bạn.</p>
+<p>Dữ liệu duy nhất được lưu là <b>ngay trên máy bạn</b>, qua bộ nhớ trình duyệt (localStorage):</p>
 <ul>
-  <li><b>Tài khoản</b>: email và thông tin đăng nhập (qua Clerk) nếu bạn đăng ký.</li>
-  <li><b>Sử dụng</b>: hành vi thao tác ẩn danh (qua PostHog) để cải thiện sản phẩm.</li>
-  <li><b>Kỹ thuật</b>: thông tin lỗi &amp; hiệu năng (qua Sentry), địa chỉ IP, loại trình duyệt.</li>
-  <li><b>Lưu cục bộ</b>: danh sách "Yêu thích", tuỳ chọn giao diện được lưu trong trình duyệt của bạn (localStorage).</li>
+  <li>danh sách coin yêu thích;</li>
+  <li>lựa chọn nền sáng hoặc tối;</li>
+  <li>một vài tuỳ chọn hiển thị.</li>
 </ul>
-<h2>2. Mục đích</h2>
-<p>Để vận hành, bảo mật, phân tích và cải thiện Dịch vụ; gửi thông báo bạn đăng ký (qua Resend).</p>
-<h2>3. Bên thứ ba</h2>
-<p>Chúng tôi dùng: <b>Supabase</b> (lưu trữ), <b>Clerk</b> (đăng nhập), <b>PostHog</b> (phân tích), <b>Sentry</b> (giám sát lỗi), <b>Cloudflare</b> (hạ tầng), <b>Resend</b> (email). Mỗi bên có chính sách bảo mật riêng.</p>
-<h2>4. Quyền của bạn</h2>
-<p>Bạn có thể yêu cầu truy cập, chỉnh sửa hoặc xoá dữ liệu cá nhân bằng cách liên hệ <a href="mailto:support@vdear.io">support@vdear.io</a>.</p>
-<h2>5. Bảo mật</h2>
-<p>Chúng tôi áp dụng các biện pháp hợp lý để bảo vệ dữ liệu, nhưng không hệ thống nào an toàn tuyệt đối.</p>
-<h2>6. Thay đổi &amp; liên hệ</h2>
-<p>Chính sách có thể được cập nhật. Mọi thắc mắc: <a href="mailto:support@vdear.io">support@vdear.io</a>.</p>
+<p>Những dữ liệu này <b>không được gửi về máy chủ</b>. Xoá dữ liệu duyệt web của trình duyệt là chúng biến mất
+hoàn toàn.</p>
+
+<h2>2. Khi bạn tạo tài khoản</h2>
+<p>Nếu bạn chọn đăng ký để đồng bộ danh sách yêu thích giữa nhiều thiết bị, chúng tôi lưu:</p>
+<ul>
+  <li><b>Email</b> — để nhận diện tài khoản và khôi phục mật khẩu;</li>
+  <li><b>Mã định danh tài khoản</b> do hệ thống sinh ra;</li>
+  <li><b>Danh sách coin bạn đánh dấu</b>.</li>
+</ul>
+<p>Chúng tôi <b>không</b> lưu mật khẩu ở dạng đọc được, <b>không</b> yêu cầu giấy tờ tuỳ thân, <b>không</b> hỏi
+thông tin tài chính, và <b>không</b> bao giờ hỏi khoá API sàn hay khoá ví của bạn. Vdear không cần những thứ
+đó để hoạt động, và sẽ không bao giờ cần.</p>
+
+<h2>3. Dữ liệu kỹ thuật</h2>
+<p>Như mọi website, hạ tầng máy chủ ghi nhận thông tin kỹ thuật cơ bản khi có yêu cầu truy cập (địa chỉ IP,
+loại trình duyệt, thời điểm, trang được gọi). Thông tin này dùng để vận hành, chống lạm dụng và khắc phục sự
+cố, không dùng để dựng hồ sơ cá nhân.</p>
+
+<h2>4. Bên thứ ba</h2>
+<p>Để hoạt động, Vdear tương tác với các bên sau:</p>
+<ul>
+  <li><b>Sàn giao dịch</b> (Binance, OKX, Bybit, Bitget và các nguồn dữ liệu khác) — chúng tôi chỉ đọc dữ liệu
+  thị trường công khai. <b>Không có thông tin cá nhân nào của bạn được gửi tới họ.</b></li>
+  <li><b>Nhà cung cấp hạ tầng và cơ sở dữ liệu</b> — lưu trữ website và dữ liệu tài khoản nếu bạn đăng ký.</li>
+  <li><b>Nhà cung cấp phông chữ</b> — trình duyệt của bạn tải phông từ dịch vụ của họ.</li>
+</ul>
+<p>Chúng tôi không chạy quảng cáo và không chia sẻ dữ liệu của bạn cho mạng quảng cáo.</p>
+
+<h2>5. Chúng tôi không làm gì</h2>
+<ul>
+  <li>Không bán, cho thuê hay trao đổi dữ liệu cá nhân của bạn.</li>
+  <li>Không gửi email tiếp thị nếu bạn không đăng ký nhận.</li>
+  <li>Không theo dõi bạn trên các website khác.</li>
+</ul>
+
+<h2>6. Thời gian lưu trữ</h2>
+<p>Dữ liệu tài khoản được lưu trong thời gian tài khoản còn hoạt động. Khi bạn yêu cầu xoá, chúng tôi xoá dữ
+liệu tài khoản và danh sách yêu thích liên quan.</p>
+
+<h2>7. Quyền của bạn</h2>
+<p>Bạn có quyền yêu cầu xem, sửa hoặc xoá dữ liệu cá nhân mà chúng tôi lưu, và rút lại sự đồng ý bất cứ lúc
+nào bằng cách xoá tài khoản. Gửi yêu cầu tới
+<a href="mailto:support@vdear.io">support@vdear.io</a> từ chính email đã đăng ký.</p>
+
+<h2>8. Bảo mật</h2>
+<p>Kết nối tới Vdear được mã hoá (HTTPS) và dữ liệu tài khoản được phân tách theo từng người dùng ở tầng cơ sở
+dữ liệu. Tuy nhiên không hệ thống nào an toàn tuyệt đối; chúng tôi không thể bảo đảm dữ liệu truyền qua
+Internet luôn an toàn trong mọi tình huống.</p>
+
+<h2>9. Trẻ em</h2>
+<p>Dịch vụ không dành cho người chưa đủ tuổi thành niên. Chúng tôi không cố ý thu thập dữ liệu của trẻ em.</p>
+
+<h2>10. Thay đổi và liên hệ</h2>
+<p>Chính sách này có thể được cập nhật; bản mới có hiệu lực khi đăng tải. Mọi câu hỏi xin gửi
+<a href="mailto:support@vdear.io">support@vdear.io</a>.</p>
 
   </main>
   <footer class="foot-wrap">

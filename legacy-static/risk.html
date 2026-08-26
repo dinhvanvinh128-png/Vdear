@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Khuyến cáo rủi ro — Vdear</title>
-  <meta name="description" content="Vui lòng đọc kỹ trước khi sử dụng tín hiệu.">
+  <meta name="description" content="Rủi ro khi giao dịch tài sản số: biến động, đòn bẩy và mức cháy tài khoản, chi phí, giới hạn của backtest, rủi ro dữ liệu và đối tác.">
   <meta property="og:title" content="Khuyến cáo rủi ro — Vdear">
-  <meta property="og:description" content="Vui lòng đọc kỹ trước khi sử dụng tín hiệu.">
+  <meta property="og:description" content="Rủi ro khi giao dịch tài sản số: biến động, đòn bẩy và mức cháy tài khoản, chi phí, giới hạn của backtest, rủi ro dữ liệu và đối tác.">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#080a0f">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,19 +30,88 @@
   <main class="doc">
     <a class="back" href="index.html">← Về ứng dụng</a>
     <h1>Khuyến cáo rủi ro</h1>
-    <div class="doc-meta">Vui lòng đọc kỹ trước khi sử dụng tín hiệu.</div>
-    
-<div class="callout"><b>Cảnh báo:</b> Giao dịch tài sản số và hợp đồng phái sinh (futures) có rủi ro rất cao. Bạn có thể mất toàn bộ vốn.</div>
-<h2>Không phải lời khuyên đầu tư</h2>
-<p>Mọi thông tin, tín hiệu, điểm số, kế hoạch Entry/TP/SL/DCA trên Vdear chỉ mang tính <b>tham khảo giáo dục</b>. Đây không phải lời khuyên đầu tư, tài chính hay khuyến nghị mua/bán.</p>
-<h2>Rủi ro đòn bẩy</h2>
-<p>Giao dịch futures với đòn bẩy khuếch đại cả lãi lẫn lỗ. Chỉ cần biến động nhỏ ngược chiều cũng có thể dẫn tới <b>thanh lý</b> và mất sạch ký quỹ.</p>
-<h2>Backtest không đảm bảo tương lai</h2>
-<p>Win-rate và kết quả mô phỏng dựa trên dữ liệu quá khứ. <b>Hiệu suất quá khứ không đảm bảo kết quả tương lai.</b> Mẫu nhỏ có thể gây hiểu lầm.</p>
-<h2>Dữ liệu có thể sai lệch</h2>
-<p>Dữ liệu đến từ API bên thứ ba, có thể trễ, gián đoạn hoặc thiếu chính xác. Luôn kiểm chứng trên sàn trước khi vào lệnh.</p>
-<h2>Tự chịu trách nhiệm</h2>
-<p>Bạn tự chịu trách nhiệm cho mọi quyết định giao dịch. Hãy tự nghiên cứu (DYOR) và chỉ dùng số vốn bạn sẵn sàng mất.</p>
+    <div class="doc-meta">Cập nhật lần cuối: 2026</div>
+
+<div class="callout"><b>Đọc kỹ trước khi dùng bất kỳ con số nào trên Vdear.</b> Giao dịch tài sản số có thể
+khiến bạn <b>mất toàn bộ số tiền</b> đã bỏ ra. Với đòn bẩy, bạn có thể mất sạch chỉ trong vài phút. Vdear
+không đưa ra lời khuyên đầu tư và không chịu trách nhiệm cho bất kỳ khoản lỗ nào của bạn.</div>
+
+<h2>1. Đây không phải lời khuyên đầu tư</h2>
+<p>Mọi thứ trên Vdear là thông tin và công cụ tham khảo. Chúng tôi không biết tình hình tài chính, mục tiêu,
+khẩu vị rủi ro hay hoàn cảnh cá nhân của bạn, nên không thứ gì ở đây được thiết kế riêng cho bạn. Một tín
+hiệu "LONG" hay điểm số 82/100 <b>không</b> có nghĩa là bạn nên mua.</p>
+
+<h2>2. Rủi ro biến động</h2>
+<p>Giá tài sản số có thể thay đổi hàng chục phần trăm trong một ngày, kể cả với các đồng vốn hoá lớn. Thị
+trường mở 24/7, không có biên độ dao động và không có cơ chế ngắt mạch như chứng khoán truyền thống. Biến động
+qua đêm khi bạn đang ngủ là chuyện bình thường.</p>
+
+<h2>3. Rủi ro đòn bẩy: hiểu bằng con số</h2>
+<p>Đòn bẩy phóng đại cả lãi lẫn lỗ. Đây là mức giá đi ngược đủ để <b>cháy toàn bộ ký quỹ</b>, chưa tính phí
+và funding:</p>
+<ul>
+  <li><b>x5</b> — giá đi ngược khoảng <b>20%</b></li>
+  <li><b>x10</b> — khoảng <b>10%</b></li>
+  <li><b>x20</b> — khoảng <b>5%</b></li>
+  <li><b>x50</b> — khoảng <b>2%</b></li>
+  <li><b>x100</b> — khoảng <b>1%</b></li>
+</ul>
+<p>Với x100, một cây nến 1% ngược chiều là đủ để mất hết. Trong thị trường này, biến động 1% xảy ra liên tục
+trong ngày. Đòn bẩy càng cao, bạn càng ít không gian để sai.</p>
+<p>Ngoài ra còn <b>thanh lý theo chuỗi</b>: khi giá chạm vùng tập trung nhiều lệnh, các lệnh bị đóng bắt buộc
+sẽ đẩy giá đi tiếp, kéo theo lớp lệnh kế tiếp. Giá có thể vượt xa mức bạn dự tính chỉ trong vài giây.</p>
+
+<h2>4. Chi phí ăn mòn vốn</h2>
+<p>Ngay cả khi bạn đoán đúng hướng, bạn vẫn có thể lỗ vì: <b>phí giao dịch</b> mỗi lần vào và ra;
+<b>funding</b> trả định kỳ khi giữ vị thế phái sinh; <b>trượt giá</b> khi thanh khoản mỏng; và
+<b>chênh lệch mua/bán</b>. Giao dịch càng nhiều, các khoản này càng ăn sâu.</p>
+
+<h2>5. Backtest không phải lời hứa</h2>
+<p>Mọi tỉ lệ thắng, thống kê hay mô phỏng trên Vdear đều tính trên <b>dữ liệu quá khứ</b>. Kết quả quá khứ
+<b>không</b> bảo đảm kết quả tương lai. Backtest luôn đẹp hơn thực tế vì:</p>
+<ul>
+  <li>không mô phỏng được trượt giá và độ sâu sổ lệnh thật;</li>
+  <li>giả định bạn vào lệnh đúng giá, đúng thời điểm, không do dự;</li>
+  <li>không tính việc bạn có thể mất kết nối, ngủ quên, hoặc đổi ý giữa chừng;</li>
+  <li>một chiến lược thử trên đủ nhiều tham số sẽ luôn tìm ra bộ tham số "đẹp" chỉ do ngẫu nhiên.</li>
+</ul>
+
+<h2>6. Dữ liệu có thể sai hoặc chậm</h2>
+<p>Vdear đọc dữ liệu từ API công khai của các sàn. Dữ liệu có thể sai, chậm vài giây, thiếu, hoặc ngừng cập
+nhật mà giao diện chưa kịp báo. Các mức thanh lý ước tính khi chưa có nguồn trả phí <b>là ước lượng</b>, được
+ghi nhãn rõ, không phải số liệu đo được. <b>Đừng đặt lệnh chỉ dựa trên một con số hiển thị ở đây mà không
+kiểm tra lại trên sàn.</b></p>
+
+<h2>7. Rủi ro kỹ thuật</h2>
+<p>Website, trình duyệt, điện thoại, mạng và cả sàn giao dịch đều có thể lỗi hoặc quá tải đúng lúc thị trường
+biến động mạnh nhất. Hãy chuẩn bị cho tình huống bạn không thể đóng lệnh khi cần.</p>
+
+<h2>8. Rủi ro đối tác</h2>
+<p>Tiền của bạn nằm ở sàn, không nằm ở Vdear. Sàn có thể bị hack, mất khả năng thanh toán, đóng băng rút tiền
+hoặc ngừng hoạt động. Vdear không có quan hệ đại diện với sàn nào và không thể can thiệp.</p>
+
+<h2>9. Rủi ro pháp lý và thuế</h2>
+<p>Quy định về tài sản số khác nhau giữa các quốc gia và thay đổi nhanh. Việc nắm giữ hay giao dịch có thể bị
+hạn chế hoặc cấm nơi bạn cư trú. Lợi nhuận có thể phải chịu thuế. Bạn tự chịu trách nhiệm tìm hiểu và tuân
+thủ; hãy hỏi chuyên gia pháp lý hoặc thuế khi cần.</p>
+
+<h2>10. Rủi ro từ chính bạn</h2>
+<p>Phần lớn thua lỗ đến từ hành vi chứ không phải công cụ: vào lệnh vì sợ bỏ lỡ, gồng lỗ vì không chấp nhận
+sai, tăng khối lượng để gỡ, giao dịch khi mệt hoặc đang cay cú. Không chỉ báo nào sửa được những điều này.</p>
+
+<h2>11. Nguyên tắc tối thiểu</h2>
+<ul>
+  <li>Chỉ dùng số tiền mà nếu mất hết bạn vẫn sống bình thường.</li>
+  <li>Không vay mượn để giao dịch.</li>
+  <li>Xác định mức cắt lỗ <b>trước</b> khi vào lệnh, không phải sau khi đã lỗ.</li>
+  <li>Kiểm tra chéo mọi con số quan trọng trên sàn trước khi hành động.</li>
+  <li>Nếu chưa hiểu vì sao một tín hiệu xuất hiện, đừng làm theo nó.</li>
+</ul>
+
+<h2>12. Bạn tự chịu trách nhiệm</h2>
+<p>Bằng việc sử dụng Vdear, bạn xác nhận đã đọc và hiểu các rủi ro trên, và chấp nhận rằng <b>mọi quyết định
+giao dịch cùng toàn bộ hậu quả tài chính là của riêng bạn</b>. Xem thêm
+<a href="terms.html">Điều khoản sử dụng</a>.</p>
 
   </main>
   <footer class="foot-wrap">
