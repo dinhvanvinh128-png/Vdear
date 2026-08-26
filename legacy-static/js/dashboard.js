@@ -162,12 +162,15 @@
   }
 
   /* --------------------- Bảng biến động 24h (movers) ------------------- */
+  // Ba bậc volume, cùng một ngọn lửa. Bậc được phân biệt bằng độ đậm và cỡ
+  // chữ (xem .vico trong styles.css) thay vì đổi sang biểu tượng khác, để hàng
+  // nào volume mạnh hơn vẫn nhìn ra ngay mà không phải học ba ký hiệu rời rạc.
   function volIcon(base) {
     const r = volRank[base];
     if (r == null) return '';
     if (r < 3) return '<span class="vico hot" title="Volume rất cao">🔥</span>';
-    if (r < 8) return '<span class="vico high" title="Volume cao">💧</span>';
-    if (r < CFG.scan.volIconTop) return '<span class="vico" title="Volume khá">📊</span>';
+    if (r < 8) return '<span class="vico high" title="Volume cao">🔥</span>';
+    if (r < CFG.scan.volIconTop) return '<span class="vico" title="Volume khá">🔥</span>';
     return '';
   }
 

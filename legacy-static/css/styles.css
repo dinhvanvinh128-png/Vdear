@@ -240,7 +240,9 @@ h1,h2,h3{margin:0;font-weight:700}
 .mv-pill.up{background:#3E8F62;color:#EDE7D6} .mv-pill.down{background:#C6483F;color:#EDE7D6}
 .mv-fund{font-variant-numeric:tabular-nums;font-weight:600;font-size:12.5px}
 .mv-fund .up{color:var(--up)} .mv-fund .down{color:var(--down)}
-.vico{margin-left:2px;font-size:13px}
+.vico{margin-left:2px;font-size:12px;opacity:.45}
+.vico.high{font-size:13px;opacity:.72}
+.vico.hot{font-size:14px;opacity:1}
 
 /* -------------------------- TradFi -------------------------- */
 .tradfi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
