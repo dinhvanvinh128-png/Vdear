@@ -341,6 +341,9 @@
     });
 
     document.querySelectorAll('.mtab').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+    // Menu 3 gạch trỏ thẳng vào một tab: index.html?view=fav | ?view=tradfi.
+    const wanted = new URLSearchParams(location.search).get('view');
+    if (wanted === 'fav' || wanted === 'tradfi') setView(wanted);
     renderSectorBar();
     $('scanMore').addEventListener('click', () => { scanExpanded = !scanExpanded; renderScan(); });
     $('scanRescan').addEventListener('click', async () => {
@@ -364,6 +367,9 @@
       market = await API.getMarket();
       renderMovers();
       renderTradFi();
+      // Vào thẳng tab Yêu thích thì lúc render lần đầu `market` còn rỗng; vẽ lại
+      // ngay khi có dữ liệu thay vì để trống tới nhịp làm mới 30s kế tiếp.
+      if (!$('view-fav').hidden) renderFavorites();
       await runScan();
     } catch (e) {
       $('scanStatus').textContent = 'Không tải được dữ liệu thị trường. Kiểm tra kết nối mạng và thử lại.';

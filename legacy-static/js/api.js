@@ -231,12 +231,21 @@
   /* --------------------- thị trường gộp 4 sàn --------------------------- */
   let _marketCache = null;
   let _marketAt = 0;
+  let _marketPending = null;
 
   // UNION toàn bộ coin futures từ 4 sàn. Sàn nào lỗi -> map rỗng, tự bỏ qua.
-  async function getMarket(force) {
+  // Nhiều module cùng gọi lúc trang vừa mở (bảng biến động, bong bóng, coin
+  // rain). Gộp các lời gọi trùng vào MỘT request đang bay, nếu không mỗi lần
+  // tải trang sẽ bắn 3 lượt y hệt tới cả 4 sàn.
+  function getMarket(force) {
     const now = Date.now();
-    if (!force && _marketCache && now - _marketAt < 15000) return _marketCache;
+    if (!force && _marketCache && now - _marketAt < 15000) return Promise.resolve(_marketCache);
+    if (_marketPending) return _marketPending;
+    _marketPending = fetchMarket().finally(() => { _marketPending = null; });
+    return _marketPending;
+  }
 
+  async function fetchMarket() {
     const [bnb, bybit, okx, bitget, funding] = await Promise.all([
       binance24h().catch(() => ({})),
       bybitFutures(),
@@ -289,7 +298,7 @@
     list.sort((a, b) => b.quoteVolume - a.quoteVolume);
 
     _marketCache = list;
-    _marketAt = now;
+    _marketAt = Date.now();   // đóng dấu lúc DỮ LIỆU VỀ, không phải lúc gửi request
     return list;
   }
 
