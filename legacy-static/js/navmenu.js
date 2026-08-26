@@ -19,15 +19,59 @@
     lock:   '<rect x="4.5" y="9" width="11" height="7.5" rx="1.6"/><path d="M7.2 9V7a2.8 2.8 0 0 1 5.6 0v2"/>',
     warn:   '<path d="M10 3.4l7 12.2H3z"/><path d="M10 8v3.4M10 13.4v.6"/>',
     mail:   '<rect x="3" y="5" width="14" height="10" rx="1.6"/><path d="M3.6 6l6.4 4.6L16.4 6"/>',
+    radar:  '<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3"/><path d="M10 10l4.8-4.8"/>',
+    table:  '<rect x="3" y="4" width="14" height="12" rx="1.6"/><path d="M3 8.4h14M8 8.4V16"/>',
+    spot:   '<path d="M3 14.5l4-4 3 2.4 3.4-4.6 3.6 3"/><circle cx="7" cy="10.5" r="1.3"/><circle cx="13.4" cy="8.3" r="1.3"/>',
+    sector: '<path d="M10 3a7 7 0 1 1-6.9 8.2"/><path d="M10 3v7l6.2 3.2"/>',
+    flow:   '<path d="M3 6.5c2.4 0 2.4 3 4.8 3s2.4-3 4.8-3 2.4 3 4.4 3"/><path d="M3 12.5c2.4 0 2.4 3 4.8 3s2.4-3 4.8-3 2.4 3 4.4 3"/>',
+    whale:  '<path d="M2.6 11.5c2.6 3.4 6 4.6 9 3.4 2.6-1 4-3.4 4.4-6.4-2.6.4-4.6 1.4-6 3"/><path d="M16 8.5c.8-1.4 1.4-2.4 1.4-3.4-1.4.2-2.4.8-3 1.6"/><circle cx="6.4" cy="10.4" r=".7"/>',
+    chain:  '<path d="M8.4 11.6a3 3 0 0 1 0-4.2l2-2a3 3 0 0 1 4.2 4.2l-1 1"/><path d="M11.6 8.4a3 3 0 0 1 0 4.2l-2 2a3 3 0 0 1-4.2-4.2l1-1"/>',
+    drop:   '<path d="M10 3.2S5.4 8 5.4 11.2a4.6 4.6 0 0 0 9.2 0C14.6 8 10 3.2 10 3.2z"/>',
+    breadth:'<path d="M3 16V9M7 16V5M11 16v-4M15 16V7"/>',
+    layers: '<path d="M10 3l7 3.6-7 3.6-7-3.6z"/><path d="M3 11l7 3.6 7-3.6"/>',
+    percent:'<circle cx="6.6" cy="6.6" r="2.1"/><circle cx="13.4" cy="13.4" r="2.1"/><path d="M15 5L5 15"/>',
+    scale:  '<path d="M10 3.4v13M4 6.6h12"/><path d="M4 6.6L1.8 11h4.4zM16 6.6L13.8 11h4.4z"/>',
   };
 
+  // Cấu trúc theo bản thiết kế "Crypto Intelligence Terminal". Mục nào TRANG
+  // ĐÃ CÓ thì là link thật; mục nào chưa có trang thì để `soon: true` — hiện ra
+  // nhưng không bấm được. Gắn link vào trang chưa tồn tại chỉ để menu trông đầy
+  // đủ là đẩy người dùng vào 404, tệ hơn hẳn việc nói thẳng là chưa có.
   const GROUPS = [
     {
       title: 'Thị trường',
       items: [
-        { href: 'index.html', label: 'Bảng thị trường', icon: 'market', desc: 'Biến động 24h · 4 sàn' },
+        { href: 'index.html', label: 'Tổng quan thị trường', icon: 'market', desc: 'Tâm lý · biến động 24h · 4 sàn' },
         { href: 'bubbles.html', label: 'Bong bóng thị trường', icon: 'bubble', desc: 'Cả thị trường trong một khung' },
+        { href: 'index.html#futures-radar', label: 'Futures Radar', icon: 'radar', desc: 'RSI · S&R · Price Action · Entry/TP/SL' },
+        { href: 'index.html#movers', label: 'Biến động 24h', icon: 'table', desc: 'Toàn bộ coin, lọc theo nhóm' },
+        { label: 'Spot Radar', icon: 'spot', desc: 'CVD · buy/sell · order book', soon: true },
+        { label: 'Sector Rotation', icon: 'sector', desc: 'Tiền đang xoay sang mảng nào', soon: true },
+      ],
+    },
+    {
+      title: 'Phân tích',
+      items: [
         { href: 'coin.html?c=BTC', label: 'Phân tích coin', icon: 'coin', desc: 'Chart · RSI · S&R · kế hoạch lệnh' },
+        { label: 'Dòng tiền', icon: 'flow', desc: 'Spot · CEX · DEX · stablecoin', soon: true },
+        { label: 'Whale & Exchange Flow', icon: 'whale', desc: 'Nạp/rút sàn, ví lớn', soon: true },
+        { label: 'On-chain', icon: 'chain', desc: 'Địa chỉ hoạt động · phí · tăng trưởng mạng', soon: true },
+        { label: 'Thanh khoản', icon: 'drop', desc: 'Stablecoin · độ sâu sổ lệnh', soon: true },
+        { label: 'Độ rộng thị trường', icon: 'breadth', desc: '% coin trên EMA, tăng/giảm', soon: true },
+      ],
+    },
+    {
+      title: 'Phái sinh',
+      items: [
+        { label: 'Open Interest', icon: 'layers', soon: true },
+        { label: 'Funding', icon: 'percent', soon: true },
+        { label: 'Thanh lý', icon: 'drop', soon: true },
+        { label: 'Long / Short', icon: 'scale', soon: true },
+      ],
+    },
+    {
+      title: 'Của bạn',
+      items: [
         { href: 'index.html?view=fav', label: 'Coin yêu thích', icon: 'star', desc: 'Danh mục bạn đang theo dõi' },
         { href: 'index.html?view=tradfi', label: 'TradFi', icon: 'bank', desc: 'Vàng · Bạc · Dầu' },
       ],
@@ -74,11 +118,15 @@
     const body = GROUPS.map((g) => `
       <div class="nd-group">
         <h3>${g.title}</h3>
-        ${g.items.map((it) => `
-          <a class="nd-item${isCurrent(it.href, here) ? ' current' : ''}" href="${it.href}"${isCurrent(it.href, here) ? ' aria-current="page"' : ''}>
-            <svg class="nd-ico" viewBox="0 0 20 20" aria-hidden="true">${I[it.icon] || ''}</svg>
-            <span class="nd-txt"><b>${it.label}</b>${it.desc ? `<small>${it.desc}</small>` : ''}</span>
-          </a>`).join('')}
+        ${g.items.map((it) => {
+          const ico = `<svg class="nd-ico" viewBox="0 0 20 20" aria-hidden="true">${I[it.icon] || ''}</svg>`;
+          const txt = `<span class="nd-txt"><b>${it.label}</b>${it.desc ? `<small>${it.desc}</small>` : ''}</span>`;
+          if (it.soon || !it.href) {
+            return `<div class="nd-item soon" aria-disabled="true">${ico}${txt}<span class="nd-soon">sắp có</span></div>`;
+          }
+          const cur = isCurrent(it.href, here);
+          return `<a class="nd-item${cur ? ' current' : ''}" href="${it.href}"${cur ? ' aria-current="page"' : ''}>${ico}${txt}</a>`;
+        }).join('')}
       </div>`).join('');
 
     const wrap = document.createElement('div');
@@ -91,7 +139,7 @@
           <button class="nd-close" data-nav-close aria-label="Đóng menu">✕</button>
         </div>
         ${body}
-        <p class="nd-foot">Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
+        <p class="nd-foot">Mục <b>sắp có</b> là các module đã dựng xong trong mã nguồn nhưng chưa được đưa lên bản đang chạy — xem <a href="about.html">Giới thiệu</a>.<br><br>Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
       </nav>`;
     document.body.appendChild(wrap);
 
@@ -106,7 +154,7 @@
       document.body.classList.add('nd-locked');
       // Ép tính lại style trước khi focus: drawer vừa đổi từ visibility:hidden
       // sang visible, mà focus() vào phần tử còn ẩn thì trình duyệt bỏ qua.
-      const first = panel.querySelector('.nd-item');
+      const first = panel.querySelector('a.nd-item');
       if (first) { void panel.offsetWidth; first.focus(); }
     }
     function close() {
@@ -125,7 +173,7 @@
     wrap.querySelectorAll('[data-nav-close]').forEach((el) => el.addEventListener('click', close));
     // Bấm vào một mục ngay trên trang hiện tại (link #hash) thì đóng menu luôn,
     // vì trang không tải lại nên drawer sẽ nằm mãi trên màn hình.
-    wrap.querySelectorAll('.nd-item').forEach((a) => a.addEventListener('click', () => setTimeout(close, 0)));
+    wrap.querySelectorAll('a.nd-item').forEach((a) => a.addEventListener('click', () => setTimeout(close, 0)));
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isOpen()) { e.stopPropagation(); close(); }
