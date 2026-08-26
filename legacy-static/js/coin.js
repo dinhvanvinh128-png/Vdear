@@ -291,6 +291,12 @@
     $('zoomIn').addEventListener('click', () => chart.zoomBy(0.7));
     $('zoomOut').addEventListener('click', () => chart.zoomBy(1.4));
     $('zoomReset').addEventListener('click', () => chart.resetView());
+    // Nới khung giá: mỗi lần bấm nhân đôi khoảng giá hiển thị -> nến co lại,
+    // nhìn được toàn cảnh thay vì lúc nào cũng bị kéo giãn vừa khít.
+    $('priceOut').addEventListener('click', () => chart.zoomPrice(1.6, 0.5));
+    $('priceAuto').addEventListener('click', () => chart.autoPrice());
+    // Nút AUTO chỉ hiện khi khung giá đang do người dùng đặt.
+    chart.onScaleChange = (manual) => { $('priceAuto').hidden = !manual; };
     // Cảm ứng (chụm để zoom, kéo ngang để di chuyển) do chart.js tự lo — để ở
     // đây nữa thì mỗi cú chụm bị nhân đôi hệ số zoom.
     renderTfTabs();

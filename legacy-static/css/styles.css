@@ -343,6 +343,11 @@ h1,h2,h3{margin:0;font-weight:700}
   background:rgba(17,21,29,.9);color:var(--text);font-size:17px;font-weight:700;cursor:pointer;
   display:grid;place-items:center;line-height:1;transition:background .12s}
 .zoom-ctrl button:hover{background:var(--panel-2)}
+/* AUTO rộng hơn vì là chữ chứ không phải ký hiệu; tô vàng để thấy ngay là
+   khung giá đang ở chế độ tự chỉnh, bấm một cái là về vừa khít. */
+#priceAuto{width:auto;padding:0 8px;font-size:10px;font-weight:700;letter-spacing:.5px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:transparent;color:#0A0906}
+:root[data-theme="light"] #priceAuto{color:#F6F4EC}
 .price-area{height:400px;position:relative}
 .rsi-area{height:130px;position:relative;margin-top:6px;border-top:1px solid var(--line)}
 .price-area canvas,.rsi-area canvas{width:100%;display:block}

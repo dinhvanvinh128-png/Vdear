@@ -40,6 +40,8 @@
       this.hoverX = null;
       this.viewStart = 0;   // chỉ số nến bắt đầu (float)
       this.viewCount = 0;   // số nến hiển thị
+      this.priceView = null; // null = tự vừa khung; {lo,hi} = người dùng tự chỉnh
+      this.onScaleChange = null;
       this._drag = null;
       this._bind();
     }
@@ -58,7 +60,7 @@
     setZones(sr) { this.sr = sr; this.render(); }
     setHighlight(zone) { this.highlightZone = zone; this.render(); }
     setPlan(plan) { this.plan = plan; this.render(); }
-    resetView() { this.viewCount = this.candles.length; this.viewStart = 0; this.render(); }
+    resetView() { this.viewCount = this.candles.length; this.viewStart = 0; this.priceView = null; this._scaleChanged(); this.render(); }
     zoomBy(factor, anchorPx) {
       const n = this.candles.length; if (!n) return;
       const w = this.pc.clientWidth || this.pc.parentElement.clientWidth;
@@ -87,25 +89,66 @@
     _bind() {
       const rect = () => this.pc.getBoundingClientRect();
 
+      // Dải trục giá bên phải (rộng padR) là vùng điều khiển THANG GIÁ, giống
+      // TradingView: kéo ở đó thì khoảng giá co/giãn chứ không trượt thời gian.
+      const onAxis = (x) => x >= (this.pc.clientWidth || 0) - this.padR - 6;
+
       /* ------------------------------ chuột ----------------------------- */
       this.pc.addEventListener('mousemove', (e) => {
-        const r = rect(); const x = e.clientX - r.left;
-        if (this._drag) this._panTo(this._drag.vs, x - this._drag.x);
+        const r = rect(); const x = e.clientX - r.left, y = e.clientY - r.top;
+        if (this._scale) {
+          // Kéo XUỐNG = nới khoảng giá ra (nến nhỏ lại, thấy tổng quát);
+          // kéo LÊN = bó lại. 190px kéo ~ gấp/chia đôi khoảng giá.
+          const dy = y - this._scale.y;
+          this.priceView = this._scale.base;          // luôn tính từ mốc lúc bấm
+          this.zoomPrice(Math.pow(2, dy / 190), 0.5);
+        } else if (this._drag) {
+          this._panTo(this._drag.vs, x - this._drag.x);
+          // Kéo lệch dọc đủ nhiều thì kéo luôn cả khung giá — nhưng chỉ sau
+          // 12px, để cú kéo ngang hơi rung tay không tự nhảy sang thang thủ công.
+          const dy = y - this._drag.y;
+          if (this._drag.vert || Math.abs(dy) > 12) {
+            this._drag.vert = true;
+            this.panPrice(y - this._drag.ly);
+            }
+          this._drag.ly = y;
+        }
         this.hoverX = x; this.render();
+        if (!this._drag && !this._scale) this.pc.style.cursor = onAxis(x) ? 'ns-resize' : 'crosshair';
       });
-      this.pc.addEventListener('mouseleave', () => { this.hoverX = null; this._drag = null; this.render(); });
+      this.pc.addEventListener('mouseleave', () => { this.hoverX = null; this._drag = this._scale = null; this.render(); });
       this.pc.addEventListener('mousedown', (e) => {
-        const r = rect(); this._drag = { x: e.clientX - r.left, vs: this.viewStart }; this.pc.style.cursor = 'grabbing';
+        const r = rect(); const x = e.clientX - r.left, y = e.clientY - r.top;
+        if (onAxis(x)) {
+          this._scale = { y, base: { ...this._priceRange() } };
+          this.pc.style.cursor = 'ns-resize';
+        } else {
+          this._drag = { x, y, ly: y, vs: this.viewStart, vert: false };
+          this.pc.style.cursor = 'grabbing';
+        }
       });
-      window.addEventListener('mouseup', () => { this._drag = null; this.pc.style.cursor = 'crosshair'; });
-      this.pc.addEventListener('dblclick', () => this.resetView());
+      window.addEventListener('mouseup', () => { this._drag = this._scale = null; this.pc.style.cursor = 'crosshair'; });
+      // Nháy đúp trên trục giá: chỉ trả thang giá về tự vừa khung, giữ nguyên
+      // khung thời gian đang xem. Nháy đúp trong biểu đồ: trả cả hai.
+      this.pc.addEventListener('dblclick', (e) => {
+        const x = e.clientX - rect().left;
+        if (onAxis(x)) this.autoPrice(); else this.resetView();
+      });
       this.pc.style.cursor = 'crosshair';
 
       // Lăn chuột phóng to/thu nhỏ, neo tại vị trí con trỏ: nến đang chỉ vào
-      // đứng yên còn phần còn lại giãn ra quanh nó.
+      // đứng yên còn phần còn lại giãn ra quanh nó. Lăn TRÊN TRỤC GIÁ thì
+      // co/giãn thang giá thay vì thời gian.
       const onWheel = (e) => {
         e.preventDefault();
-        this.zoomBy(e.deltaY > 0 ? 1.18 : 0.85, e.clientX - rect().left);
+        const r = rect(); const x = e.clientX - r.left;
+        if (e.currentTarget === this.pc && onAxis(x)) {
+          const h = (this.pc.parentElement.clientHeight || 400);
+          const frac = 1 - ((e.clientY - r.top) - this.padT) / Math.max(1, h - this.padT - this.padB);
+          this.zoomPrice(e.deltaY > 0 ? 1.15 : 0.87, frac);
+          return;
+        }
+        this.zoomBy(e.deltaY > 0 ? 1.18 : 0.85, x);
       };
       this.pc.addEventListener('wheel', onWheel, { passive: false });
 
@@ -134,31 +177,53 @@
       const pos = (t) => { const r = rect(); return { x: t.clientX - r.left, y: t.clientY - r.top }; };
       const mid = (a, b) => (a.clientX + b.clientX) / 2 - rect().left;
 
+      const gap = (t) => ({ dx: Math.abs(t[0].clientX - t[1].clientX), dy: Math.abs(t[0].clientY - t[1].clientY) });
+
       const onStart = (e) => {
         if (e.touches.length === 2) {
           touch = null;
-          pinch = { d: Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
-                                  e.touches[0].clientY - e.touches[1].clientY),
-                    x: mid(e.touches[0], e.touches[1]) };
+          const g = gap(e.touches);
+          pinch = { dx: g.dx, dy: g.dy, x: mid(e.touches[0], e.touches[1]),
+                    axis: null, base: { ...this._priceRange() } };
         } else if (e.touches.length === 1) {
           pinch = null;
           const p = pos(e.touches[0]);
-          touch = { x: p.x, y: p.y, vs: this.viewStart, mode: null };
+          // Chạm vào dải trục giá = chỉnh thang giá, giống kéo bằng chuột.
+          touch = { x: p.x, y: p.y, vs: this.viewStart,
+                    mode: onAxis(p.x) ? 'scale' : null,
+                    base: { ...this._priceRange() } };
         }
       };
       const onMove = (e) => {
         if (e.touches.length === 2 && pinch) {
-          const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
-                               e.touches[0].clientY - e.touches[1].clientY);
+          const g = gap(e.touches);
           const x = mid(e.touches[0], e.touches[1]);
-          if (d > 0) this.zoomBy(pinch.d / d, x);   // neo tại điểm giữa hai ngón
-          pinch = { d, x };
+          // Hai ngón tách nhau theo chiều nào thì zoom theo chiều đó: dọc =
+          // thang giá, ngang = thời gian. Chốt trục ở cú di đầu tiên để giữa
+          // chừng không nhảy qua nhảy lại.
+          if (pinch.axis === null) {
+            const cdx = Math.abs(g.dx - pinch.dx), cdy = Math.abs(g.dy - pinch.dy);
+            if (cdx > 12 || cdy > 12) pinch.axis = cdy > cdx ? 'price' : 'time';
+          }
+          if (pinch.axis === 'price') {
+            if (g.dy > 0 && pinch.dy > 0) { this.priceView = pinch.base; this.zoomPrice(pinch.dy / g.dy, 0.5); }
+          } else if (pinch.axis === 'time') {
+            if (g.dx > 0 && pinch.dx > 0) this.zoomBy(pinch.dx / g.dx, x);
+          }
+          if (pinch.axis === 'time') { pinch.dx = g.dx; pinch.dy = g.dy; }
+          pinch.x = x;
           if (e.cancelable) e.preventDefault();
           return;
         }
         if (e.touches.length !== 1 || !touch) return;
         const p = pos(e.touches[0]);
         const dx = p.x - touch.x, dy = p.y - touch.y;
+        if (touch.mode === 'scale') {
+          this.priceView = touch.base;
+          this.zoomPrice(Math.pow(2, dy / 190), 0.5);
+          if (e.cancelable) e.preventDefault();
+          return;
+        }
         if (touch.mode === null) {
           if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;   // chưa rõ ý định
           touch.mode = Math.abs(dx) > Math.abs(dy) ? 'pan' : 'scroll';
@@ -232,8 +297,40 @@
       }
       if (!isFinite(lo) || !isFinite(hi) || lo === hi) { lo = lo * 0.99; hi = hi * 1.01; }
       const pad = (hi - lo) * 0.08;
-      return { lo: lo - pad, hi: hi + pad };
+      const auto = { lo: lo - pad, hi: hi + pad };
+      this._autoRange = auto;
+      // Người dùng đã tự chỉnh trục giá thì GIỮ NGUYÊN khoảng đó, kể cả khi
+      // trượt ngang — đó mới là "kéo ra xem tổng quát": nến co lại trong một
+      // khung giá rộng hơn thay vì lúc nào cũng bị kéo giãn vừa khít.
+      return this.priceView ? { lo: this.priceView.lo, hi: this.priceView.hi } : auto;
     }
+
+    // Nới/thu khoảng giá quanh một điểm neo (0..1 tính từ đáy khung vẽ).
+    _scaleChanged() { if (this.onScaleChange) this.onScaleChange(this.isPriceManual()); }
+
+    zoomPrice(factor, anchorFrac) {
+      const cur = this._priceRange();
+      const span = cur.hi - cur.lo;
+      if (!(span > 0)) return;
+      const a = anchorFrac == null ? 0.5 : Math.max(0, Math.min(1, anchorFrac));
+      const anchorPrice = cur.lo + span * a;
+      const ns = Math.max(span * 1e-4, Math.min(span * 400, span * factor));
+      this.priceView = { lo: anchorPrice - ns * a, hi: anchorPrice + ns * (1 - a) };
+      this._scaleChanged(); this.render();
+    }
+
+    // Dời khoảng giá lên/xuống theo pixel.
+    panPrice(dyPx) {
+      const cur = this._priceRange();
+      const h = (this.pc.parentElement.clientHeight || 400) - this.padT - this.padB;
+      if (!(h > 0)) return;
+      const d = ((cur.hi - cur.lo) / h) * dyPx;   // kéo xuống = xem giá thấp hơn
+      this.priceView = { lo: cur.lo + d, hi: cur.hi + d };
+      this._scaleChanged(); this.render();
+    }
+
+    autoPrice() { this.priceView = null; this._scaleChanged(); this.render(); }
+    isPriceManual() { return !!this.priceView; }
 
     // Bộ chống đè nhãn: trả y không chồng các nhãn đã đặt (mỗi bên trái/phải).
     _placeLabel(used, y, h, top, bottom) {
@@ -296,6 +393,11 @@
         ctx.fillRect(this.padL, Math.min(y1, y2), this._plotW(w), Math.abs(y2 - y1) || 2);
       }
 
+      // Với thang giá tự chỉnh, nến có thể nằm ngoài khung vẽ. Cắt theo vùng
+      // biểu đồ để không tràn lên trục giá và nhãn ở lề.
+      ctx.save();
+      ctx.beginPath(); ctx.rect(this.padL, plotT, this._plotW(w), plotH); ctx.clip();
+
       // nến (chỉ vẽ phần hiển thị)
       const { i0, i1 } = this._visRange();
       const cw = Math.max(1, this._barW(w) * 0.66);
@@ -324,6 +426,7 @@
       };
       drawLine(this.ema20, COLORS.ema20);
       drawLine(this.ema50, COLORS.ema50);
+      ctx.restore();   // hết vùng cắt: từ đây là nhãn ở lề, phải vẽ ra ngoài được
 
       // Kế hoạch thực chiến (nhãn bên phải, chống đè)
       if (this.plan) {
