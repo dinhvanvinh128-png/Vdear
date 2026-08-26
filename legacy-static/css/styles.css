@@ -76,10 +76,6 @@ h1,h2,h3{margin:0;font-weight:700}
 }
 .brand-name{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:17px;letter-spacing:.5px}
 .brand-sub{font-size:11px;color:var(--muted)}
-.topnav{display:flex;gap:6px;margin-left:8px}
-.topnav a{padding:7px 12px;border-radius:9px;color:var(--muted);font-weight:600;font-size:13px}
-.topnav a:hover{background:var(--panel);color:var(--text)}
-.topnav a.active{background:var(--panel-2);color:var(--text)}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .back-link{margin-left:auto;color:var(--muted);font-weight:600}
 .back-link:hover{color:var(--text)}
@@ -413,7 +409,6 @@ h1,h2,h3{margin:0;font-weight:700}
   .sr-kind,.sr-band{grid-column:2/3}
   .sr-dist{display:none}
   .price-area{height:320px}
-  .topnav{display:none}
 }
 
 /* ============================================================
