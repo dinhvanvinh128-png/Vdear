@@ -67,7 +67,7 @@
     let market = [];
     let bubbles = [];
     let byBase = {};
-    let opts = { filter: 'all', size: 'change', page: 0, sector: 'all' };
+    let opts = { filter: 'all', size: 'change', page: 0, per: PAGE_SIZE, sector: 'all' };
     let theme = readTheme();
     let running = false, visible = false, rafId = 0;
     const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -154,19 +154,23 @@
       if (sec && sec.coins) list = list.filter((c) => sec.coins.includes(c.base));
       return list.filter((c) => !CFG.stableCoins.includes(c.base));
     }
-    function pageCount(total) { return Math.max(1, Math.ceil(total / PAGE_SIZE)); }
+    // opts.per = 0 nghĩa là "tất cả trong một nhóm".
+    function perPage(total) { return opts.per > 0 ? opts.per : Math.max(1, total); }
+    function pageCount(total) { return Math.max(1, Math.ceil(total / perPage(total))); }
 
-    // Cắt trang TRƯỚC rồi mới lọc tăng/giảm. Làm ngược lại thì số thứ tự trang
-    // sẽ nhảy mỗi lần thị trường đảo chiều — trang "101-200" hôm nay là những
+    // Cắt nhóm TRƯỚC rồi mới lọc tăng/giảm. Làm ngược lại thì số thứ tự nhóm
+    // sẽ nhảy mỗi lần thị trường đảo chiều — nhóm "101-200" hôm nay là những
     // coin khác hẳn hôm qua, không còn là một mốc để quay lại.
     function selection() {
       const all = pool();
+      const per = perPage(all.length);
       const pages = pageCount(all.length);
       if (opts.page >= pages) opts.page = pages - 1;
-      let list = all.slice(opts.page * PAGE_SIZE, (opts.page + 1) * PAGE_SIZE);
-      if (opts.filter === 'up') list = list.filter((c) => c.change > 0);
-      if (opts.filter === 'down') list = list.filter((c) => c.change < 0);
-      return list;
+      const block = all.slice(opts.page * per, (opts.page + 1) * per);
+      let list = block;
+      if (opts.filter === 'up') list = block.filter((c) => c.change > 0);
+      if (opts.filter === 'down') list = block.filter((c) => c.change < 0);
+      return { list, block, total: all.length, from: opts.page * per + 1, to: opts.page * per + block.length };
     }
 
     // Dropdown trang: mỗi mục là một khối 100 coin kèm mức biến động trung bình
@@ -175,12 +179,14 @@
     function renderPages() {
       if (!pageSel) return;
       const all = pool();
+      const per = perPage(all.length);
       const n = pageCount(all.length);
       const labels = [];
       for (let i = 0; i < n; i++) {
-        const block = all.slice(i * PAGE_SIZE, (i + 1) * PAGE_SIZE);
+        const block = all.slice(i * per, (i + 1) * per);
         const avg = block.length ? block.reduce((a, c) => a + (c.change || 0), 0) / block.length : 0;
-        labels.push(`${i * PAGE_SIZE + 1}–${i * PAGE_SIZE + block.length} · ${avg >= 0 ? '+' : ''}${avg.toFixed(2)}%`);
+        const span = n === 1 ? `Tất cả ${block.length} coin` : `${i * per + 1}–${i * per + block.length}`;
+        labels.push(`${span} · ${avg >= 0 ? '+' : ''}${avg.toFixed(2)}%`);
       }
       // Dựng lại cả danh sách sẽ đóng dropdown người dùng đang mở, mà nhãn thì
       // đổi sau mỗi lần làm mới 30s. Chỉ thay chữ khi số trang không đổi.
@@ -193,7 +199,7 @@
     }
 
     function rebuild() {
-      const list = selection();
+      const { list, block, total, from, to } = selection();
       const next = [];
       const seen = {};
       for (const c of list) {
@@ -218,11 +224,14 @@
       renderPages();
       if (empty) empty.hidden = bubbles.length > 0;
       if (stat) {
-        const up = list.filter((c) => c.change > 0).length;
-        const total = pool().length;
-        stat.textContent = list.length
-          ? `${list.length} coin · ${up} tăng / ${list.length - up} giảm · tổng ${total}`
-          : '0 coin';
+        // Nói rõ ĐANG XEM ĐOẠN NÀO. Ghi mỗi "100 coin" thì chọn nhóm 301–400
+        // xong lại tưởng máy chỉ tải được 100 coin đầu.
+        const up = block.filter((c) => c.change > 0).length;
+        const span = `Coin ${from}–${to} / ${total}`;
+        stat.textContent = !block.length ? 'Không có coin nào'
+          : opts.filter === 'up' ? `${span} · hiện ${list.length} coin tăng`
+          : opts.filter === 'down' ? `${span} · hiện ${list.length} coin giảm`
+          : `${span} · ${up} tăng · ${block.length - up} giảm`;
       }
       if (reduced) settleStatic();
     }
@@ -259,9 +268,45 @@
         if (b.y - b.r < 0) { b.y = b.r; b.vy = Math.abs(b.vy) * WALL; }
         if (b.y + b.r > H) { b.y = H - b.r; b.vy = -Math.abs(b.vy) * WALL; }
       }
-      for (let it = 0; it < 2; it++)
-        for (let i = 0; i < bubbles.length; i++)
-          for (let j = i + 1; j < bubbles.length; j++) collide(bubbles[i], bubbles[j]);
+      for (let it = 0; it < 2; it++) resolveAll();
+    }
+
+    // Va chạm qua lưới ô vuông thay vì so từng cặp. So từng cặp là O(n²): 100
+    // bong bóng tốn ~1.3ms/frame còn 900 tốn ~42ms — quá ngân sách 16.7ms, và
+    // điện thoại còn chậm hơn vài lần. Cạnh ô bằng đường kính lớn nhất nên hai
+    // bong bóng chạm nhau chắc chắn nằm cùng ô hoặc ô kề; mỗi ô chỉ xét ô phải
+    // và ba ô dưới để không lặp cặp.
+    const grid = new Map();
+    function resolveAll() {
+      const n = bubbles.length;
+      if (n < 2) return;
+      let rmax = 0;
+      for (const b of bubbles) if (b.r > rmax) rmax = b.r;
+      const cell = Math.max(8, rmax * 2);
+      grid.clear();
+      for (let i = 0; i < n; i++) {
+        const b = bubbles[i];
+        const key = (Math.floor(b.x / cell) << 16) ^ (Math.floor(b.y / cell) & 0xffff);
+        let bucket = grid.get(key);
+        if (!bucket) grid.set(key, (bucket = []));
+        bucket.push(b);
+      }
+      const NEIGH = [[0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
+      for (const [key, bucket] of grid) {
+        const cx = key >> 16, cy = (key << 16) >> 16;
+        for (const [dx, dy] of NEIGH) {
+          const other = dx === 0 && dy === 0
+            ? bucket
+            : grid.get(((cx + dx) << 16) ^ ((cy + dy) & 0xffff));
+          if (!other) continue;
+          if (other === bucket) {
+            for (let i = 0; i < bucket.length; i++)
+              for (let j = i + 1; j < bucket.length; j++) collide(bucket[i], bucket[j]);
+          } else {
+            for (const a of bucket) for (const b of other) collide(a, b);
+          }
+        }
+      }
     }
 
     function collide(a, b) {
@@ -357,7 +402,12 @@
     // Chế độ giảm chuyển động: chạy mô phỏng trong bộ nhớ cho tới khi xếp xong
     // rồi vẽ MỘT lần — vẫn thấy đủ dữ liệu, không có gì nhấp nháy trên màn hình.
     function settleStatic() {
-      for (let i = 0; i < 260; i++) step(0.016);
+      // Vòng lặp này chạy đồng bộ, khoá giao diện cho tới khi xong. 260 bước ở
+      // 619 bong bóng là ~0.6 giây đứng hình, nên số bước giảm dần theo số
+      // lượng: đông thì xếp nhanh hơn (chật nên chạm nhau sớm) và cũng phải
+      // dừng sớm hơn. Trần chi phí khoảng 0.2 giây.
+      const steps = Math.max(90, Math.min(260, Math.round(26000 / bubbles.length)));
+      for (let i = 0; i < steps; i++) step(0.016);
       draw();
     }
 
@@ -459,6 +509,10 @@
       secSel.addEventListener('change', () => { opts.sector = secSel.value; opts.page = 0; rebuild(); });
     }
     if (pageSel) pageSel.addEventListener('change', () => { opts.page = +pageSel.value || 0; rebuild(); });
+
+    // Đổi cỡ nhóm thì ranh giới nhóm đổi hẳn -> quay về nhóm đầu.
+    const perSel = document.getElementById('bubPer');
+    if (perSel) perSel.addEventListener('change', () => { opts.per = +perSel.value || 0; opts.page = 0; rebuild(); });
 
     // Bảng màu đổi khi bật/tắt nền sáng -> đọc lại token và vẽ lại ngay.
     new MutationObserver(() => { theme = readTheme(); if (reduced) draw(); })
