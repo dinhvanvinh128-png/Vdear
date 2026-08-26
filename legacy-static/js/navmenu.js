@@ -28,6 +28,7 @@
     chain:  '<path d="M8.4 11.6a3 3 0 0 1 0-4.2l2-2a3 3 0 0 1 4.2 4.2l-1 1"/><path d="M11.6 8.4a3 3 0 0 1 0 4.2l-2 2a3 3 0 0 1-4.2-4.2l1-1"/>',
     drop:   '<path d="M10 3.2S5.4 8 5.4 11.2a4.6 4.6 0 0 0 9.2 0C14.6 8 10 3.2 10 3.2z"/>',
     breadth:'<path d="M3 16V9M7 16V5M11 16v-4M15 16V7"/>',
+    etf:    '<rect x="2.6" y="4.4" width="14.8" height="11.2" rx="1.8"/><path d="M6.2 12.6V9.4M10 12.6V7.2M13.8 12.6v-2.2"/>',
     layers: '<path d="M10 3l7 3.6-7 3.6-7-3.6z"/><path d="M3 11l7 3.6 7-3.6"/>',
     percent:'<circle cx="6.6" cy="6.6" r="2.1"/><circle cx="13.4" cy="13.4" r="2.1"/><path d="M15 5L5 15"/>',
     scale:  '<path d="M10 3.4v13M4 6.6h12"/><path d="M4 6.6L1.8 11h4.4zM16 6.6L13.8 11h4.4z"/>',
@@ -45,6 +46,7 @@
       items: [
         { href: '/', label: 'Tổng quan thị trường', icon: 'market', desc: 'Tâm lý · tín hiệu 4H · biến động 24h' },
         { href: '/#movers', label: 'Biến động 24h', icon: 'table', desc: 'Toàn bộ coin, lọc theo nhóm' },
+        { href: '/#etf', label: 'Dòng tiền ETF', icon: 'etf', desc: '12 tài sản · tiền vào/ra quỹ mỗi ngày' },
         { href: 'bubbles.html', label: 'Bong bóng thị trường', icon: 'bubble', desc: 'Cả thị trường trong một khung' },
         { href: '/#futures-radar', label: 'Futures Radar', icon: 'radar', desc: 'RSI · S&R · Price Action · Entry/TP/SL' },
         { label: 'Spot Radar', icon: 'spot', desc: 'CVD · buy/sell · order book', soon: true },
