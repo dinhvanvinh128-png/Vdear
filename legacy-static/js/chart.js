@@ -75,17 +75,22 @@
       this.render();
     }
 
+    // Kéo ngang bao nhiêu pixel thì cửa sổ xem dịch bấy nhiêu nến.
+    _panTo(baseVs, dxPx) {
+      const n = this.candles.length; if (!n) return;
+      const w = this.pc.clientWidth || this.pc.parentElement.clientWidth;
+      const bw = (w - this.padL - this.padR) / this.viewCount;
+      if (!(bw > 0)) return;
+      this.viewStart = Math.max(0, Math.min(n - this.viewCount, baseVs - dxPx / bw));
+    }
+
     _bind() {
       const rect = () => this.pc.getBoundingClientRect();
+
+      /* ------------------------------ chuột ----------------------------- */
       this.pc.addEventListener('mousemove', (e) => {
         const r = rect(); const x = e.clientX - r.left;
-        if (this._drag) {
-          const n = this.candles.length;
-          const plotW = (this.pc.clientWidth) - this.padL - this.padR;
-          const bw = plotW / this.viewCount;
-          let vs = this._drag.vs - (x - this._drag.x) / bw;
-          this.viewStart = Math.max(0, Math.min(n - this.viewCount, vs));
-        }
+        if (this._drag) this._panTo(this._drag.vs, x - this._drag.x);
         this.hoverX = x; this.render();
       });
       this.pc.addEventListener('mouseleave', () => { this.hoverX = null; this._drag = null; this.render(); });
@@ -93,13 +98,86 @@
         const r = rect(); this._drag = { x: e.clientX - r.left, vs: this.viewStart }; this.pc.style.cursor = 'grabbing';
       });
       window.addEventListener('mouseup', () => { this._drag = null; this.pc.style.cursor = 'crosshair'; });
-      this.pc.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const r = rect();
-        this.zoomBy(e.deltaY > 0 ? 1.18 : 0.85, e.clientX - r.left);
-      }, { passive: false });
       this.pc.addEventListener('dblclick', () => this.resetView());
       this.pc.style.cursor = 'crosshair';
+
+      // Lăn chuột phóng to/thu nhỏ, neo tại vị trí con trỏ: nến đang chỉ vào
+      // đứng yên còn phần còn lại giãn ra quanh nó.
+      const onWheel = (e) => {
+        e.preventDefault();
+        this.zoomBy(e.deltaY > 0 ? 1.18 : 0.85, e.clientX - rect().left);
+      };
+      this.pc.addEventListener('wheel', onWheel, { passive: false });
+
+      // Khung RSI nằm dưới cùng trục thời gian, nên kéo/lăn ở đó cũng phải
+      // điều khiển cùng cửa sổ xem — người dùng không phân biệt hai canvas.
+      if (this.rc) {
+        this.rc.addEventListener('wheel', onWheel, { passive: false });
+        this.rc.addEventListener('mousedown', (e) => {
+          this._drag = { x: e.clientX - rect().left, vs: this.viewStart };
+          this.rc.style.cursor = 'grabbing';
+        });
+        this.rc.addEventListener('mousemove', (e) => {
+          if (!this._drag) return;
+          this._panTo(this._drag.vs, (e.clientX - rect().left) - this._drag.x);
+          this.render();
+        });
+        window.addEventListener('mouseup', () => { this.rc.style.cursor = 'grab'; });
+        this.rc.style.cursor = 'grab';
+      }
+
+      /* ------------------------------ cảm ứng --------------------------- */
+      // Một ngón: kéo ngang = di chuyển biểu đồ, kéo dọc = cuộn trang. Phải
+      // chọn theo hướng chứ không nuốt hết mọi cú chạm, nếu không người dùng
+      // điện thoại chạm trúng biểu đồ là không cuộn qua được nữa.
+      let touch = null, pinch = null;
+      const pos = (t) => { const r = rect(); return { x: t.clientX - r.left, y: t.clientY - r.top }; };
+      const mid = (a, b) => (a.clientX + b.clientX) / 2 - rect().left;
+
+      const onStart = (e) => {
+        if (e.touches.length === 2) {
+          touch = null;
+          pinch = { d: Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                                  e.touches[0].clientY - e.touches[1].clientY),
+                    x: mid(e.touches[0], e.touches[1]) };
+        } else if (e.touches.length === 1) {
+          pinch = null;
+          const p = pos(e.touches[0]);
+          touch = { x: p.x, y: p.y, vs: this.viewStart, mode: null };
+        }
+      };
+      const onMove = (e) => {
+        if (e.touches.length === 2 && pinch) {
+          const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                               e.touches[0].clientY - e.touches[1].clientY);
+          const x = mid(e.touches[0], e.touches[1]);
+          if (d > 0) this.zoomBy(pinch.d / d, x);   // neo tại điểm giữa hai ngón
+          pinch = { d, x };
+          if (e.cancelable) e.preventDefault();
+          return;
+        }
+        if (e.touches.length !== 1 || !touch) return;
+        const p = pos(e.touches[0]);
+        const dx = p.x - touch.x, dy = p.y - touch.y;
+        if (touch.mode === null) {
+          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;   // chưa rõ ý định
+          touch.mode = Math.abs(dx) > Math.abs(dy) ? 'pan' : 'scroll';
+        }
+        if (touch.mode !== 'pan') return;                     // nhường cho cuộn trang
+        this._panTo(touch.vs, dx);
+        this.hoverX = p.x; this.render();
+        if (e.cancelable) e.preventDefault();
+      };
+      const onEnd = () => { touch = null; pinch = null; this.hoverX = null; this.render(); };
+
+      [this.pc, this.rc].forEach((el) => {
+        if (!el) return;
+        el.addEventListener('touchstart', onStart, { passive: true });
+        el.addEventListener('touchmove', onMove, { passive: false });
+        el.addEventListener('touchend', onEnd);
+        el.addEventListener('touchcancel', onEnd);
+      });
+
       window.addEventListener('resize', () => this.render());
     }
 
@@ -287,7 +365,7 @@
       ctx.fillStyle = COLORS.ema20; ctx.fillText('EMA20', this.padL + 4, plotT + 12);
       ctx.fillStyle = COLORS.ema50; ctx.fillText('EMA50', this.padL + 54, plotT + 12);
       ctx.fillStyle = COLORS.axis; ctx.font = '10px Inter, Arial';
-      ctx.fillText('Lăn chuột để zoom · kéo để di chuyển · nháy đúp để reset', this.padL + 108, plotT + 12);
+      ctx.fillText('Lăn chuột / chụm 2 ngón để zoom · kéo để di chuyển · nháy đúp để xem toàn bộ', this.padL + 108, plotT + 12);
     }
 
     _crosshair(ctx, w, h, yFor, plotT, plotB) {

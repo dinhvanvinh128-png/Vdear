@@ -742,31 +742,6 @@ body.nd-locked{overflow:hidden}
 .bub-empty{position:absolute;inset:0;display:grid;place-content:center;padding:20px;
   text-align:center;color:var(--muted);font-size:13px}
 
-/* -------------------- Biểu đồ TradingView nhúng -------------------- */
-.tv-wrap{position:relative;margin-top:10px;border:1px solid var(--line);border-radius:12px;
-  overflow:hidden;background:var(--panel-2)}
-#tvChart{height:min(70vh,560px);width:100%}
-@media (max-width:760px){#tvChart{height:min(64vh,420px)}}
-/* Chế độ "Cả hai": hai biểu đồ chồng nhau nên TradingView thấp lại, tổng chiều
-   cao vẫn nằm trong khoảng cuộn một lần. */
-.chart-panel.both #tvChart{height:min(48vh,400px)}
-@media (max-width:760px){.chart-panel.both #tvChart{height:min(44vh,300px)}}
-.chart-panel.both .chart-wrap{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
-/* Dòng trạng thái nằm dưới iframe: khi widget dựng xong thì bị che, khi hỏng
-   thì nó chính là chỗ báo lỗi. */
-.tv-status{position:absolute;inset:0;z-index:1;display:grid;place-content:center;
-  padding:22px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
-.tv-status b{color:var(--text)}
-#chartMode{flex:0 0 auto}
-.tv-pivots{flex:0 0 auto;border:1px solid var(--line-2);border-radius:9px;padding:6px 11px;
-  background:var(--panel);color:var(--muted);font:600 12px inherit;cursor:pointer}
-.tv-pivots:hover{color:var(--text);border-color:var(--accent-2)}
-.tv-pivots.on{background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  border-color:transparent;color:#0A0906}
-:root[data-theme="light"] .tv-pivots.on{color:#F6F4EC}
-#tvVenue{flex:0 0 auto}
-#chartHint{margin-top:10px}
-
 /* Bảng tuỳ chọn (bánh răng): khung thời gian · cỡ · nội dung · màu */
 .bub-gear{width:34px;height:34px;font-size:14px}
 .bub-gear[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}

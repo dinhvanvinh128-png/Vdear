@@ -67,7 +67,6 @@
   async function selectTf(tf) {
     currentTf = tf;
     renderTfTabs();
-    if (chartMode !== 'vdear' && !tvBroken) mountTV();
     const candles = await loadCandles(tf);
     const sr = TA.supportResistance(candles, candles[candles.length - 1].close);
     chart.setData(candles);
@@ -206,14 +205,10 @@
       row.addEventListener('click', () => {
         box.querySelectorAll('.sr-row').forEach((r) => r.classList.remove('sel'));
         row.classList.add('sel');
-        // Vùng S&R chỉ vẽ được trên biểu đồ tự vẽ. Nếu đang xem MỖI TradingView
-        // thì chuyển sang "Cả hai" để vùng hiện ra, chứ không cuộn người dùng
-        // tới một biểu đồ không đánh dấu gì.
-        if (chartMode === 'tv' && !tvBroken) setMode('both');
         chart.setHighlight({
           price: +row.dataset.price, low: +row.dataset.low, high: +row.dataset.high,
         });
-        $('vdearWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.querySelector('.chart-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     });
   }
@@ -287,91 +282,6 @@
       <p class="hint">TradFi (vàng/bạc/dầu) không niêm yết trên sàn crypto nên <b>chưa có biểu đồ nến chi tiết &amp; chiến lược</b> như coin. XAU/XAG lấy giá realtime khi khả dụng; CL/BZ là chỉ báo tham khảo. <b>Chỉ tham khảo, không phải lời khuyên đầu tư.</b></p>`;
   }
 
-  /* ------------------------- chế độ biểu đồ ---------------------------- */
-  // 'tv'    = biểu đồ TradingView (mặc định, đầy đủ công cụ)
-  // 'vdear' = biểu đồ tự vẽ, nơi DUY NHẤT có vùng S&R bấm được và các đường
-  //           Entry/TP/SL chạy theo đòn bẩy — widget của TradingView không vẽ
-  //           hộ được những thứ đó, nên nó ở lại chứ không bị thay thế.
-  const MODE_KEY = 'vdear_chartmode';
-  const MODES = ['both', 'tv', 'vdear'];
-  let chartMode = 'both';
-  try { const m = localStorage.getItem(MODE_KEY); if (MODES.indexOf(m) >= 0) chartMode = m; } catch (e) {}
-  let tvVenue = null, tvBooted = false, tvBroken = false, tvTimer = 0;
-  const PIV_KEY = 'vdear_tvpivots';
-  let tvPivots = true;
-  try { if (localStorage.getItem(PIV_KEY) === '0') tvPivots = false; } catch (e) {}
-
-  function applyMode() {
-    // TradingView hỏng thì luôn còn biểu đồ tự vẽ, không để trang trắng.
-    const mode = tvBroken ? 'vdear' : chartMode;
-    const tvOn = mode === 'tv' || mode === 'both';
-    const vdOn = mode === 'vdear' || mode === 'both';
-    $('tvWrap').hidden = !tvOn;
-    $('vdearWrap').hidden = !vdOn;
-    $('rsiLegend').hidden = !vdOn;
-    $('chartHint').hidden = !tvOn;
-    // Xem cả hai thì biểu đồ TradingView thấp lại, để hai biểu đồ cộng lại
-    // không dài hơn một màn hình rưỡi.
-    document.querySelector('.chart-panel').classList.toggle('both', mode === 'both');
-    const venueSel = $('tvVenue');
-    if (venueSel) venueSel.hidden = !tvOn;
-    const piv = $('tvPivots');
-    if (piv) piv.hidden = !tvOn;
-    document.querySelectorAll('#chartMode .seg-btn').forEach((b) =>
-      b.classList.toggle('active', b.dataset.v === mode));
-    if (tvOn) mountTV();
-    // Canvas nằm trong khối [hidden] có clientWidth = 0, nên mọi lần vẽ trong
-    // lúc ẩn đều ra rỗng. Hiện ra thì phải vẽ lại.
-    if (vdOn && chart && chart.candles && chart.candles.length) chart.render();
-  }
-
-  function setMode(m) {
-    chartMode = m;
-    try { localStorage.setItem(MODE_KEY, m); } catch (e) {}
-    applyMode();
-  }
-
-  // Dựng lại widget khi đổi khung/sàn/nền. Widget nhúng không có API đổi
-  // interval tại chỗ, nên phải tạo mới; gộp nhịp để bấm nhanh qua nhiều khung
-  // không tạo ra một chuỗi iframe rồi vứt đi.
-  function mountTV() {
-    if (!window.VdearTV || tvBroken) return;
-    // Luôn gộp nhịp, kể cả lần đầu: applyMode() và selectTf() cùng gọi mountTV
-    // lúc mở trang, không gộp thì dựng một iframe rồi vứt ngay để dựng cái thứ
-    // hai. 120ms là không thấy được bằng mắt nhưng đủ để hai lời gọi nhập một.
-    clearTimeout(tvTimer);
-    tvTimer = setTimeout(() => {
-      const status = $('tvStatus');
-      if (status) { status.hidden = false; status.textContent = 'Đang mở biểu đồ TradingView…'; }
-      window.VdearTV.create('tvChart', { base, venue: tvVenue, tf: currentTf, pivots: tvPivots })
-        .then(() => { tvBooted = true; if (status) status.hidden = true; })
-        .catch(() => {
-          tvBroken = true;
-          if (status) {
-            status.hidden = false;
-            status.innerHTML = 'Không mở được biểu đồ TradingView (mạng chặn hoặc tiện ích chặn quảng cáo). '
-              + 'Đã chuyển sang <b>biểu đồ Phân tích Vdear</b>.';
-          }
-          applyMode();
-        });
-    }, 120);
-  }
-
-  function renderVenueSelect() {
-    const sel = $('tvVenue');
-    if (!sel || !window.VdearTV) return;
-    const listed = coin && coin.venues ? Object.keys(coin.venues) : [];
-    const opts = (listed.length ? listed : ['binance']).filter((v) => window.VdearTV.VENUE[v]);
-    if (!opts.length) return;
-    if (!tvVenue || opts.indexOf(tvVenue) < 0) tvVenue = (coin && coin.primaryVenue) || opts[0];
-    sel.innerHTML = opts.map((v) => `<option value="${v}">${window.VdearTV.VENUE_LABEL[v]}</option>`).join('');
-    sel.value = tvVenue;
-    if (!sel._bound) {
-      sel._bound = true;
-      sel.addEventListener('change', () => { tvVenue = sel.value; tvBooted = false; mountTV(); });
-    }
-  }
-
   /* ------------------------------- init -------------------------------- */
   async function init() {
     if (qs.get('type') === 'tradfi') { await initTradfi(); return; }
@@ -381,43 +291,11 @@
     $('zoomIn').addEventListener('click', () => chart.zoomBy(0.7));
     $('zoomOut').addEventListener('click', () => chart.zoomBy(1.4));
     $('zoomReset').addEventListener('click', () => chart.resetView());
-    // pinch-zoom cảm ứng
-    let pinch = null;
-    const pc = $('priceCanvas');
-    pc.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 2) pinch = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-    }, { passive: true });
-    pc.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 2 && pinch) {
-        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        chart.zoomBy(pinch / d); pinch = d;
-      }
-    }, { passive: true });
-    pc.addEventListener('touchend', () => { pinch = null; });
+    // Cảm ứng (chụm để zoom, kéo ngang để di chuyển) do chart.js tự lo — để ở
+    // đây nữa thì mỗi cú chụm bị nhân đôi hệ số zoom.
     renderTfTabs();
-    document.getElementById('chartMode').addEventListener('click', (e) => {
-      const b = e.target.closest('.seg-btn');
-      if (!b) return;
-      if (tvBroken && b.dataset.v !== 'vdear') { tvBroken = false; tvBooted = false; }
-      setMode(b.dataset.v);
-    });
-    // Chỉ báo được nhúng lúc tạo widget, nên bật/tắt phải dựng lại.
-    const pivBtn = $('tvPivots');
-    if (pivBtn) pivBtn.addEventListener('click', () => {
-      tvPivots = !tvPivots;
-      pivBtn.classList.toggle('on', tvPivots);
-      pivBtn.setAttribute('aria-pressed', String(tvPivots));
-      try { localStorage.setItem(PIV_KEY, tvPivots ? '1' : '0'); } catch (e) {}
-      tvBooted = false; mountTV();
-    });
-    if (pivBtn) { pivBtn.classList.toggle('on', tvPivots); pivBtn.setAttribute('aria-pressed', String(tvPivots)); }
-    // Nền sáng/tối của widget được nhúng lúc tạo, nên đổi nền phải dựng lại.
-    new MutationObserver(() => { if (chartMode !== 'vdear' && !tvBroken) { tvBooted = false; mountTV(); } })
-      .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     try {
       await renderHeader();
-      renderVenueSelect();
-      applyMode();
       await selectTf(currentTf);
     } catch (e) {
       $('chartError').style.display = 'block';

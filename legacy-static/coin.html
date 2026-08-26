@@ -71,26 +71,12 @@
     </section>
 
     <!-- Chart -->
-    <section class="panel chart-panel">
+    <section class="panel">
       <div class="panel-head">
         <h2>Biểu đồ nến &amp; RSI</h2>
-        <div class="seg" id="chartMode">
-          <button class="seg-btn active" type="button" data-v="both">Cả hai</button>
-          <button class="seg-btn" type="button" data-v="tv">TradingView</button>
-          <button class="seg-btn" type="button" data-v="vdear">Phân tích Vdear</button>
-        </div>
-        <select class="bub-select" id="tvVenue" aria-label="Sàn hiển thị trên TradingView" hidden></select>
-        <button class="seg-btn tv-pivots on" type="button" id="tvPivots" aria-pressed="true"
-          title="Bật/tắt chỉ báo Pivot Points của TradingView">S&amp;R trên TradingView</button>
         <div class="tf-tabs" id="tfTabs"></div>
       </div>
-
-      <div class="tv-wrap" id="tvWrap">
-        <div id="tvChart"></div>
-        <div class="tv-status" id="tvStatus">Đang mở biểu đồ TradingView…</div>
-      </div>
-
-      <div class="chart-wrap" id="vdearWrap" hidden>
+      <div class="chart-wrap">
         <div class="zoom-ctrl">
           <button id="zoomIn" title="Phóng to">+</button>
           <button id="zoomOut" title="Thu nhỏ">−</button>
@@ -100,11 +86,11 @@
         <div class="rsi-area"><canvas id="rsiCanvas"></canvas></div>
         <div class="chart-error" id="chartError" style="display:none"></div>
       </div>
-      <div class="rsi-legend" id="rsiLegend" hidden>
+      <div class="rsi-legend">
         <span><i class="sw" style="background:#E0574F"></i> RSI 70–80 quá mua · &gt;80 quá mua mạnh (chú ý SHORT)</span>
         <span><i class="sw" style="background:#4FB477"></i> RSI 20–30 quá bán · &lt;20 quá bán mạnh (chú ý LONG)</span>
       </div>
-      <p class="hint" id="chartHint">Nút <b>S&amp;R trên TradingView</b> bật chỉ báo <b>Pivot Points Standard</b> — các mức hỗ trợ/kháng cự vẽ thẳng lên biểu đồ TradingView. Lưu ý: đó là mức do <b>chính TradingView tính</b>, không phải vùng của Vdear, nên hai bên sẽ không trùng khít. Biểu đồ nhúng của TradingView <b>không cho phép trang ngoài vẽ thêm gì vào bên trong nó</b>, nên <b>vùng S&amp;R của Vdear</b> (chính là danh sách ở dưới) cùng các đường <b>Entry / TP / SL</b> chạy theo đòn bẩy được vẽ trên <b>biểu đồ Phân tích Vdear</b> ngay bên dưới — cùng coin, cùng khung thời gian. Biểu đồ TradingView do tradingview.com cung cấp nên trình duyệt của bạn sẽ kết nối tới máy chủ của họ; xem mục <a href="privacy.html">Chính sách bảo mật</a>.</p>
+      <p class="hint"><b>Điều khiển biểu đồ</b> — máy tính: lăn chuột để phóng to/thu nhỏ (neo tại vị trí con trỏ), giữ chuột kéo ngang để trượt qua lại, nháy đúp để xem lại toàn bộ. Điện thoại: chụm hai ngón để phóng to/thu nhỏ, một ngón kéo ngang để trượt (kéo dọc vẫn cuộn trang như thường). Các nút <b>+</b> / <b>−</b> / <b>⤢</b> ở góc phải làm cùng việc đó. Kéo hoặc lăn ở khung RSI phía dưới cũng điều khiển chung một cửa sổ xem.</p>
     </section>
 
     <!-- Điểm các khung -->
@@ -155,7 +141,6 @@
   <script src="js/api.js"></script>
   <script src="js/indicators.js"></script>
   <script src="js/chart.js"></script>
-  <script src="js/tvchart.js"></script>
   <script src="js/ticker.js"></script>
   <script src="js/coin.js"></script>
   <script src="js/theme.js"></script>
