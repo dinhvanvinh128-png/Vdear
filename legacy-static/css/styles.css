@@ -817,3 +817,17 @@ body.nd-locked{overflow:hidden}
 .etf-group + .etf-group{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
 .etf-group h4{margin:14px 0 7px;font-size:12px;font-weight:700;color:var(--muted)}
 .etf-table code{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent)}
+/* Cột "quỹ đóng góp nhiều nhất": mã quỹ + dòng tiền của riêng nó, lấy thẳng từ
+   etf_flows[] của CoinGlass. Xuống dòng được vì mã quỹ dài ngắn khác nhau. */
+.etf-funds{white-space:normal;min-width:170px}
+.etf-fund{display:inline-flex;align-items:baseline;gap:5px;margin:2px 5px 2px 0;padding:3px 8px;
+  border-radius:7px;border:1px solid var(--line);background:var(--panel-2);
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;font-variant-numeric:tabular-nums}
+.etf-fund.up{color:var(--up)} .etf-fund.down{color:var(--down)}
+/* Nền sáng: #4FB477 chỉ còn 2.35:1 trên panel sáng. Đổi sang cặp đậm hơn:
+   5.87:1 và 6.14:1. */
+:root[data-theme="light"] .etf-fund.up{color:#1F6B45}
+:root[data-theme="light"] .etf-fund.down{color:#9E3A33}
+/* Dòng tài sản nguồn không có: mờ đi để không lẫn với dòng có số thật, nhưng
+   vẫn đọc được — nó đang nói một điều có ý nghĩa, không phải chỗ trống. */
+.etf-table tr.etf-na td{opacity:.7}

@@ -7,7 +7,7 @@
  *   DÒNG TIỀN  (net creations/redemptions) là tiền thực chảy vào/ra quỹ. Nó
  *              tính từ số chứng chỉ quỹ phát hành thêm hoặc mua lại trong ngày,
  *              KHÔNG suy ra được từ giá hay khối lượng khớp lệnh. Không nguồn
- *              miễn phí nào công bố; cần CoinGlass/SoSoValue có API key, mà key
+ *              miễn phí nào công bố; cần CoinGlass có API key, mà key
  *              phải nằm ở server. Bản tĩnh không có server, nên phần dòng tiền
  *              hiển thị "chưa cấu hình nguồn" thay vì một con số ước lượng.
  *
@@ -69,7 +69,10 @@
       const res = await fetch('/api/etf-flow', { signal: ctrl.signal });
       if (!res.ok) return null;
       const j = await res.json();
-      return j && j.configured && j.available ? j : null;
+      // Trả nguyên payload khi ĐÃ cấu hình, kể cả lúc available:false — mảng
+      // errors là thứ duy nhất giải thích được vì sao trống, nuốt nó đi thì
+      // người xem không biết là chưa có key hay là nguồn đang hỏng.
+      return j && j.configured ? j : null;
     } catch (e) { return null; }
     finally { clearTimeout(t); }
   }
@@ -101,36 +104,50 @@
     const assets = CFG.etf.assets;
     if (!flow) {
       return `<p class="hint">Dòng tiền ETF <b>chưa cấu hình nguồn</b>. Số này chỉ nhà cung cấp
-        có API mới công bố (SoSoValue); cần đặt <code>SOSOVALUE_API_KEY</code> ở biến môi trường
-        phía server. Chừng nào chưa có, ở đây để trống — trang này không ước lượng dòng tiền.</p>`;
+        có API mới công bố; cần đặt <code>COINGLASS_API_KEY</code> ở biến môi trường phía server.
+        Chừng nào chưa có, ở đây để trống — trang này không ước lượng dòng tiền.</p>`;
     }
     const got = assets.filter((a) => flow.assets && flow.assets[a.symbol]);
     if (!got.length) {
-      return `<p class="hint">Nguồn đã cấu hình nhưng chưa trả về tài sản nào.
-        ${(flow.errors || []).length ? 'Lý do: ' + flow.errors.slice(0, 3).join(' · ') : ''}</p>`;
+      const why = (flow.errors || []).slice(0, 4).join(' · ');
+      return `<p class="hint">Đã cấu hình <code>COINGLASS_API_KEY</code> nhưng lần gọi này nguồn
+        không trả về tài sản nào.${why ? ' Lý do: ' + why + '.' : ''} Không có số thật thì để trống.</p>`;
     }
     const rows = assets.map((a) => {
       const d = flow.assets && flow.assets[a.symbol];
       if (!d) {
-        return `<tr><td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
-          <td colspan="4" class="muted small">Nguồn chưa có dữ liệu</td></tr>`;
+        // Phân biệt rõ hai chuyện khác hẳn nhau: nguồn KHÔNG CÓ tài sản này,
+        // với nguồn có mà lần gọi này hỏng. Gộp làm một là để người xem tưởng
+        // đợi thêm sẽ có.
+        const supported = (flow.supported || []).indexOf(a.symbol) >= 0;
+        // Nhãn ngắn: câu giải thích đầy đủ nằm một lần ở dưới bảng. Lặp lại
+        // nguyên câu trên 8 dòng vừa rối vừa kéo bảng rộng ra trên điện thoại.
+        return `<tr class="etf-na"><td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
+          <td colspan="3" class="muted small">${supported ? 'Lần gọi này không lấy được' : 'Nguồn không công bố'}</td></tr>`;
       }
       const net = d.netInflow;
       const cls = net == null ? '' : net >= 0 ? 'up' : 'down';
+      const top = (d.funds || []).slice(0, 3)
+        .map((f) => `<span class="etf-fund ${f.flow >= 0 ? 'up' : 'down'}">${f.ticker} ${fmtFlow(f.flow)}</span>`)
+        .join('');
       return `<tr>
         <td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
         <td><span class="mv-pill ${cls}">${fmtFlow(net)}</span></td>
-        <td class="mv-klgd">${fmtFlow(d.cumNetInflow)}</td>
-        <td class="mv-klgd">${d.totalNetAssets == null ? '—' : fmtUsd(d.totalNetAssets)}</td>
+        <td class="etf-funds">${top || '<span class="muted small">—</span>'}</td>
         <td class="muted small">${d.date || '—'}</td>
       </tr>`;
     }).join('');
+    const sup = flow.supported || [];
+    const supported = sup.length || got.length;
     const miss = (flow.errors || []).length;
+    const outside = assets.filter((a) => sup.indexOf(a.symbol) < 0).map((a) => a.symbol);
     return `<div class="table-wrap"><table class="movers etf-table">
-        <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Luỹ kế</th><th>Tổng tài sản ròng</th><th>Ngày</th></tr></thead>
+        <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Quỹ đóng góp nhiều nhất</th><th>Ngày</th></tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
-      <p class="hint">${got.length}/${assets.length} tài sản có dữ liệu${miss ? ` · ${miss} tài sản nguồn không trả về` : ''}.</p>`;
+      <p class="hint">${got.length}/${supported} tài sản CoinGlass có ETF đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
+        ${outside.length ? `<b>Nguồn không công bố</b> ETF của ${outside.join(', ')} — CoinGlass chỉ có
+        ${sup.join(', ')}. Đó là giới hạn của nguồn, không phải đang chờ dữ liệu.` : ''}</p>`;
   }
 
   /* BẢNG PHỤ: giá cổ phiếu quỹ, chỉ những quỹ đã biết chắc mã niêm yết. */

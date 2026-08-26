@@ -210,21 +210,37 @@ Dòng tiền ròng của ETF (tiền thực vào/ra quỹ mỗi ngày) tính t�
 khớp lệnh — khối lượng là nhà đầu tư sang tay nhau, tiền không chạm tới quỹ.
 Không nguồn miễn phí nào công bố số này.
 
-Trang `m.sosovalue.com/...` là **giao diện web, không phải API**. Đọc dữ liệu từ
-đó là scrape: vi phạm điều khoản của họ và bị CORS chặn. Hàm này chỉ gọi API
-chính thức.
+### Nguồn: CoinGlass API v4
 
-Bật lên:
+Đường dẫn lấy từ tài liệu chính thức, không phải đoán:
 
-1. Đăng ký API key ở OpenAPI của SoSoValue.
-2. Vercel → Settings → Environment Variables → thêm `SOSOVALUE_API_KEY`.
+| Tài sản | Endpoint | Gói yêu cầu |
+| --- | --- | --- |
+| BTC | `GET /api/etf/bitcoin/flow-history` | mọi gói, kể cả Hobbyist |
+| ETH | `GET /api/etf/ethereum/flow-history` | mọi gói |
+| SOL | `GET /api/etf/solana/flow-history` | mọi gói |
+| XRP | `GET /api/etf/xrp/flow-history` | mọi gói |
+
+Xác thực bằng header `CG-API-KEY`. Mỗi bản ghi trả về `timestamp`, `flow_usd`,
+`price_usd` và `etf_flows[]` — dòng tiền của **từng quỹ** kèm mã (`etf_ticker`),
+nên bảng "quỹ đóng góp nhiều nhất" lấy thẳng từ API, không phải danh sách mã tự
+gõ tay.
+
+**CoinGlass chỉ có 4 tài sản trên.** DOGE, LINK, AVAX, HBAR, LTC, DOT, HYPE,
+BNB không nằm trong tài liệu. Hàm trả về mảng `supported` để giao diện ghi rõ
+"CoinGlass không cung cấp ETF của tài sản này", phân biệt với "lần gọi này
+không lấy được" — không để trống mập mờ như thể đang chờ dữ liệu.
+
+### Bật lên
+
+1. Lấy API key ở CoinGlass.
+2. Vercel → Settings → Environment Variables → thêm `COINGLASS_API_KEY`.
 3. Redeploy.
 
 Chưa có key → hàm trả `configured:false`, giao diện hiện "chưa cấu hình nguồn"
-và để trống. Không bao giờ hiện số ước lượng.
+và để trống. Gọi hỏng → `available:false` kèm lý do từng tài sản trong `errors`.
+Không đường nào trong file đó sinh ra số liệu.
 
-`SOSOVALUE_API_BASE` và `SOSOVALUE_ETF_PATH` có thể ghi đè bằng biến môi trường:
-đường dẫn endpoint chưa được xác minh từ môi trường phát triển (mọi host bên
-ngoài đều bị chặn ở đó), nên nếu SoSoValue dùng đường dẫn khác thì sửa bằng biến
-môi trường chứ không phải sửa code. Sai đường dẫn thì hàm báo lỗi rõ, không đoán
-dữ liệu.
+`COINGLASS_API_BASE` ghi đè base URL nếu gói của bạn dùng host khác (mặc định
+`https://open-api-v4.coinglass.com`). Cùng một key này cũng phục vụ các mục
+thanh lý (liquidation) trong app Next.
