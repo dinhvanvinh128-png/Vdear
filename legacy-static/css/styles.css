@@ -802,3 +802,15 @@ body.nd-locked{overflow:hidden}
    chip: 5.66:1 và 6.48:1. */
 :root[data-theme="light"] .bs-chip.active,
 :root[data-theme="light"] .seg-btn.active{color:#F6F4EC}
+
+/* -------------------- ETF giao ngay -------------------- */
+.etf-group{margin-top:10px}
+.etf-group h3{margin:0 0 8px;font-size:12px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.7px;color:var(--muted-2)}
+.etf-table th,.etf-table td{white-space:nowrap}
+.etf-name{white-space:normal}
+.etf-name b{display:block;font-family:'Chakra Petch',sans-serif;font-size:13.5px}
+.etf-name small{display:block;color:var(--muted-2);font-size:11px;line-height:1.3;margin-top:1px}
+/* Thẻ TradFi khi chưa có giá: không phải link, không mời bấm vào chỗ trống. */
+.tf-card.tf-off{cursor:default;opacity:.72}
+.tf-card.tf-off:hover{transform:none;box-shadow:none}

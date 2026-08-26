@@ -128,6 +128,17 @@
       </section>
     </div>
 
+      <!-- ETF giao ngay BTC/ETH -->
+      <section class="panel" id="etf">
+        <div class="panel-head">
+          <h2>🏛️ ETF giao ngay BTC &amp; ETH</h2>
+          <span class="muted small">Nguồn báo giá miễn phí</span>
+        </div>
+        <div id="etfBody"></div>
+        <p class="hint"><b>Đọc đúng hai cột:</b> <b>Trong phiên</b> là % so với giá mở cửa của chính phiên đó, không phải biến động 24h. <b>KL khớp lệnh</b> là số chứng chỉ quỹ được sang tay giữa các nhà đầu tư — <b>không phải</b> tiền vào quỹ.</p>
+        <p class="hint"><b>Dòng tiền ròng</b> (tiền thực vào/ra quỹ mỗi ngày) tính từ số chứng chỉ quỹ được phát hành thêm hay mua lại, <b>không suy ra được từ giá hay khối lượng khớp lệnh</b>. Không nguồn miễn phí nào công bố số này; muốn có phải cấu hình CoinGlass hoặc SoSoValue bằng API key đặt ở phía server. Chừng nào chưa có, cột đó để trống — trang này không ước lượng dòng tiền.</p>
+      </section>
+
     <!-- ============ VIEW: TRADFI ============ -->
     <div id="view-tradfi" hidden>
       <section class="panel">
@@ -190,6 +201,7 @@
   <script src="js/indicators.js"></script>
   <script src="js/ticker.js"></script>
   <script src="js/dashboard.js"></script>
+  <script src="js/etf.js"></script>
   <script src="js/coinrain.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/command.js"></script>

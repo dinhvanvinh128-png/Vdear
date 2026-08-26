@@ -295,11 +295,21 @@
     let data;
     try { data = await API.getTradFi(); } catch (e) { data = []; }
     $('tradfiRow').innerHTML = data.map((t) => {
-      const up = t.change >= 0;
+      const up = (t.change || 0) >= 0;
       // logo TradingView, lỗi -> emoji dự phòng
       const ico = t.logo
         ? `<img class="tf-logo" src="${t.logo}" alt="${t.symbol}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="tf-ico" style="display:none">${t.icon}</span>`
         : `<span class="tf-ico">${t.icon}</span>`;
+      // Không có giá thì nói là không có, không vẽ ra một con số nào.
+      if (t.price == null) {
+        return `<div class="tf-card tf-off">
+          ${ico}
+          <div class="tf-body">
+            <div class="tf-sym">${t.symbol} <small>${t.label}</small></div>
+            <div class="tf-price muted">Chưa lấy được giá</div>
+          </div>
+        </div>`;
+      }
       return `<a class="tf-card" href="coin.html?c=${t.symbol}&type=tradfi">
         ${ico}
         <div class="tf-body">
@@ -307,7 +317,7 @@
           <div class="tf-price">$${fmt(t.price)} <span class="tf-unit">${t.unit}</span></div>
         </div>
         <div class="tf-chg ${up ? 'up' : 'down'}">${up ? '+' : ''}${t.change.toFixed(2)}%
-          ${t.live ? '<span class="live-dot" title="realtime"></span>' : '<small class="sim" title="dữ liệu mô phỏng">~</small>'}</div>
+          <span class="live-dot" title="realtime"></span></div>
       </a>`;
     }).join('');
   }
@@ -362,6 +372,9 @@
     document.querySelectorAll('.movers .th-sort').forEach((th) =>
       th.addEventListener('click', () => setSort(th.dataset.sort)));
     updateSortUI();
+
+    // ETF nạp độc lập: nguồn khác hẳn, hỏng cũng không được kéo theo bảng coin.
+    if (window.VdearETF) window.VdearETF.init('etfBody');
 
     try {
       market = await API.getMarket();

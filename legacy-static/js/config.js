@@ -70,17 +70,44 @@ window.VDEAR_CONFIG = {
   ],
 
   // TradFi — vàng, bạc, dầu WTI, dầu Brent. Không niêm yết trên sàn crypto nên
-  // được lấy từ nguồn miễn phí (best-effort) + fallback mô phỏng có nhãn rõ ràng.
+  // lấy từ nguồn miễn phí (best-effort). Không lấy được thì để trống, KHÔNG mô
+  // phỏng: giá bịa nằm cạnh giá thật là thứ nguy hiểm nhất trên một trang tài
+  // chính. Trường `base` cũ đã bỏ vì nó chính là hạt giống của phần mô phỏng đó.
   tradfi: [
-    { symbol: 'XAU', label: 'Vàng (Gold)', unit: 'USD/oz', icon: '🥇', base: 2380,
+    { symbol: 'XAU', label: 'Vàng (Gold)', unit: 'USD/oz', icon: '🥇',
       logo: 'https://s3-symbol-logo.tradingview.com/metal/gold.svg' },
-    { symbol: 'XAG', label: 'Bạc (Silver)', unit: 'USD/oz', icon: '🥈', base: 30.2,
+    { symbol: 'XAG', label: 'Bạc (Silver)', unit: 'USD/oz', icon: '🥈',
       logo: 'https://s3-symbol-logo.tradingview.com/metal/silver.svg' },
-    { symbol: 'CL', label: 'Dầu WTI', unit: 'USD/bbl', icon: '🛢️', base: 78.5,
+    { symbol: 'CL', label: 'Dầu WTI', unit: 'USD/bbl', icon: '🛢️',
       logo: 'https://s3-symbol-logo.tradingview.com/crude-oil.svg' },
-    { symbol: 'BZ', label: 'Dầu Brent', unit: 'USD/bbl', icon: '🛢️', base: 82.3,
+    { symbol: 'BZ', label: 'Dầu Brent', unit: 'USD/bbl', icon: '🛢️',
       logo: 'https://s3-symbol-logo.tradingview.com/crude-oil.svg' },
   ],
+
+  // ETF giao ngay BTC/ETH niêm yết tại Mỹ.
+  //
+  // Hai đại lượng KHÁC HẲN nhau, đừng lẫn:
+  //  · GIÁ  — giá cổ phiếu quỹ, lấy được từ nguồn báo giá miễn phí.
+  //  · DÒNG TIỀN (net flow) — tiền thực vào/ra quỹ mỗi ngày, tính từ số chứng
+  //    chỉ quỹ phát hành thêm/mua lại. KHÔNG nguồn miễn phí nào công bố; muốn
+  //    có phải cấu hình CoinGlass hoặc SoSoValue bằng API key, mà key thì bắt
+  //    buộc nằm ở server. Bản tĩnh không có server nên phần này để trống chứ
+  //    tuyệt đối không suy ra từ giá — giá và dòng tiền không liên quan tuyến tính.
+  etf: {
+    // Stooq: CSV miễn phí, không cần key. Có thể bị chặn CORS -> hiện "không
+    // lấy được", không bao giờ thay bằng số tự chế.
+    quoteBase: 'https://stooq.com/q/l/?f=sd2t2ohlcv&h&e=csv&s=',
+    funds: [
+      { ticker: 'IBIT', name: 'iShares Bitcoin Trust', issuer: 'BlackRock', asset: 'BTC' },
+      { ticker: 'FBTC', name: 'Fidelity Wise Origin Bitcoin', issuer: 'Fidelity', asset: 'BTC' },
+      { ticker: 'GBTC', name: 'Grayscale Bitcoin Trust', issuer: 'Grayscale', asset: 'BTC' },
+      { ticker: 'ARKB', name: 'ARK 21Shares Bitcoin', issuer: 'ARK/21Shares', asset: 'BTC' },
+      { ticker: 'BITB', name: 'Bitwise Bitcoin', issuer: 'Bitwise', asset: 'BTC' },
+      { ticker: 'ETHA', name: 'iShares Ethereum Trust', issuer: 'BlackRock', asset: 'ETH' },
+      { ticker: 'FETH', name: 'Fidelity Ethereum Fund', issuer: 'Fidelity', asset: 'ETH' },
+      { ticker: 'ETHE', name: 'Grayscale Ethereum Trust', issuer: 'Grayscale', asset: 'ETH' },
+    ],
+  },
 
   // Số coin quét & hiển thị
   scan: {

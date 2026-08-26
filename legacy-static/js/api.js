@@ -391,20 +391,18 @@
   async function getTradFi() {
     const out = [];
     for (const item of CFG.tradfi) {
-      let price = item.base, change = 0, live = false;
+      let price = null, change = 0, live = false;
       try {
         if (item.symbol === 'XAU' || item.symbol === 'XAG') {
           const j = await getJSON('https://api.gold-api.com/price/' + item.symbol, { timeout: 6000 });
           if (j && j.price) { price = num(j.price); live = true; }
         }
       } catch (e) { /* fallback */ }
-      if (!live) {
-        // dao động nhẹ theo thời gian để giao diện "sống", nhưng gắn nhãn mô phỏng
-        const drift = Math.sin(Date.now() / 3.6e6 + item.base) * 0.012;
-        price = item.base * (1 + drift);
-        change = drift * 100;
-      }
-      out.push({ ...item, price, change, live });
+      // Không lấy được giá thì trả về NULL. Trước đây chỗ này sinh một hình sin
+      // quanh `base` rồi hiển thị như giá thị trường — có gắn nhãn "~" nhưng vẫn
+      // là con số bịa nằm cạnh dữ liệu thật, đúng thứ mà quy tắc "không fake
+      // data" cấm. Thà để trống còn hơn cho người dùng một con số họ tưởng thật.
+      out.push({ ...item, price: live ? price : null, change: live ? change : null, live });
     }
     return out;
   }
