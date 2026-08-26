@@ -747,6 +747,11 @@ body.nd-locked{overflow:hidden}
   overflow:hidden;background:var(--panel-2)}
 #tvChart{height:min(70vh,560px);width:100%}
 @media (max-width:760px){#tvChart{height:min(64vh,420px)}}
+/* Chế độ "Cả hai": hai biểu đồ chồng nhau nên TradingView thấp lại, tổng chiều
+   cao vẫn nằm trong khoảng cuộn một lần. */
+.chart-panel.both #tvChart{height:min(48vh,400px)}
+@media (max-width:760px){.chart-panel.both #tvChart{height:min(44vh,300px)}}
+.chart-panel.both .chart-wrap{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 /* Dòng trạng thái nằm dưới iframe: khi widget dựng xong thì bị che, khi hỏng
    thì nó chính là chỗ báo lỗi. */
 .tv-status{position:absolute;inset:0;z-index:1;display:grid;place-content:center;

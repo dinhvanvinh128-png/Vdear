@@ -67,7 +67,7 @@
   async function selectTf(tf) {
     currentTf = tf;
     renderTfTabs();
-    if (chartMode === 'tv' && !tvBroken) mountTV();
+    if (chartMode !== 'vdear' && !tvBroken) mountTV();
     const candles = await loadCandles(tf);
     const sr = TA.supportResistance(candles, candles[candles.length - 1].close);
     chart.setData(candles);
@@ -206,10 +206,10 @@
       row.addEventListener('click', () => {
         box.querySelectorAll('.sr-row').forEach((r) => r.classList.remove('sel'));
         row.classList.add('sel');
-        // Vùng S&R chỉ vẽ được trên biểu đồ tự vẽ. Bấm vào vùng mà đang ở
-        // TradingView thì tự chuyển chế độ, thay vì cuộn tới một biểu đồ
-        // không hề đánh dấu gì.
-        if (chartMode === 'tv' && !tvBroken) setMode('vdear');
+        // Vùng S&R chỉ vẽ được trên biểu đồ tự vẽ. Nếu đang xem MỖI TradingView
+        // thì chuyển sang "Cả hai" để vùng hiện ra, chứ không cuộn người dùng
+        // tới một biểu đồ không đánh dấu gì.
+        if (chartMode === 'tv' && !tvBroken) setMode('both');
         chart.setHighlight({
           price: +row.dataset.price, low: +row.dataset.low, high: +row.dataset.high,
         });
@@ -293,23 +293,31 @@
   //           Entry/TP/SL chạy theo đòn bẩy — widget của TradingView không vẽ
   //           hộ được những thứ đó, nên nó ở lại chứ không bị thay thế.
   const MODE_KEY = 'vdear_chartmode';
-  let chartMode = 'tv';
-  try { const m = localStorage.getItem(MODE_KEY); if (m === 'tv' || m === 'vdear') chartMode = m; } catch (e) {}
+  const MODES = ['both', 'tv', 'vdear'];
+  let chartMode = 'both';
+  try { const m = localStorage.getItem(MODE_KEY); if (MODES.indexOf(m) >= 0) chartMode = m; } catch (e) {}
   let tvVenue = null, tvBooted = false, tvBroken = false, tvTimer = 0;
 
   function applyMode() {
-    const tvOn = chartMode === 'tv' && !tvBroken;
+    // TradingView hỏng thì luôn còn biểu đồ tự vẽ, không để trang trắng.
+    const mode = tvBroken ? 'vdear' : chartMode;
+    const tvOn = mode === 'tv' || mode === 'both';
+    const vdOn = mode === 'vdear' || mode === 'both';
     $('tvWrap').hidden = !tvOn;
-    $('vdearWrap').hidden = tvOn;
-    $('rsiLegend').hidden = tvOn;
+    $('vdearWrap').hidden = !vdOn;
+    $('rsiLegend').hidden = !vdOn;
+    $('chartHint').hidden = !tvOn;
+    // Xem cả hai thì biểu đồ TradingView thấp lại, để hai biểu đồ cộng lại
+    // không dài hơn một màn hình rưỡi.
+    document.querySelector('.chart-panel').classList.toggle('both', mode === 'both');
     const venueSel = $('tvVenue');
     if (venueSel) venueSel.hidden = !tvOn;
     document.querySelectorAll('#chartMode .seg-btn').forEach((b) =>
-      b.classList.toggle('active', b.dataset.v === (tvBroken ? 'vdear' : chartMode)));
+      b.classList.toggle('active', b.dataset.v === mode));
+    if (tvOn) mountTV();
     // Canvas nằm trong khối [hidden] có clientWidth = 0, nên mọi lần vẽ trong
     // lúc ẩn đều ra rỗng. Hiện ra thì phải vẽ lại.
-    if (tvOn) mountTV();
-    else if (chart && chart.candles && chart.candles.length) chart.render();
+    if (vdOn && chart && chart.candles && chart.candles.length) chart.render();
   }
 
   function setMode(m) {
@@ -385,11 +393,11 @@
     document.getElementById('chartMode').addEventListener('click', (e) => {
       const b = e.target.closest('.seg-btn');
       if (!b) return;
-      if (tvBroken && b.dataset.v === 'tv') { tvBroken = false; tvBooted = false; }
+      if (tvBroken && b.dataset.v !== 'vdear') { tvBroken = false; tvBooted = false; }
       setMode(b.dataset.v);
     });
     // Nền sáng/tối của widget được nhúng lúc tạo, nên đổi nền phải dựng lại.
-    new MutationObserver(() => { if (chartMode === 'tv' && !tvBroken) { tvBooted = false; mountTV(); } })
+    new MutationObserver(() => { if (chartMode !== 'vdear' && !tvBroken) { tvBooted = false; mountTV(); } })
       .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     try {
       await renderHeader();
