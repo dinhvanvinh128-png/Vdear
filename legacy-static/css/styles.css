@@ -70,7 +70,9 @@ h1,h2,h3{margin:0;font-weight:700}
 }
 .brand{display:flex;align-items:center;gap:11px}
 .brand-mark{
-  width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+  /* flex item in .brand: without a shrink lock the tile is squeezed
+     narrower while its height holds, turning the square into an oval. */
+  width:36px;height:36px;flex:0 0 36px;border-radius:10px;display:grid;place-items:center;
   background:linear-gradient(135deg,var(--accent),var(--accent-2));
   box-shadow:0 4px 14px rgba(216,163,43,.35);
 }
