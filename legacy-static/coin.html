@@ -82,7 +82,8 @@
           <button id="zoomOut" title="Thu nhỏ (thời gian)">−</button>
           <button id="priceOut" title="Nới khung giá — kéo nến nhỏ lại để nhìn tổng quát">↕</button>
           <button id="priceAuto" title="Trả khung giá về vừa khít" hidden>AUTO</button>
-          <button id="zoomReset" title="Xem toàn bộ">⤢</button>
+          <button id="zoomReset" title="Về khung xem mặc định (nến mới nhất)">⤢</button>
+          <button id="fitAll" title="Xem toàn bộ số nến đã tải">⊞</button>
         </div>
         <div class="price-area"><canvas id="priceCanvas"></canvas></div>
         <div class="rsi-area"><canvas id="rsiCanvas"></canvas></div>
@@ -93,6 +94,7 @@
         <span><i class="sw" style="background:#4FB477"></i> RSI 20–30 quá bán · &lt;20 quá bán mạnh (chú ý LONG)</span>
       </div>
       <p class="hint"><b>Điều khiển biểu đồ</b> — <u>Thời gian (trục ngang)</u>: lăn chuột hoặc nút <b>+</b>/<b>−</b> để phóng to/thu nhỏ, giữ chuột kéo ngang để trượt qua lại; trên điện thoại chụm hai ngón theo chiều ngang, một ngón kéo ngang để trượt (kéo dọc vẫn cuộn trang như thường). <u>Khung giá (trục dọc)</u>: <b>kéo dọc ngay trên dải giá bên phải</b> để nới rộng hay bó hẹp khung giá — nới ra thì nến nhỏ lại và bạn nhìn được tổng quát, đúng như kéo trục giá trên TradingView; nút <b>↕</b> làm nhanh việc đó, chụm hai ngón theo chiều dọc cũng vậy. Kéo lệch dọc trong lòng biểu đồ thì dời khung giá lên xuống. Nháy đúp trên dải giá trả riêng khung giá về vừa khít, nháy đúp trong biểu đồ trả cả hai; nút <b>AUTO</b> hiện ra khi bạn đang tự chỉnh khung giá. Kéo hoặc lăn ở khung RSI phía dưới cũng điều khiển chung một cửa sổ thời gian.</p>
+      <p class="hint">Biểu đồ mở ra ở <b>khung xem vừa mắt</b> — chỉ hiện phần nến gần nhất, đủ rộng để mỗi cây nến còn ra hình nến, và neo sát mép phải như mọi phần mềm biểu đồ. Nhấn <b>−</b> hoặc nút <b>⊞</b> để lùi ra xem toàn bộ số nến đã tải, <b>⤢</b> để về khung mặc định.</p>
     </section>
 
     <!-- Điểm các khung -->

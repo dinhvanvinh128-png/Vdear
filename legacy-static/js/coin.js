@@ -291,6 +291,7 @@
     $('zoomIn').addEventListener('click', () => chart.zoomBy(0.7));
     $('zoomOut').addEventListener('click', () => chart.zoomBy(1.4));
     $('zoomReset').addEventListener('click', () => chart.resetView());
+    $('fitAll').addEventListener('click', () => chart.fitAll());
     // Nới khung giá: mỗi lần bấm nhân đôi khoảng giá hiển thị -> nến co lại,
     // nhìn được toàn cảnh thay vì lúc nào cũng bị kéo giãn vừa khít.
     $('priceOut').addEventListener('click', () => chart.zoomPrice(1.6, 0.5));

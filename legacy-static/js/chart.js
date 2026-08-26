@@ -53,14 +53,37 @@
       this.ema20 = TA.emaSeries(this.closes, 20);
       this.ema50 = TA.emaSeries(this.closes, 50);
       this.rsi = TA.rsiSeries(this.closes);
-      if (!keepView) { this.viewCount = candles.length; this.viewStart = 0; }
+      if (!keepView) { const d = this._defaultView(); this.viewCount = d.count; this.viewStart = d.start; }
       this.render();
+    }
+
+    // Lề phải giữ chỗ cho trục giá. 72px trên màn 345px là hơn 20% bề ngang,
+    // nến bị dồn hết sang trái; màn hẹp thì thu lại.
+    _padRFor(w) { return w < 560 ? 52 : 72; }
+
+    // Cửa sổ mặc định: đủ rộng để mỗi nến CÒN RA HÌNH NẾN. Mở ra 400 nến trên
+    // một màn điện thoại thì mỗi nến chưa tới 1px — là vệt màu, không phải nến.
+    // Và khi viewCount = toàn bộ thì không còn gì để kéo qua lại, nên trang
+    // trông như bị đơ. Neo về bên phải: nến mới nhất sát mép, như mọi phần mềm
+    // biểu đồ; muốn xem hết thì thu nhỏ ra.
+    _defaultView() {
+      const n = this.candles.length;
+      if (!n) return { start: 0, count: 0 };
+      const w = this.pc.clientWidth || this.pc.parentElement.clientWidth || 900;
+      const plotW = Math.max(80, w - this.padL - this._padRFor(w));
+      const count = Math.max(30, Math.min(n, Math.floor(plotW / 6)));
+      return { start: Math.max(0, n - count), count };
     }
 
     setZones(sr) { this.sr = sr; this.render(); }
     setHighlight(zone) { this.highlightZone = zone; this.render(); }
     setPlan(plan) { this.plan = plan; this.render(); }
-    resetView() { this.viewCount = this.candles.length; this.viewStart = 0; this.priceView = null; this._scaleChanged(); this.render(); }
+    resetView() {
+      const d = this._defaultView();
+      this.viewCount = d.count; this.viewStart = d.start;
+      this.priceView = null; this._scaleChanged(); this.render();
+    }
+    fitAll() { this.viewCount = this.candles.length; this.viewStart = 0; this.priceView = null; this._scaleChanged(); this.render(); }
     zoomBy(factor, anchorPx) {
       const n = this.candles.length; if (!n) return;
       const w = this.pc.clientWidth || this.pc.parentElement.clientWidth;
@@ -347,6 +370,7 @@
     _renderPrice() {
       const ctx = this.pctx;
       const { w, h } = this._prep(this.pc, ctx, this.pc.parentElement.clientHeight || 400);
+      this.padR = this._padRFor(w);
       const { lo, hi } = this._priceRange();
       const plotT = this.padT, plotB = h - this.padB, plotH = plotB - plotT;
       const yFor = (p) => plotB - ((p - lo) / (hi - lo)) * plotH;
@@ -463,12 +487,25 @@
 
       this._crosshair(ctx, w, h, yFor, plotT, plotB);
 
+      // Canvas không có nội dung nào đọc được: với trình đọc màn hình nó là một
+      // ô trống. Mô tả cửa sổ đang xem để ít nhất còn biết đang nhìn cái gì.
+      const n = this.candles.length;
+      const a = Math.max(1, Math.round(this.viewStart) + 1);
+      const b = Math.min(n, Math.round(this.viewStart + this.viewCount));
+      this.pc.setAttribute('role', 'img');
+      this.pc.setAttribute('aria-label',
+        `Biểu đồ nến: đang xem nến ${a}–${b} trên ${n}, `
+        + `giá từ ${fmt(lo)} đến ${fmt(hi)}`
+        + (this.priceView ? ' (khung giá tự chỉnh)' : ''));
+
       // legend EMA + hướng dẫn zoom
       ctx.textAlign = 'left'; ctx.font = '11px Inter, Arial';
       ctx.fillStyle = COLORS.ema20; ctx.fillText('EMA20', this.padL + 4, plotT + 12);
       ctx.fillStyle = COLORS.ema50; ctx.fillText('EMA50', this.padL + 54, plotT + 12);
       ctx.fillStyle = COLORS.axis; ctx.font = '10px Inter, Arial';
-      ctx.fillText('Lăn chuột / chụm 2 ngón để zoom · kéo để di chuyển · nháy đúp để xem toàn bộ', this.padL + 108, plotT + 12);
+      // Màn hẹp: bỏ dòng hướng dẫn trên canvas — nó chạy thẳng vào cụm nút zoom
+      // và bị cắt cụt. Nội dung đó đã có đủ ở phần chú thích dưới biểu đồ.
+      if (w >= 620) ctx.fillText('Lăn chuột / chụm 2 ngón để zoom · kéo để di chuyển · nháy đúp để xem toàn bộ', this.padL + 108, plotT + 12);
     }
 
     _crosshair(ctx, w, h, yFor, plotT, plotB) {
