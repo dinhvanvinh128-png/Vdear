@@ -171,25 +171,25 @@ tokens rather than raw hex in components, and tabular numerics throughout.
 
 ## Deployment
 
-**Production serves the static build in `legacy-static/`**, not the Next.js app.
+**Production builds the Next.js app.** `vercel.json` carries no framework or
+output overrides, so Vercel detects Next and runs `next build`.
 
-`vercel.json` sets `outputDirectory: legacy-static` with the install and build
-steps stubbed out, so Vercel publishes that folder as-is instead of detecting the
-root `package.json` and running `next build`. Pushing to the production branch is
-the whole deploy step; nothing needs to be uploaded by hand.
+The static site in `legacy-static/` is not gone and is not duplicated in git.
+`npm run prebuild` (`scripts/copy-static.mjs`) copies it into `public/` before
+every build, so `legacy-static/` stays the only place to edit it and the two
+can never drift. `index.html` is published as `classic.html`, because `/` now
+belongs to the Next app.
 
-If a deploy ever shows the wrong build, check these in order:
+| URL | Served by |
+|---|---|
+| `/`, `/money-flow`, `/breadth`, `/coins`, … | Next.js app |
+| `/classic.html` | the futures dashboard, ticker, 4H scan |
+| `/bubbles.html` | the market bubble view |
+| `/coin.html?c=BTC` | the canvas chart with S/R and Entry/TP/SL |
+| `/about.html` `/terms.html` `/privacy.html` `/risk.html` `/contact.html` | the Vietnamese pages |
 
-1. **Settings → Git → Production Branch** must equal the branch being pushed.
-   Vercel defaults this to `main`; a push to any other branch produces a
-   *Preview* deployment and leaves production untouched.
-2. **Deployments** — a row marked `Vercel Drop` came from a manual drag-and-drop
-   upload, not from Git. Drops pin production in place and Git pushes will not
-   replace them until a Git deployment is promoted.
-3. **Settings → General → Root Directory** should be empty, since `vercel.json`
-   already points at the output folder.
+`public/` is generated, so it is in `.gitignore`.
 
-The Next.js app under `app/`, `lib/` and `components/` is still in the repository
-and still tested, it is simply not what production serves right now. To switch,
-remove `outputDirectory`, `framework`, `buildCommand` and `installCommand` from
-`vercel.json`; the framework preset then takes over again.
+**Rolling back to the static-only site** is one commit: put `framework: null`,
+`installCommand`, `buildCommand` and `outputDirectory: legacy-static` back into
+`vercel.json`.

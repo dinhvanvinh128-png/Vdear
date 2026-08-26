@@ -22,3 +22,6 @@ next-env.d.ts
 
 # offline test build
 .test-build/
+
+# sinh ra lúc build từ legacy-static/ (xem scripts/copy-static.mjs)
+/public/

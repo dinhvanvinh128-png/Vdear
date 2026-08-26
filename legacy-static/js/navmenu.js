@@ -33,47 +33,49 @@
     scale:  '<path d="M10 3.4v13M4 6.6h12"/><path d="M4 6.6L1.8 11h4.4zM16 6.6L13.8 11h4.4z"/>',
   };
 
-  // Cấu trúc theo bản thiết kế "Crypto Intelligence Terminal". Mục nào TRANG
-  // ĐÃ CÓ thì là link thật; mục nào chưa có trang thì để `soon: true` — hiện ra
-  // nhưng không bấm được. Gắn link vào trang chưa tồn tại chỉ để menu trông đầy
-  // đủ là đẩy người dùng vào 404, tệ hơn hẳn việc nói thẳng là chưa có.
+  // Cấu trúc theo bản thiết kế "Crypto Intelligence Terminal".
+  // Đường dẫn bắt đầu bằng "/" là route của app Next.js (module dòng tiền,
+  // on-chain, whale, thanh khoản, độ rộng, phái sinh...). Đường dẫn .html là
+  // các trang tĩnh vẫn giữ nguyên. Mục nào chưa có trang thì đặt `soon: true`
+  // để hiện ra mà không bấm được — gắn link vào trang chưa tồn tại chỉ để menu
+  // trông đầy đủ là đẩy người dùng vào 404.
   const GROUPS = [
     {
       title: 'Thị trường',
       items: [
-        { href: 'index.html', label: 'Tổng quan thị trường', icon: 'market', desc: 'Tâm lý · biến động 24h · 4 sàn' },
+        { href: '/', label: 'Tổng quan thị trường', icon: 'market', desc: 'Market score · regime · dòng tiền' },
+        { href: 'classic.html', label: 'Bảng Futures (bản cũ)', icon: 'table', desc: 'Tâm lý · tín hiệu 4H · biến động 24h' },
         { href: 'bubbles.html', label: 'Bong bóng thị trường', icon: 'bubble', desc: 'Cả thị trường trong một khung' },
-        { href: 'index.html#futures-radar', label: 'Futures Radar', icon: 'radar', desc: 'RSI · S&R · Price Action · Entry/TP/SL' },
-        { href: 'index.html#movers', label: 'Biến động 24h', icon: 'table', desc: 'Toàn bộ coin, lọc theo nhóm' },
-        { label: 'Spot Radar', icon: 'spot', desc: 'CVD · buy/sell · order book', soon: true },
-        { label: 'Sector Rotation', icon: 'sector', desc: 'Tiền đang xoay sang mảng nào', soon: true },
+        { href: 'classic.html#futures-radar', label: 'Futures Radar', icon: 'radar', desc: 'RSI · S&R · Price Action · Entry/TP/SL' },
+        { href: '/coins', label: 'Spot Radar', icon: 'spot', desc: 'CVD · buy/sell · order book' },
+        { href: '/sectors', label: 'Sector Rotation', icon: 'sector', desc: 'Tiền đang xoay sang mảng nào' },
       ],
     },
     {
       title: 'Phân tích',
       items: [
         { href: 'coin.html?c=BTC', label: 'Phân tích coin', icon: 'coin', desc: 'Chart · RSI · S&R · kế hoạch lệnh' },
-        { label: 'Dòng tiền', icon: 'flow', desc: 'Spot · CEX · DEX · stablecoin', soon: true },
-        { label: 'Whale & Exchange Flow', icon: 'whale', desc: 'Nạp/rút sàn, ví lớn', soon: true },
-        { label: 'On-chain', icon: 'chain', desc: 'Địa chỉ hoạt động · phí · tăng trưởng mạng', soon: true },
-        { label: 'Thanh khoản', icon: 'drop', desc: 'Stablecoin · độ sâu sổ lệnh', soon: true },
-        { label: 'Độ rộng thị trường', icon: 'breadth', desc: '% coin trên EMA, tăng/giảm', soon: true },
+        { href: '/money-flow', label: 'Dòng tiền', icon: 'flow', desc: 'Spot · CEX · DEX · stablecoin' },
+        { href: '/whales', label: 'Whale & Exchange Flow', icon: 'whale', desc: 'Nạp/rút sàn, ví lớn' },
+        { href: '/onchain', label: 'On-chain', icon: 'chain', desc: 'Địa chỉ hoạt động · phí · tăng trưởng mạng' },
+        { href: '/liquidity', label: 'Thanh khoản', icon: 'drop', desc: 'Stablecoin · độ sâu sổ lệnh' },
+        { href: '/breadth', label: 'Độ rộng thị trường', icon: 'breadth', desc: '% coin trên EMA, tăng/giảm' },
       ],
     },
     {
       title: 'Phái sinh',
       items: [
-        { label: 'Open Interest', icon: 'layers', soon: true },
-        { label: 'Funding', icon: 'percent', soon: true },
-        { label: 'Thanh lý', icon: 'drop', soon: true },
-        { label: 'Long / Short', icon: 'scale', soon: true },
+        { href: '/open-interest', label: 'Open Interest', icon: 'layers' },
+        { href: '/funding', label: 'Funding', icon: 'percent' },
+        { href: '/liquidations', label: 'Thanh lý', icon: 'drop' },
+        { href: '/long-short', label: 'Long / Short', icon: 'scale' },
       ],
     },
     {
       title: 'Của bạn',
       items: [
-        { href: 'index.html?view=fav', label: 'Coin yêu thích', icon: 'star', desc: 'Danh mục bạn đang theo dõi' },
-        { href: 'index.html?view=tradfi', label: 'TradFi', icon: 'bank', desc: 'Vàng · Bạc · Dầu' },
+        { href: 'classic.html?view=fav', label: 'Coin yêu thích', icon: 'star', desc: 'Danh mục bạn đang theo dõi' },
+        { href: 'classic.html?view=tradfi', label: 'TradFi', icon: 'bank', desc: 'Vàng · Bạc · Dầu' },
       ],
     },
     {
@@ -139,7 +141,7 @@
           <button class="nd-close" data-nav-close aria-label="Đóng menu">✕</button>
         </div>
         ${body}
-        <p class="nd-foot">Mục <b>sắp có</b> là các module đã dựng xong trong mã nguồn nhưng chưa được đưa lên bản đang chạy — xem <a href="about.html">Giới thiệu</a>.<br><br>Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
+        <p class="nd-foot">Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
       </nav>`;
     document.body.appendChild(wrap);
 
