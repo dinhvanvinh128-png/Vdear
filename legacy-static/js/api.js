@@ -319,14 +319,17 @@
   function logoUrl(base) { return logoSources(base)[0]; }
   // Trả về data-URI avatar chữ (fallback khi không có logo).
   function letterAvatar(base) {
-    const colors = ['#2f81f7','#00d68f','#f0b90b','#e0457b','#8b5cf6','#00c2ff','#ff7849','#20c997'];
+    // Warm metals rather than eight arbitrary hues: the discs still tell coins
+    // apart, but they stay inside the gold identity. Each one clears 4.5:1
+    // against the dark letter ink below.
+    const colors = ['#D8A32B','#C4873A','#E0BE6A','#A9772A','#EAD79B','#B8913F','#CF9E55','#9C7730'];
     let h = 0; for (let i = 0; i < base.length; i++) h = (h * 31 + base.charCodeAt(i)) >>> 0;
     const c = colors[h % colors.length];
     const ch = (base[0] || '?').toUpperCase();
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'>
       <circle cx='32' cy='32' r='32' fill='${c}'/>
       <text x='32' y='42' font-size='30' font-family='Arial,Helvetica,sans-serif'
-        font-weight='700' fill='#fff' text-anchor='middle'>${ch}</text></svg>`;
+        font-weight='700' fill='#0A0906' text-anchor='middle'>${ch}</text></svg>`;
     return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
   }
   // Gắn logo vào <img>, thử lần lượt các nguồn rồi fallback avatar chữ.

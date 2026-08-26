@@ -38,11 +38,11 @@
   // Diễn giải vùng RSI theo yêu cầu người dùng.
   function rsiZone(rsi) {
     const r = CFG.rsi;
-    if (rsi >= r.overboughtStrong) return { key: 'ob_strong', side: 'SHORT', label: 'Quá mua MẠNH', color: '#ff3b57', note: 'RSI > 80 — tín hiệu quá mua mạnh, khả năng đảo chiều GIẢM cao. Cân nhắc SHORT.' };
-    if (rsi >= r.overbought) return { key: 'ob', side: 'SHORT', label: 'Quá mua', color: '#ff6b6b', note: 'RSI 70–80 — vùng quá mua, chú ý khả năng đảo chiều GIẢM. Ưu tiên SHORT.' };
-    if (rsi <= r.oversoldStrong) return { key: 'os_strong', side: 'LONG', label: 'Quá bán MẠNH', color: '#00d68f', note: 'RSI < 20 — tín hiệu quá bán mạnh, khả năng đảo chiều TĂNG cao. Cân nhắc LONG.' };
-    if (rsi <= r.oversold) return { key: 'os', side: 'LONG', label: 'Quá bán', color: '#26c281', note: 'RSI 20–30 — vùng quá bán, chú ý khả năng đảo chiều TĂNG. Ưu tiên LONG.' };
-    return { key: 'neutral', side: 'NEUTRAL', label: 'Trung tính', color: '#8a94a6', note: 'RSI trung tính (30–70) — chưa có tín hiệu đảo chiều rõ ràng.' };
+    if (rsi >= r.overboughtStrong) return { key: 'ob_strong', side: 'SHORT', label: 'Quá mua MẠNH', color: '#E0574F', note: 'RSI > 80 — tín hiệu quá mua mạnh, khả năng đảo chiều GIẢM cao. Cân nhắc SHORT.' };
+    if (rsi >= r.overbought) return { key: 'ob', side: 'SHORT', label: 'Quá mua', color: '#C6483F', note: 'RSI 70–80 — vùng quá mua, chú ý khả năng đảo chiều GIẢM. Ưu tiên SHORT.' };
+    if (rsi <= r.oversoldStrong) return { key: 'os_strong', side: 'LONG', label: 'Quá bán MẠNH', color: '#4FB477', note: 'RSI < 20 — tín hiệu quá bán mạnh, khả năng đảo chiều TĂNG cao. Cân nhắc LONG.' };
+    if (rsi <= r.oversold) return { key: 'os', side: 'LONG', label: 'Quá bán', color: '#3E9E6A', note: 'RSI 20–30 — vùng quá bán, chú ý khả năng đảo chiều TĂNG. Ưu tiên LONG.' };
+    return { key: 'neutral', side: 'NEUTRAL', label: 'Trung tính', color: '#9A9078', note: 'RSI trung tính (30–70) — chưa có tín hiệu đảo chiều rõ ràng.' };
   }
 
   /* ------------------------------- EMA ---------------------------------- */

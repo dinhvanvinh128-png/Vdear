@@ -101,9 +101,9 @@
         ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fill();
         ctx.rotate(c.angle);
         ctx.beginPath(); ctx.arc(0, 0, c.r, 0, 6.2832); ctx.closePath();
-        ctx.fillStyle = '#12161f'; ctx.fill();
+        ctx.fillStyle = '#1B1810'; ctx.fill();
         if (c.img) { ctx.save(); ctx.clip(); ctx.drawImage(c.img, -c.r, -c.r, c.r * 2, c.r * 2); ctx.restore(); }
-        ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.stroke();
+        ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(216,163,43,0.38)';  // gold rim: the discs read as struck coins ctx.stroke();
         ctx.restore();
       }
     }

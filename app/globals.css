@@ -6,47 +6,50 @@
 /*
  * VDEAR Crypto — theme tokens.
  *
- * The palette is instrument enamel: a desaturated petrol ground, brass for
- * attention and uncertainty, jade/clay for direction. Brass is deliberately NOT
- * a brand colour — it means "look here, this is uncertain", which is why --brand
- * and --warn resolve to the same hue. On this page the brightest thing on screen
- * is always data, never chrome.
+ * The palette is struck metal: a warm off-black ground with a bronze undertone
+ * and one accent, gold. Gold carries both attention and uncertainty, which is
+ * why --brand and --warn resolve to the same hue; --brand-2 and --info are a
+ * dimmer step of that same gold rather than a second colour. up/down keep their
+ * own hues because price direction is meaning, not decoration. On this page the
+ * brightest thing on screen is always data, never chrome.
  *
  * Colors are RGB triples so Tailwind's <alpha-value> works. Semantic tokens
  * (up/down/warn/info) are the ONLY place these hues live — components never
  * hard-code green/red (spec §28, §46).
  */
 :root {
-  --bg: 10 17 19;         /* #0A1113 petrol ground */
-  --panel: 15 26 29;      /* #0F1A1D card face */
-  --panel-2: 20 34 38;    /* #142226 recessed channel */
-  --border: 30 51 57;     /* #1E3339 engraved rule */
-  --muted: 110 136 144;   /* #6E8890 etched label */
-  --text: 220 231 230;    /* #DCE7E6 */
-  --brand: 192 138 46;    /* #C08A2E brass — attention / error */
-  --brand-2: 78 143 133;  /* #4E8F85 patina — supporting info */
-  --up: 62 158 119;       /* #3E9E77 jade */
-  --down: 196 87 63;      /* #C4573F clay */
-  --warn: 192 138 46;     /* brass */
-  --info: 78 143 133;     /* patina */
+  --bg: 10 9 6;           /* #0A0906 warm off-black ground, never pure #000 */
+  --panel: 18 16 10;      /* #12100A card face */
+  --panel-2: 27 24 16;    /* #1B1810 recessed channel */
+  --border: 44 39 24;     /* #2C2718 engraved rule */
+  --muted: 154 144 120;   /* #9A9078 etched label */
+  --text: 237 231 214;    /* #EDE7D6 warm paper */
+  --brand: 216 163 43;    /* #D8A32B struck gold - the single accent */
+  --brand-2: 156 122 34;  /* #9C7A22 dim gold - rules, tracks, inactive */
+  --up: 79 180 119;       /* #4FB477 */
+  --down: 224 87 79;      /* #E0574F */
+  --warn: 216 163 43;     /* gold */
+  --info: 156 122 34;     /* dim gold */
   --radius: 3px;
 }
 
 /* Light theme (toggled by adding data-theme="light" on <html>).
-   Technical card stock, faintly green — the same instrument in daylight. */
+   Bone card stock, the same instrument in daylight. Gold darkens rather than
+   disappears so the identity survives the toggle; every value here clears
+   WCAG AA against the bone ground. */
 :root[data-theme='light'] {
-  --bg: 231 234 232;      /* #E7EAE8 */
-  --panel: 244 246 245;   /* #F4F6F5 */
-  --panel-2: 237 241 239; /* #EDF1EF */
-  --border: 201 210 207;  /* #C9D2CF */
-  --muted: 85 103 107;    /* #55676B */
-  --text: 16 26 28;       /* #101A1C */
-  --brand: 138 95 20;     /* #8A5F14 */
-  --brand-2: 46 110 102;  /* #2E6E66 */
-  --up: 33 110 82;        /* #216E52 */
-  --down: 156 61 42;      /* #9C3D2A */
-  --warn: 138 95 20;
-  --info: 46 110 102;
+  --bg: 237 234 224;      /* #EDEAE0 bone, not the cream cliche */
+  --panel: 246 244 236;   /* #F6F4EC */
+  --panel-2: 230 226 213; /* #E6E2D5 */
+  --border: 207 200 180;  /* #CFC8B4 */
+  --muted: 92 83 64;      /* #5C5340 */
+  --text: 23 19 9;        /* #171309 */
+  --brand: 122 92 20;     /* #7A5C14 gold darkened to clear AA on bone */
+  --brand-2: 110 84 22;   /* #6E5416 */
+  --up: 39 107 71;        /* #276B47 */
+  --down: 166 63 53;      /* #A63F35 */
+  --warn: 122 92 20;
+  --info: 110 84 22;
 }
 
 html, body {

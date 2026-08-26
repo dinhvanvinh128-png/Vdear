@@ -14,18 +14,18 @@ export type ThemeToken =
   | 'brand' | 'brand-2' | 'up' | 'down' | 'warn' | 'info';
 
 const FALLBACK: Record<ThemeToken, string> = {
-  bg: '10 17 19',
-  panel: '15 26 29',
-  'panel-2': '20 34 38',
-  border: '30 51 57',
-  muted: '110 136 144',
-  text: '220 231 230',
-  brand: '192 138 46',
-  'brand-2': '78 143 133',
-  up: '62 158 119',
-  down: '196 87 63',
-  warn: '192 138 46',
-  info: '78 143 133',
+  bg: '10 9 6',
+  panel: '18 16 10',
+  'panel-2': '27 24 16',
+  border: '44 39 24',
+  muted: '154 144 120',
+  text: '237 231 214',
+  brand: '216 163 43',
+  'brand-2': '156 122 34',
+  up: '79 180 119',
+  down: '224 87 79',
+  warn: '216 163 43',
+  info: '156 122 34',
 };
 
 function triple(token: ThemeToken): string {

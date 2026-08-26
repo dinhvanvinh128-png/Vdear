@@ -7,14 +7,17 @@
   const TA = window.VdearTA;
 
   const COLORS = {
-    up: '#00d68f', down: '#ff3b57',
-    grid: 'rgba(255,255,255,0.05)', axis: '#5a6474', text: '#8a94a6',
-    ema20: '#2f81f7', ema50: '#f0b90b',
-    support: 'rgba(0,214,143,0.12)', supportLine: '#00d68f',
-    resistance: 'rgba(255,59,87,0.12)', resistanceLine: '#ff3b57',
-    rsiLine: '#c792ea', ob: 'rgba(255,59,87,0.12)', os: 'rgba(0,214,143,0.12)',
-    highlight: 'rgba(240,185,11,0.20)', crosshair: 'rgba(255,255,255,0.25)',
-    gold: '#f0b90b',
+    // Black + gold. The two EMAs are tonal steps of the same gold rather than
+    // two different hues, so the only non-gold colours on the chart are the
+    // ones that carry meaning: price direction and its S/R bands.
+    up: '#4FB477', down: '#E0574F',
+    grid: 'rgba(216,163,43,0.07)', axis: '#6B644F', text: '#9A9078',
+    ema20: '#D8A32B', ema50: '#9C7A22',
+    support: 'rgba(79,180,119,0.12)', supportLine: '#4FB477',
+    resistance: 'rgba(224,87,79,0.12)', resistanceLine: '#E0574F',
+    rsiLine: '#F0C55A', ob: 'rgba(224,87,79,0.12)', os: 'rgba(79,180,119,0.12)',
+    highlight: 'rgba(216,163,43,0.20)', crosshair: 'rgba(237,231,214,0.28)',
+    gold: '#D8A32B',
   };
 
   function fmt(p) {
