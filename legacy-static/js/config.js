@@ -84,18 +84,36 @@ window.VDEAR_CONFIG = {
       logo: 'https://s3-symbol-logo.tradingview.com/crude-oil.svg' },
   ],
 
-  // ETF giao ngay BTC/ETH niêm yết tại Mỹ.
+  // ETF giao ngay niêm yết tại Mỹ.
   //
   // Hai đại lượng KHÁC HẲN nhau, đừng lẫn:
-  //  · GIÁ  — giá cổ phiếu quỹ, lấy được từ nguồn báo giá miễn phí.
   //  · DÒNG TIỀN (net flow) — tiền thực vào/ra quỹ mỗi ngày, tính từ số chứng
-  //    chỉ quỹ phát hành thêm/mua lại. KHÔNG nguồn miễn phí nào công bố; muốn
-  //    có phải cấu hình CoinGlass hoặc SoSoValue bằng API key, mà key thì bắt
-  //    buộc nằm ở server. Bản tĩnh không có server nên phần này để trống chứ
-  //    tuyệt đối không suy ra từ giá — giá và dòng tiền không liên quan tuyến tính.
+  //    chỉ quỹ phát hành thêm/mua lại. Chỉ nhà cung cấp có API mới công bố;
+  //    lấy qua hàm server /api/etf-flow để API key không xuống trình duyệt.
+  //  · GIÁ — giá cổ phiếu quỹ, lấy được từ nguồn báo giá miễn phí.
+  //    KHÔNG suy ra dòng tiền từ giá hay khối lượng khớp lệnh: khối lượng là
+  //    nhà đầu tư sang tay nhau, tiền không hề chạm tới quỹ.
   etf: {
-    // Stooq: CSV miễn phí, không cần key. Có thể bị chặn CORS -> hiện "không
-    // lấy được", không bao giờ thay bằng số tự chế.
+    // Danh sách tài sản. `type` là mã nhóm ETF phía nhà cung cấp; tài sản nào
+    // nguồn chưa có thì hàng đó báo "không lấy được", không bịa số.
+    assets: [
+      { symbol: 'BTC', label: 'Bitcoin' },
+      { symbol: 'ETH', label: 'Ethereum' },
+      { symbol: 'XRP', label: 'XRP' },
+      { symbol: 'SOL', label: 'Solana' },
+      { symbol: 'DOGE', label: 'Dogecoin' },
+      { symbol: 'LINK', label: 'Chainlink' },
+      { symbol: 'AVAX', label: 'Avalanche' },
+      { symbol: 'HBAR', label: 'Hedera' },
+      { symbol: 'LTC', label: 'Litecoin' },
+      { symbol: 'DOT', label: 'Polkadot' },
+      { symbol: 'HYPE', label: 'Hyperliquid' },
+      { symbol: 'BNB', label: 'BNB' },
+    ],
+
+    // Bảng giá cổ phiếu quỹ. CHỈ liệt kê những quỹ mà mã niêm yết đã biết chắc.
+    // Các tài sản mới hơn chưa có mặt ở đây vì tôi không tự chế mã chứng khoán —
+    // dòng tiền của chúng vẫn hiện đủ ở bảng trên, lấy từ API.
     quoteBase: 'https://stooq.com/q/l/?f=sd2t2ohlcv&h&e=csv&s=',
     funds: [
       { ticker: 'IBIT', name: 'iShares Bitcoin Trust', issuer: 'BlackRock', asset: 'BTC' },

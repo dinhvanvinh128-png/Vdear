@@ -28,6 +28,35 @@ const BASE = process.env.SOSOVALUE_API_BASE || 'https://openapi.sosovalue.com';
 const PATH = process.env.SOSOVALUE_ETF_PATH || '/openapi/v2/etf/currentEtfDataMetrics';
 const TIMEOUT_MS = 9000;
 
+// Các tài sản có ETF giao ngay tại Mỹ. `type` theo mẫu us-<symbol>-spot; nếu nhà
+// cung cấp đặt tên khác thì đổi bằng SOSOVALUE_ETF_TYPES (danh sách
+// "SYMBOL=type" ngăn bởi dấu phẩy) chứ không phải sửa code. Mã sai -> tài sản đó
+// báo lỗi rõ ràng, không ảnh hưởng các tài sản khác và không sinh ra số nào.
+const DEFAULT_ASSETS = [
+  'BTC', 'ETH', 'XRP', 'SOL', 'DOGE', 'LINK', 'AVAX', 'HBAR', 'LTC', 'DOT', 'HYPE', 'BNB',
+];
+
+function assetTypes() {
+  const override = (process.env.SOSOVALUE_ETF_TYPES || '').trim();
+  if (override) {
+    return override.split(',').map((pair) => {
+      const [sym, type] = pair.split('=').map((x) => (x || '').trim());
+      return sym && type ? { symbol: sym.toUpperCase(), type } : null;
+    }).filter(Boolean);
+  }
+  return DEFAULT_ASSETS.map((sym) => ({ symbol: sym, type: `us-${sym.toLowerCase()}-spot` }));
+}
+
+// Gọi theo lô để không bắn 12 request cùng lúc vào nhà cung cấp.
+async function pool(items, worker, size) {
+  const out = new Array(items.length);
+  let i = 0;
+  await Promise.all(new Array(Math.min(size, items.length)).fill(0).map(async () => {
+    while (i < items.length) { const idx = i++; out[idx] = await worker(items[idx]); }
+  }));
+  return out;
+}
+
 function json(res, status, body) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   // Dữ liệu thị trường công khai, đã tổng hợp -> cho cache ngắn ở CDN.
@@ -91,18 +120,21 @@ module.exports = async function handler(req, res) {
       message: 'Chưa cấu hình SOSOVALUE_API_KEY. Dòng tiền ETF cần nhà cung cấp có API key.',
     });
   }
-  const [btc, eth] = await Promise.all([
-    fetchAsset('us-btc-spot', key),
-    fetchAsset('us-eth-spot', key),
-  ]);
-  const anyOk = btc.ok || eth.ok;
+  const assets = assetTypes();
+  const results = await pool(assets, async (a) => ({ ...a, res: await fetchAsset(a.type, key) }), 4);
+
+  const data = {};
+  const errors = [];
+  for (const r of results) {
+    if (r.res.ok) data[r.symbol] = r.res.data;
+    else errors.push(`${r.symbol}: ${r.res.message}`);
+  }
   return json(res, 200, {
     configured: true,
-    available: anyOk,
+    available: Object.keys(data).length > 0,
     source: 'sosovalue',
     generatedAt: new Date().toISOString(),
-    btc: btc.ok ? btc.data : null,
-    eth: eth.ok ? eth.data : null,
-    errors: [btc.ok ? null : `BTC: ${btc.message}`, eth.ok ? null : `ETH: ${eth.message}`].filter(Boolean),
+    assets: data,     // { BTC: {...}, ETH: {...}, ... } — chỉ tài sản đọc được
+    errors,           // tài sản nào hỏng, hỏng vì sao
   });
 };

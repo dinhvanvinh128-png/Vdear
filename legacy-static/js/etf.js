@@ -87,68 +87,89 @@
   }
 
   function fmtFlow(v) {
-    if (v == null) return null;
+    if (v == null) return '—';
     const sign = v > 0 ? '+' : v < 0 ? '−' : '';
-    return sign + fmtUsd(Math.abs(v)).replace('$', '$');
+    return sign + fmtUsd(Math.abs(v));
   }
 
-  // Dòng tiền là số của TOÀN NHÓM quỹ (BTC hoặc ETH), không phải của từng quỹ:
-  // SoSoValue công bố theo nhóm. Hiển thị ở đầu nhóm chứ không rải vào từng
-  // dòng — rải xuống là ngầm khẳng định một điều nguồn không hề nói.
-  function flowBanner(flow, asset) {
-    if (!flow) return '';
-    const d = asset === 'BTC' ? flow.btc : flow.eth;
-    if (!d) return '';
-    const net = d.netInflow;
-    const cls = net == null ? '' : net >= 0 ? 'up' : 'down';
-    const parts = [];
-    if (net != null) parts.push(`<span>Dòng tiền ròng ngày <b class="${cls}">${fmtFlow(net)}</b></span>`);
-    if (d.cumNetInflow != null) parts.push(`<span>Luỹ kế <b>${fmtFlow(d.cumNetInflow)}</b></span>`);
-    if (d.totalNetAssets != null) parts.push(`<span>Tổng tài sản ròng <b>${fmtUsd(d.totalNetAssets)}</b></span>`);
-    if (!parts.length) return '';
-    return `<div class="etf-flow">${parts.join('')}${d.date ? `<span class="muted">· ${d.date}</span>` : ''}</div>`;
+  /*
+   * BẢNG CHÍNH: một dòng cho mỗi tài sản, số lấy thẳng từ /api/etf-flow.
+   * Tài sản nào nguồn không trả về thì ghi rõ là không lấy được — cách này cho
+   * phép hiển thị đủ 12 tài sản mà không phải đoán mã niêm yết của từng quỹ.
+   */
+  function flowTable(flow) {
+    const assets = CFG.etf.assets;
+    if (!flow) {
+      return `<p class="hint">Dòng tiền ETF <b>chưa cấu hình nguồn</b>. Số này chỉ nhà cung cấp
+        có API mới công bố (SoSoValue); cần đặt <code>SOSOVALUE_API_KEY</code> ở biến môi trường
+        phía server. Chừng nào chưa có, ở đây để trống — trang này không ước lượng dòng tiền.</p>`;
+    }
+    const got = assets.filter((a) => flow.assets && flow.assets[a.symbol]);
+    if (!got.length) {
+      return `<p class="hint">Nguồn đã cấu hình nhưng chưa trả về tài sản nào.
+        ${(flow.errors || []).length ? 'Lý do: ' + flow.errors.slice(0, 3).join(' · ') : ''}</p>`;
+    }
+    const rows = assets.map((a) => {
+      const d = flow.assets && flow.assets[a.symbol];
+      if (!d) {
+        return `<tr><td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
+          <td colspan="4" class="muted small">Nguồn chưa có dữ liệu</td></tr>`;
+      }
+      const net = d.netInflow;
+      const cls = net == null ? '' : net >= 0 ? 'up' : 'down';
+      return `<tr>
+        <td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
+        <td><span class="mv-pill ${cls}">${fmtFlow(net)}</span></td>
+        <td class="mv-klgd">${fmtFlow(d.cumNetInflow)}</td>
+        <td class="mv-klgd">${d.totalNetAssets == null ? '—' : fmtUsd(d.totalNetAssets)}</td>
+        <td class="muted small">${d.date || '—'}</td>
+      </tr>`;
+    }).join('');
+    const miss = (flow.errors || []).length;
+    return `<div class="table-wrap"><table class="movers etf-table">
+        <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Luỹ kế</th><th>Tổng tài sản ròng</th><th>Ngày</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p class="hint">${got.length}/${assets.length} tài sản có dữ liệu${miss ? ` · ${miss} tài sản nguồn không trả về` : ''}.</p>`;
+  }
+
+  /* BẢNG PHỤ: giá cổ phiếu quỹ, chỉ những quỹ đã biết chắc mã niêm yết. */
+  function quoteTable(rows) {
+    const ok = rows.filter((r) => r.quote);
+    if (!ok.length) {
+      return `<p class="hint">Không lấy được báo giá cổ phiếu quỹ (nguồn miễn phí có thể bị chặn
+        từ trình duyệt). Không có số liệu thì để trống.</p>`;
+    }
+    const group = (asset, label) => {
+      const list = rows.filter((r) => r.asset === asset);
+      if (!list.length) return '';
+      return `<h4>${label}</h4><div class="table-wrap"><table class="movers etf-table">
+        <thead><tr><th>Quỹ</th><th>Giá</th><th>Trong phiên</th><th>KL khớp lệnh</th></tr></thead>
+        <tbody>${list.map((r) => {
+          const q = r.quote;
+          if (!q) return `<tr><td class="etf-name"><b>${r.ticker}</b><small>${r.issuer}</small></td>
+            <td colspan="3" class="muted small">Chưa lấy được</td></tr>`;
+          const c = q.changeIntraday;
+          const cls = c == null ? '' : c >= 0 ? 'up' : 'down';
+          const ctxt = c == null ? '—' : (c >= 0 ? '+' : '') + c.toFixed(2) + '%';
+          return `<tr>
+            <td class="etf-name"><b>${r.ticker}</b><small>${r.name}</small></td>
+            <td class="mv-price">$${q.price.toFixed(2)}</td>
+            <td><span class="mv-pill ${cls}">${ctxt}</span></td>
+            <td class="mv-klgd">${q.volume == null ? '—' : q.volume.toLocaleString('en-US')}</td>
+          </tr>`;
+        }).join('')}</tbody></table></div>`;
+    };
+    const stamp = ok[0].quote.date ? `${ok[0].quote.date} ${ok[0].quote.time || ''}`.trim() : '';
+    return group('BTC', 'Quỹ Bitcoin') + group('ETH', 'Quỹ Ethereum')
+      + (stamp ? `<p class="hint">Báo giá tính đến <b>${stamp}</b> (giờ nguồn).</p>` : '');
   }
 
   function render(mountId, payload) {
     const el = document.getElementById(mountId);
     if (!el) return;
-    const rows = payload.rows, flow = payload.flow;
-    const ok = rows.filter((r) => r.quote);
-    if (!ok.length) {
-      el.innerHTML = '<p class="hint">Không lấy được báo giá ETF (nguồn miễn phí có thể bị chặn từ trình duyệt). '
-        + 'Không có số liệu thì để trống — trang này không tự sinh ra giá.</p>';
-      return;
-    }
-    const group = (asset) => rows.filter((r) => r.asset === asset);
-    const table = (asset, label) => {
-      const list = group(asset);
-      if (!list.length) return '';
-      return `<div class="etf-group">
-        <h3>${label}</h3>
-        ${flowBanner(flow, asset)}
-        <div class="table-wrap"><table class="movers etf-table">
-          <thead><tr><th>Quỹ</th><th>Giá</th><th>Trong phiên</th><th>KL khớp lệnh</th><th>Dòng tiền ròng</th></tr></thead>
-          <tbody>${list.map((r) => {
-            const q = r.quote;
-            if (!q) return `<tr><td class="etf-name"><b>${r.ticker}</b><small>${r.issuer}</small></td>
-              <td colspan="4" class="muted">Chưa lấy được</td></tr>`;
-            const c = q.changeIntraday;
-            const cls = c == null ? '' : c >= 0 ? 'up' : 'down';
-            const ctxt = c == null ? '—' : (c >= 0 ? '+' : '') + c.toFixed(2) + '%';
-            return `<tr>
-              <td class="etf-name"><b>${r.ticker}</b><small>${r.name}</small></td>
-              <td class="mv-price">$${q.price.toFixed(2)}</td>
-              <td><span class="mv-pill ${cls}">${ctxt}</span></td>
-              <td class="mv-klgd">${q.volume == null ? '—' : q.volume.toLocaleString('en-US')}</td>
-              <td class="muted small">${flow ? 'xem theo nhóm ↑' : 'chưa cấu hình nguồn'}</td>
-            </tr>`;
-          }).join('')}</tbody>
-        </table></div>
-      </div>`;
-    };
-    const stamp = ok[0].quote.date ? `${ok[0].quote.date} ${ok[0].quote.time || ''}`.trim() : '';
-    el.innerHTML = table('BTC', 'ETF Bitcoin giao ngay') + table('ETH', 'ETF Ethereum giao ngay')
-      + (stamp ? `<p class="hint">Báo giá tính đến <b>${stamp}</b> (giờ nguồn) · ${ok.length}/${rows.length} quỹ lấy được dữ liệu.</p>` : '');
+    el.innerHTML = `<div class="etf-group"><h3>Dòng tiền ròng theo tài sản</h3>${flowTable(payload.flow)}</div>
+      <div class="etf-group"><h3>Giá cổ phiếu quỹ</h3>${quoteTable(payload.rows)}</div>`;
   }
 
   async function init(mountId) {
