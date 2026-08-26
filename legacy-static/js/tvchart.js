@@ -67,7 +67,15 @@
         allow_symbol_change: false, // đổi coin đi qua thanh tìm kiếm của site
         save_image: false,
         details: false,
-        studies: ['RSI@tv-basicstudies'],
+        // Widget nhúng KHÔNG mở API vẽ hình cho trang ngoài, nên vùng S&R của
+        // Vdear không đặt vào trong iframe được. Thứ đặt được là chỉ báo có
+        // sẵn của chính TradingView: Pivot Points Standard vẽ các mức hỗ
+        // trợ/kháng cự ngay trên biểu đồ. Đây là mức do TRADINGVIEW tính, không
+        // phải vùng của Vdear — hai bên dùng cách tính khác nhau nên sẽ không
+        // trùng khít, và giao diện nói rõ điều đó.
+        studies: opts.pivots === false
+          ? ['RSI@tv-basicstudies']
+          : ['PivotPointsStandard@tv-basicstudies', 'RSI@tv-basicstudies'],
         // Khớp nền của widget với nền panel để không có một khối xám lạc lõng.
         backgroundColor: isLight() ? '#F6F4EC' : '#12100A',
         gridColor: isLight() ? 'rgba(60,48,18,0.10)' : 'rgba(216,163,43,0.07)',

@@ -297,6 +297,9 @@
   let chartMode = 'both';
   try { const m = localStorage.getItem(MODE_KEY); if (MODES.indexOf(m) >= 0) chartMode = m; } catch (e) {}
   let tvVenue = null, tvBooted = false, tvBroken = false, tvTimer = 0;
+  const PIV_KEY = 'vdear_tvpivots';
+  let tvPivots = true;
+  try { if (localStorage.getItem(PIV_KEY) === '0') tvPivots = false; } catch (e) {}
 
   function applyMode() {
     // TradingView hỏng thì luôn còn biểu đồ tự vẽ, không để trang trắng.
@@ -312,6 +315,8 @@
     document.querySelector('.chart-panel').classList.toggle('both', mode === 'both');
     const venueSel = $('tvVenue');
     if (venueSel) venueSel.hidden = !tvOn;
+    const piv = $('tvPivots');
+    if (piv) piv.hidden = !tvOn;
     document.querySelectorAll('#chartMode .seg-btn').forEach((b) =>
       b.classList.toggle('active', b.dataset.v === mode));
     if (tvOn) mountTV();
@@ -338,7 +343,7 @@
     tvTimer = setTimeout(() => {
       const status = $('tvStatus');
       if (status) { status.hidden = false; status.textContent = 'Đang mở biểu đồ TradingView…'; }
-      window.VdearTV.create('tvChart', { base, venue: tvVenue, tf: currentTf })
+      window.VdearTV.create('tvChart', { base, venue: tvVenue, tf: currentTf, pivots: tvPivots })
         .then(() => { tvBooted = true; if (status) status.hidden = true; })
         .catch(() => {
           tvBroken = true;
@@ -396,6 +401,16 @@
       if (tvBroken && b.dataset.v !== 'vdear') { tvBroken = false; tvBooted = false; }
       setMode(b.dataset.v);
     });
+    // Chỉ báo được nhúng lúc tạo widget, nên bật/tắt phải dựng lại.
+    const pivBtn = $('tvPivots');
+    if (pivBtn) pivBtn.addEventListener('click', () => {
+      tvPivots = !tvPivots;
+      pivBtn.classList.toggle('on', tvPivots);
+      pivBtn.setAttribute('aria-pressed', String(tvPivots));
+      try { localStorage.setItem(PIV_KEY, tvPivots ? '1' : '0'); } catch (e) {}
+      tvBooted = false; mountTV();
+    });
+    if (pivBtn) { pivBtn.classList.toggle('on', tvPivots); pivBtn.setAttribute('aria-pressed', String(tvPivots)); }
     // Nền sáng/tối của widget được nhúng lúc tạo, nên đổi nền phải dựng lại.
     new MutationObserver(() => { if (chartMode !== 'vdear' && !tvBroken) { tvBooted = false; mountTV(); } })
       .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

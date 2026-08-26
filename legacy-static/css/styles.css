@@ -758,6 +758,12 @@ body.nd-locked{overflow:hidden}
   padding:22px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
 .tv-status b{color:var(--text)}
 #chartMode{flex:0 0 auto}
+.tv-pivots{flex:0 0 auto;border:1px solid var(--line-2);border-radius:9px;padding:6px 11px;
+  background:var(--panel);color:var(--muted);font:600 12px inherit;cursor:pointer}
+.tv-pivots:hover{color:var(--text);border-color:var(--accent-2)}
+.tv-pivots.on{background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  border-color:transparent;color:#0A0906}
+:root[data-theme="light"] .tv-pivots.on{color:#F6F4EC}
 #tvVenue{flex:0 0 auto}
 #chartHint{margin-top:10px}
 
