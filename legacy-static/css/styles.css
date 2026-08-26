@@ -742,6 +742,20 @@ body.nd-locked{overflow:hidden}
 .bub-empty{position:absolute;inset:0;display:grid;place-content:center;padding:20px;
   text-align:center;color:var(--muted);font-size:13px}
 
+/* -------------------- Biểu đồ TradingView nhúng -------------------- */
+.tv-wrap{position:relative;margin-top:10px;border:1px solid var(--line);border-radius:12px;
+  overflow:hidden;background:var(--panel-2)}
+#tvChart{height:min(70vh,560px);width:100%}
+@media (max-width:760px){#tvChart{height:min(64vh,420px)}}
+/* Dòng trạng thái nằm dưới iframe: khi widget dựng xong thì bị che, khi hỏng
+   thì nó chính là chỗ báo lỗi. */
+.tv-status{position:absolute;inset:0;z-index:1;display:grid;place-content:center;
+  padding:22px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
+.tv-status b{color:var(--text)}
+#chartMode{flex:0 0 auto}
+#tvVenue{flex:0 0 auto}
+#chartHint{margin-top:10px}
+
 /* Bảng tuỳ chọn (bánh răng): khung thời gian · cỡ · nội dung · màu */
 .bub-gear{width:34px;height:34px;font-size:14px}
 .bub-gear[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}

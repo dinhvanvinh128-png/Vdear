@@ -67,6 +67,7 @@
   async function selectTf(tf) {
     currentTf = tf;
     renderTfTabs();
+    if (chartMode === 'tv' && !tvBroken) mountTV();
     const candles = await loadCandles(tf);
     const sr = TA.supportResistance(candles, candles[candles.length - 1].close);
     chart.setData(candles);
@@ -205,10 +206,14 @@
       row.addEventListener('click', () => {
         box.querySelectorAll('.sr-row').forEach((r) => r.classList.remove('sel'));
         row.classList.add('sel');
+        // Vùng S&R chỉ vẽ được trên biểu đồ tự vẽ. Bấm vào vùng mà đang ở
+        // TradingView thì tự chuyển chế độ, thay vì cuộn tới một biểu đồ
+        // không hề đánh dấu gì.
+        if (chartMode === 'tv' && !tvBroken) setMode('vdear');
         chart.setHighlight({
           price: +row.dataset.price, low: +row.dataset.low, high: +row.dataset.high,
         });
-        document.querySelector('.chart-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        $('vdearWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     });
   }
@@ -282,6 +287,78 @@
       <p class="hint">TradFi (vàng/bạc/dầu) không niêm yết trên sàn crypto nên <b>chưa có biểu đồ nến chi tiết &amp; chiến lược</b> như coin. XAU/XAG lấy giá realtime khi khả dụng; CL/BZ là chỉ báo tham khảo. <b>Chỉ tham khảo, không phải lời khuyên đầu tư.</b></p>`;
   }
 
+  /* ------------------------- chế độ biểu đồ ---------------------------- */
+  // 'tv'    = biểu đồ TradingView (mặc định, đầy đủ công cụ)
+  // 'vdear' = biểu đồ tự vẽ, nơi DUY NHẤT có vùng S&R bấm được và các đường
+  //           Entry/TP/SL chạy theo đòn bẩy — widget của TradingView không vẽ
+  //           hộ được những thứ đó, nên nó ở lại chứ không bị thay thế.
+  const MODE_KEY = 'vdear_chartmode';
+  let chartMode = 'tv';
+  try { const m = localStorage.getItem(MODE_KEY); if (m === 'tv' || m === 'vdear') chartMode = m; } catch (e) {}
+  let tvVenue = null, tvBooted = false, tvBroken = false, tvTimer = 0;
+
+  function applyMode() {
+    const tvOn = chartMode === 'tv' && !tvBroken;
+    $('tvWrap').hidden = !tvOn;
+    $('vdearWrap').hidden = tvOn;
+    $('rsiLegend').hidden = tvOn;
+    const venueSel = $('tvVenue');
+    if (venueSel) venueSel.hidden = !tvOn;
+    document.querySelectorAll('#chartMode .seg-btn').forEach((b) =>
+      b.classList.toggle('active', b.dataset.v === (tvBroken ? 'vdear' : chartMode)));
+    // Canvas nằm trong khối [hidden] có clientWidth = 0, nên mọi lần vẽ trong
+    // lúc ẩn đều ra rỗng. Hiện ra thì phải vẽ lại.
+    if (tvOn) mountTV();
+    else if (chart && chart.candles && chart.candles.length) chart.render();
+  }
+
+  function setMode(m) {
+    chartMode = m;
+    try { localStorage.setItem(MODE_KEY, m); } catch (e) {}
+    applyMode();
+  }
+
+  // Dựng lại widget khi đổi khung/sàn/nền. Widget nhúng không có API đổi
+  // interval tại chỗ, nên phải tạo mới; gộp nhịp để bấm nhanh qua nhiều khung
+  // không tạo ra một chuỗi iframe rồi vứt đi.
+  function mountTV() {
+    if (!window.VdearTV || tvBroken) return;
+    // Luôn gộp nhịp, kể cả lần đầu: applyMode() và selectTf() cùng gọi mountTV
+    // lúc mở trang, không gộp thì dựng một iframe rồi vứt ngay để dựng cái thứ
+    // hai. 120ms là không thấy được bằng mắt nhưng đủ để hai lời gọi nhập một.
+    clearTimeout(tvTimer);
+    tvTimer = setTimeout(() => {
+      const status = $('tvStatus');
+      if (status) { status.hidden = false; status.textContent = 'Đang mở biểu đồ TradingView…'; }
+      window.VdearTV.create('tvChart', { base, venue: tvVenue, tf: currentTf })
+        .then(() => { tvBooted = true; if (status) status.hidden = true; })
+        .catch(() => {
+          tvBroken = true;
+          if (status) {
+            status.hidden = false;
+            status.innerHTML = 'Không mở được biểu đồ TradingView (mạng chặn hoặc tiện ích chặn quảng cáo). '
+              + 'Đã chuyển sang <b>biểu đồ Phân tích Vdear</b>.';
+          }
+          applyMode();
+        });
+    }, 120);
+  }
+
+  function renderVenueSelect() {
+    const sel = $('tvVenue');
+    if (!sel || !window.VdearTV) return;
+    const listed = coin && coin.venues ? Object.keys(coin.venues) : [];
+    const opts = (listed.length ? listed : ['binance']).filter((v) => window.VdearTV.VENUE[v]);
+    if (!opts.length) return;
+    if (!tvVenue || opts.indexOf(tvVenue) < 0) tvVenue = (coin && coin.primaryVenue) || opts[0];
+    sel.innerHTML = opts.map((v) => `<option value="${v}">${window.VdearTV.VENUE_LABEL[v]}</option>`).join('');
+    sel.value = tvVenue;
+    if (!sel._bound) {
+      sel._bound = true;
+      sel.addEventListener('change', () => { tvVenue = sel.value; tvBooted = false; mountTV(); });
+    }
+  }
+
   /* ------------------------------- init -------------------------------- */
   async function init() {
     if (qs.get('type') === 'tradfi') { await initTradfi(); return; }
@@ -305,8 +382,19 @@
     }, { passive: true });
     pc.addEventListener('touchend', () => { pinch = null; });
     renderTfTabs();
+    document.getElementById('chartMode').addEventListener('click', (e) => {
+      const b = e.target.closest('.seg-btn');
+      if (!b) return;
+      if (tvBroken && b.dataset.v === 'tv') { tvBroken = false; tvBooted = false; }
+      setMode(b.dataset.v);
+    });
+    // Nền sáng/tối của widget được nhúng lúc tạo, nên đổi nền phải dựng lại.
+    new MutationObserver(() => { if (chartMode === 'tv' && !tvBroken) { tvBooted = false; mountTV(); } })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     try {
       await renderHeader();
+      renderVenueSelect();
+      applyMode();
       await selectTf(currentTf);
     } catch (e) {
       $('chartError').style.display = 'block';
