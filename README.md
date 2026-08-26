@@ -171,31 +171,29 @@ tokens rather than raw hex in components, and tabular numerics throughout.
 
 ## Deployment
 
-**Production builds the Next.js app.** `vercel.json` carries no framework or
-output overrides, and the Vercel project's Framework Preset is Next.js with
-every Override switched off, so `next build` runs.
+**Production serves the static build in `legacy-static/`** — the Vietnamese
+futures dashboard, the bubble view, the canvas chart and the legal pages.
+`vercel.json` sets `outputDirectory` there with install and build stubbed out.
 
-`npm run prebuild` (`scripts/copy-static.mjs`) copies `legacy-static/` into
-`public/` first, so the static pages are published without being duplicated in
-git. `index.html` becomes `classic.html`, since `/` belongs to the app.
+The Next.js app under `app/`, `lib/` and `components/` is complete and tested
+(26 routes, 39 API routes, 11 engines, 10 providers, scoring and quality
+layers, 270 tests) and **has been deployed successfully once** — so the build
+works. It is not what production serves, because its interface reads as a
+different product from the dashboard above.
 
-| URL | Served by |
-|---|---|
-| `/`, `/money-flow`, `/breadth`, `/coins`, `/onchain`, `/whales`, … | Next.js app |
-| `/classic.html` | futures dashboard, ticker, 4H scan |
-| `/bubbles.html` · `/coin.html?c=BTC` | bubble view · canvas chart |
-| `/about.html` `/terms.html` `/privacy.html` `/risk.html` `/contact.html` | Vietnamese pages |
+Switching it on again is two changes:
 
-`public/` is generated and gitignored.
+1. Remove `framework`, `installCommand`, `buildCommand` and `outputDirectory`
+   from `vercel.json`. `npm run prebuild` (`scripts/copy-static.mjs`) then
+   copies `legacy-static/` into `public/`, publishing `index.html` as
+   `classic.html` since `/` becomes the app's home.
+2. Relink the drawer: entries carrying `soon: true` in
+   `legacy-static/js/navmenu.js` must point at the app routes. While the
+   static build is serving they have to stay unlinked — those routes do not
+   exist in that folder, and linking them returns the static 404 page.
 
-**`typescript.ignoreBuildErrors` is on, and is temporary.** This app had never
-been compiled against real `node_modules` — the registry is blocked in the
-development sandbox — so an unseen type error would fail the build and take the
-site down. The logic layer has 270 tests; the pages are presentational. Once a
-build has gone green, run `npm run typecheck`, fix what it finds, and delete
-that block from `next.config.mjs`.
-
-**Rolling back** is one commit: put `framework: null`, `installCommand`,
-`buildCommand` and `outputDirectory: legacy-static` back into `vercel.json`.
-Symptom that the switch has not taken effect: app routes return the static
-404 page.
+`typescript.ignoreBuildErrors` in `next.config.mjs` was added because this
+sandbox cannot compile the app (no node_modules, registry blocked). One green
+build has happened since; before relying on the app, run `npm run typecheck`
+somewhere with dependencies installed, fix what it reports, and remove that
+block.
