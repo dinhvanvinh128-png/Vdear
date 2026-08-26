@@ -44,10 +44,6 @@
             <button class="seg-btn" type="button" data-v="up">Tăng</button>
             <button class="seg-btn" type="button" data-v="down">Giảm</button>
           </div>
-          <div class="seg" id="bubSize">
-            <button class="seg-btn active" type="button" data-v="change">Cỡ theo %</button>
-            <button class="seg-btn" type="button" data-v="vol">Cỡ theo KLGD</button>
-          </div>
           <select class="bub-select" id="bubSector" aria-label="Danh mục coin"></select>
           <select class="bub-select" id="bubPer" aria-label="Số coin mỗi nhóm">
             <option value="100" selected>100 coin/nhóm</option>
@@ -56,7 +52,49 @@
             <option value="0">Tất cả một lần</option>
           </select>
           <select class="bub-select bub-page" id="bubPage" aria-label="Nhóm coin theo thứ hạng khối lượng"></select>
+          <button class="icon-btn bub-gear" type="button" id="bubGear" aria-expanded="false" aria-controls="bubSettings" title="Tuỳ chọn hiển thị" aria-label="Tuỳ chọn hiển thị">⚙</button>
         </div>
+      </div>
+
+      <div class="bub-settings" id="bubSettings" hidden>
+        <div class="bs-group">
+          <h4>Khung thời gian</h4>
+          <div class="bs-chips" id="bsPeriod">
+            <button class="bs-chip" type="button" data-v="1h">1 giờ</button>
+            <button class="bs-chip active" type="button" data-v="24h">24 giờ</button>
+            <button class="bs-chip" type="button" data-v="7d">7 ngày</button>
+            <button class="bs-chip" type="button" data-v="30d">30 ngày</button>
+            <button class="bs-chip" type="button" data-v="1y">1 năm</button>
+          </div>
+        </div>
+        <div class="bs-group">
+          <h4>Cỡ bong bóng</h4>
+          <div class="bs-chips" id="bsSize">
+            <button class="bs-chip active" type="button" data-v="perf">Biến động</button>
+            <button class="bs-chip" type="button" data-v="mcap">Vốn hoá</button>
+            <button class="bs-chip" type="button" data-v="vol">KLGD 24h</button>
+            <button class="bs-chip" type="button" data-v="rank">Thứ hạng</button>
+          </div>
+        </div>
+        <div class="bs-group">
+          <h4>Nội dung trong bong bóng</h4>
+          <div class="bs-chips" id="bsContent">
+            <button class="bs-chip active" type="button" data-v="perf">Biến động</button>
+            <button class="bs-chip" type="button" data-v="mcap">Vốn hoá</button>
+            <button class="bs-chip" type="button" data-v="vol">KLGD 24h</button>
+            <button class="bs-chip" type="button" data-v="price">Giá</button>
+            <button class="bs-chip" type="button" data-v="rank">Thứ hạng</button>
+            <button class="bs-chip" type="button" data-v="name">Chỉ tên coin</button>
+          </div>
+        </div>
+        <div class="bs-group">
+          <h4>Màu bong bóng</h4>
+          <div class="bs-chips" id="bsColor">
+            <button class="bs-chip active" type="button" data-v="perf">Theo biến động</button>
+            <button class="bs-chip" type="button" data-v="neutral">Trung tính</button>
+          </div>
+        </div>
+        <p class="bs-note"><b>24 giờ</b> lấy thẳng từ 4 sàn nên có đủ mọi coin được niêm yết. <b>1 giờ · 7 ngày · 30 ngày · 1 năm</b>, cùng <b>vốn hoá</b> và <b>thứ hạng</b>, đến từ CoinGecko — nguồn này chỉ phủ khoảng 750 coin vốn hoá lớn nhất, nên coin nào không có sẽ bị loại khỏi khung hình và được đếm ở dòng trạng thái, chứ không bị gán bừa một con số. Lựa chọn của bạn được nhớ lại cho lần sau.</p>
       </div>
       <div class="bub-stage">
         <canvas id="bubbleCanvas" aria-label="Bản đồ bong bóng biến động 24h của thị trường crypto"></canvas>

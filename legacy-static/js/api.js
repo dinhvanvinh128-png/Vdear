@@ -205,24 +205,46 @@
   }
 
   /* ------- Bản đồ logo CoinGecko (miễn phí, CORS mở, logo đúng coin) ----- */
-  let _cgLogos = null, _cgPromise = null;
-  async function loadCGLogos() {
-    if (_cgLogos) return _cgLogos;
+  // Số hữu hạn thì trả về, còn lại NULL. Không bao giờ đổi thiếu dữ liệu thành
+  // 0: 0% là "giá đứng yên", một phát biểu về thị trường mà ta không có.
+  function fin(x) { const n = parseFloat(x); return Number.isFinite(n) ? n : null; }
+
+  // Một request này trước đây chỉ lấy mỗi URL logo rồi vứt phần còn lại. Thêm
+  // price_change_percentage vào cùng lời gọi là có luôn vốn hoá, thứ hạng và
+  // biến động 1h/24h/7d/30d/1y mà KHÔNG tốn thêm request nào.
+  let _cg = null, _cgPromise = null;
+  async function loadCoinGecko() {
+    if (_cg) return _cg;
     if (_cgPromise) return _cgPromise;
     _cgPromise = (async () => {
       const map = {};
       for (const page of [1, 2, 3]) {
         try {
           const j = await getJSON(
-            'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=' + page + '&sparkline=false',
-            { timeout: 9000 });
+            'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=' + page
+            + '&sparkline=false&price_change_percentage=1h%2C24h%2C7d%2C30d%2C1y',
+            { timeout: 11000 });
           (Array.isArray(j) ? j : []).forEach((c) => {
             const s = (c.symbol || '').toUpperCase();
-            if (s && c.image && !map[s]) map[s] = c.image; // vốn hoá lớn hơn xuất hiện trước -> đúng coin
+            // Nhiều coin trùng ký hiệu. Danh sách xếp theo vốn hoá giảm dần nên
+            // bản gặp đầu tiên là bản lớn nhất — cũng là bản mà sàn niêm yết.
+            if (!s || map[s]) return;
+            map[s] = {
+              logo: c.image || null,
+              marketCap: fin(c.market_cap),
+              rank: fin(c.market_cap_rank),
+              ch: {
+                '1h': fin(c.price_change_percentage_1h_in_currency),
+                '24h': fin(c.price_change_percentage_24h_in_currency),
+                '7d': fin(c.price_change_percentage_7d_in_currency),
+                '30d': fin(c.price_change_percentage_30d_in_currency),
+                '1y': fin(c.price_change_percentage_1y_in_currency),
+              },
+            };
           });
         } catch (e) { /* bỏ trang lỗi */ }
       }
-      _cgLogos = map;
+      _cg = map;
       return map;
     })();
     return _cgPromise;
@@ -252,7 +274,7 @@
       okxFutures(),
       bitgetFutures(),
       binanceFunding(),
-      loadCGLogos().catch(() => null), // nạp bản đồ logo (kết quả bỏ qua, chỉ set cache)
+      loadCoinGecko().catch(() => null), // nạp vốn hoá + biến động đa khung (chỉ set cache)
     ]);
 
     const venueOrder = [['binance', bnb], ['bybit', bybit], ['okx', okx], ['bitget', bitget]];
@@ -318,7 +340,7 @@
     const U = l.toUpperCase();
     const arr = [];
     // 1) CoinGecko: logo đúng coin, phủ rộng nhất (nếu bản đồ đã nạp)
-    if (_cgLogos && _cgLogos[U]) arr.push(_cgLogos[U]);
+    if (_cg && _cg[U] && _cg[U].logo) arr.push(_cg[U].logo);
     // 2) TradingView (crypto): XTVC<SYMBOL>.svg
     arr.push('https://s3-symbol-logo.tradingview.com/crypto/XTVC' + U + '.svg');
     // 3) cryptocurrency-icons qua jsDelivr
@@ -387,8 +409,17 @@
     return out;
   }
 
+  // Tra cứu CoinGecko theo base của sàn. Dùng chung logoKey để 1000PEPE tìm ra
+  // PEPE: đó là cùng một tài sản nhân 1000, nên % biến động và vốn hoá của nó
+  // chính là của PEPE, không phải một con số khác.
+  function cgInfo(base) {
+    if (!_cg) return null;
+    return _cg[logoKey(base).toUpperCase()] || _cg[String(base).toUpperCase()] || null;
+  }
+
   window.VdearAPI = {
     getMarket, getCoin, binanceKlines, klinesMulti, getTradFi,
     logoUrl, logoSources, letterAvatar, applyLogo, baseFromSymbol, pool, num,
+    loadCoinGecko, cgInfo,
   };
 })();

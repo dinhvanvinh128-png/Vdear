@@ -741,3 +741,24 @@ body.nd-locked{overflow:hidden}
 .hint b.up{color:var(--up)} .hint b.down{color:var(--down)}
 .bub-empty{position:absolute;inset:0;display:grid;place-content:center;padding:20px;
   text-align:center;color:var(--muted);font-size:13px}
+
+/* Bảng tuỳ chọn (bánh răng): khung thời gian · cỡ · nội dung · màu */
+.bub-gear{width:34px;height:34px;font-size:14px}
+.bub-gear[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
+.bub-settings{margin-top:12px;padding:14px 15px;border:1px solid var(--line-2);border-radius:12px;
+  background:var(--panel-2);display:grid;gap:13px}
+.bs-group h4{margin:0 0 7px;font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.7px;color:var(--muted-2)}
+.bs-chips{display:flex;flex-wrap:wrap;gap:6px}
+.bs-chip{padding:6px 12px;border-radius:9px;border:1px solid var(--line);cursor:pointer;
+  background:var(--panel);color:var(--muted);font:600 12.5px inherit;transition:all .14s}
+.bs-chip:hover{color:var(--text);border-color:var(--accent-2)}
+.bs-chip.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  border-color:transparent;color:#0A0906}
+.bs-note{margin:2px 0 0;padding-top:11px;border-top:1px solid var(--line);
+  color:var(--muted-2);font-size:11.5px;line-height:1.6}
+/* Nền sáng: vàng tối lại thành nâu, chữ mực đen trên đó chỉ còn 2.79:1 ở đầu
+   nhạt của gradient — dưới ngưỡng đọc được. Đảo sang chữ sáng cho cả hai loại
+   chip: 5.66:1 và 6.48:1. */
+:root[data-theme="light"] .bs-chip.active,
+:root[data-theme="light"] .seg-btn.active{color:#F6F4EC}
