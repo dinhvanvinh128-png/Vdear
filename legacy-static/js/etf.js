@@ -57,18 +57,62 @@
     } finally { clearTimeout(t); }
   }
 
-  async function load() {
-    const funds = CFG.etf.funds;
-    const rows = await Promise.all(funds.map(async (f) => {
-      try { return { ...f, quote: await fetchQuote(f.ticker) }; }
-      catch (e) { return { ...f, quote: null }; }
-    }));
-    return rows;
+  /*
+   * Dòng tiền ròng đi qua hàm server /api/etf-flow, nơi API key được giữ lại.
+   * Trình duyệt không bao giờ thấy key. Hàm chưa được triển khai (404) hoặc
+   * chưa cấu hình key -> trả null, cột dòng tiền để trống.
+   */
+  async function fetchFlow() {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 9000);
+    try {
+      const res = await fetch('/api/etf-flow', { signal: ctrl.signal });
+      if (!res.ok) return null;
+      const j = await res.json();
+      return j && j.configured && j.available ? j : null;
+    } catch (e) { return null; }
+    finally { clearTimeout(t); }
   }
 
-  function render(mountId, rows) {
+  async function load() {
+    const funds = CFG.etf.funds;
+    const [rows, flow] = await Promise.all([
+      Promise.all(funds.map(async (f) => {
+        try { return { ...f, quote: await fetchQuote(f.ticker) }; }
+        catch (e) { return { ...f, quote: null }; }
+      })),
+      fetchFlow(),
+    ]);
+    return { rows, flow };
+  }
+
+  function fmtFlow(v) {
+    if (v == null) return null;
+    const sign = v > 0 ? '+' : v < 0 ? '−' : '';
+    return sign + fmtUsd(Math.abs(v)).replace('$', '$');
+  }
+
+  // Dòng tiền là số của TOÀN NHÓM quỹ (BTC hoặc ETH), không phải của từng quỹ:
+  // SoSoValue công bố theo nhóm. Hiển thị ở đầu nhóm chứ không rải vào từng
+  // dòng — rải xuống là ngầm khẳng định một điều nguồn không hề nói.
+  function flowBanner(flow, asset) {
+    if (!flow) return '';
+    const d = asset === 'BTC' ? flow.btc : flow.eth;
+    if (!d) return '';
+    const net = d.netInflow;
+    const cls = net == null ? '' : net >= 0 ? 'up' : 'down';
+    const parts = [];
+    if (net != null) parts.push(`<span>Dòng tiền ròng ngày <b class="${cls}">${fmtFlow(net)}</b></span>`);
+    if (d.cumNetInflow != null) parts.push(`<span>Luỹ kế <b>${fmtFlow(d.cumNetInflow)}</b></span>`);
+    if (d.totalNetAssets != null) parts.push(`<span>Tổng tài sản ròng <b>${fmtUsd(d.totalNetAssets)}</b></span>`);
+    if (!parts.length) return '';
+    return `<div class="etf-flow">${parts.join('')}${d.date ? `<span class="muted">· ${d.date}</span>` : ''}</div>`;
+  }
+
+  function render(mountId, payload) {
     const el = document.getElementById(mountId);
     if (!el) return;
+    const rows = payload.rows, flow = payload.flow;
     const ok = rows.filter((r) => r.quote);
     if (!ok.length) {
       el.innerHTML = '<p class="hint">Không lấy được báo giá ETF (nguồn miễn phí có thể bị chặn từ trình duyệt). '
@@ -81,6 +125,7 @@
       if (!list.length) return '';
       return `<div class="etf-group">
         <h3>${label}</h3>
+        ${flowBanner(flow, asset)}
         <div class="table-wrap"><table class="movers etf-table">
           <thead><tr><th>Quỹ</th><th>Giá</th><th>Trong phiên</th><th>KL khớp lệnh</th><th>Dòng tiền ròng</th></tr></thead>
           <tbody>${list.map((r) => {
@@ -95,7 +140,7 @@
               <td class="mv-price">$${q.price.toFixed(2)}</td>
               <td><span class="mv-pill ${cls}">${ctxt}</span></td>
               <td class="mv-klgd">${q.volume == null ? '—' : q.volume.toLocaleString('en-US')}</td>
-              <td class="muted small">chưa cấu hình nguồn</td>
+              <td class="muted small">${flow ? 'xem theo nhóm ↑' : 'chưa cấu hình nguồn'}</td>
             </tr>`;
           }).join('')}</tbody>
         </table></div>

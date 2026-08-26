@@ -197,3 +197,34 @@ sandbox cannot compile the app (no node_modules, registry blocked). One green
 build has happened since; before relying on the app, run `npm run typecheck`
 somewhere with dependencies installed, fix what it reports, and remove that
 block.
+
+---
+
+## Dòng tiền ETF
+
+`api/etf-flow.js` là một Vercel Serverless Function chạy cùng bản tĩnh. Nó tồn
+tại vì một lý do duy nhất: **API key không được xuống trình duyệt.**
+
+Dòng tiền ròng của ETF (tiền thực vào/ra quỹ mỗi ngày) tính từ số chứng chỉ quỹ
+được phát hành thêm hoặc mua lại. Nó **không suy ra được** từ giá hay khối lượng
+khớp lệnh — khối lượng là nhà đầu tư sang tay nhau, tiền không chạm tới quỹ.
+Không nguồn miễn phí nào công bố số này.
+
+Trang `m.sosovalue.com/...` là **giao diện web, không phải API**. Đọc dữ liệu từ
+đó là scrape: vi phạm điều khoản của họ và bị CORS chặn. Hàm này chỉ gọi API
+chính thức.
+
+Bật lên:
+
+1. Đăng ký API key ở OpenAPI của SoSoValue.
+2. Vercel → Settings → Environment Variables → thêm `SOSOVALUE_API_KEY`.
+3. Redeploy.
+
+Chưa có key → hàm trả `configured:false`, giao diện hiện "chưa cấu hình nguồn"
+và để trống. Không bao giờ hiện số ước lượng.
+
+`SOSOVALUE_API_BASE` và `SOSOVALUE_ETF_PATH` có thể ghi đè bằng biến môi trường:
+đường dẫn endpoint chưa được xác minh từ môi trường phát triển (mọi host bên
+ngoài đều bị chặn ở đó), nên nếu SoSoValue dùng đường dẫn khác thì sửa bằng biến
+môi trường chứ không phải sửa code. Sai đường dẫn thì hàm báo lỗi rõ, không đoán
+dữ liệu.
