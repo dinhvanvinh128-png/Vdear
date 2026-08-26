@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bong bóng thị trường — Vdearypto</title>
+  <meta name="description" content="Toàn bộ thị trường crypto trong một khung: mỗi coin là một bong bóng, xanh tăng đỏ giảm, to nhỏ theo biên độ biến động 24h hoặc khối lượng. Dữ liệu gộp từ Binance · Bybit · OKX · Bitget.">
+  <meta property="og:title" content="Bong bóng thị trường — Vdearypto">
+  <meta property="og:description" content="Mỗi coin là một bong bóng: xanh tăng, đỏ giảm, càng lớn càng biến động mạnh.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0A0906">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+</head>
+<body>
+  <div id="ticker" class="ticker-bar" aria-label="Bảng giá chạy"></div>
+
+  <header class="topbar">
+    <button class="nav-toggle" type="button" data-nav-open aria-label="Mở menu" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><path fill="#0A0906" d="M3 4 L16 27.5 L28 4 L24.2 4 L16 20 L7.2 4 Z"/></svg></span>
+      <div><div class="brand-name">Vdearypto</div><div class="brand-sub">Bong bóng thị trường</div></div>
+    </a>
+    <div class="tb-actions">
+      <span class="pill live"><span class="live-dot"></span> Realtime</span>
+      <button class="icon-btn" data-theme-toggle title="Đổi nền">☀️</button>
+      <a class="btn-ghost" href="index.html">← Về bảng thị trường</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel bubbles-panel bub-page">
+      <div class="panel-head">
+        <h2>🫧 Bong bóng thị trường <span class="tag">24H</span></h2>
+        <div class="bub-controls">
+          <span class="bub-stat" id="bubStat">Đang tải…</span>
+          <div class="seg" id="bubFilter">
+            <button class="seg-btn active" type="button" data-v="all">Tất cả</button>
+            <button class="seg-btn" type="button" data-v="up">Tăng</button>
+            <button class="seg-btn" type="button" data-v="down">Giảm</button>
+          </div>
+          <div class="seg" id="bubSize">
+            <button class="seg-btn active" type="button" data-v="change">Cỡ theo %</button>
+            <button class="seg-btn" type="button" data-v="vol">Cỡ theo KLGD</button>
+          </div>
+          <select class="bub-select" id="bubCount" aria-label="Số coin hiển thị">
+            <option value="50">Top 50</option>
+            <option value="100" selected>Top 100</option>
+            <option value="150">Top 150</option>
+            <option value="200">Top 200</option>
+          </select>
+          <select class="bub-select" id="bubSector" aria-label="Nhóm coin"></select>
+        </div>
+      </div>
+      <div class="bub-stage">
+        <canvas id="bubbleCanvas" aria-label="Bản đồ bong bóng biến động 24h của thị trường crypto"></canvas>
+        <div class="bub-tip" id="bubTip" hidden></div>
+        <div class="bub-empty" id="bubEmpty" hidden>Không có coin nào khớp bộ lọc này.</div>
+      </div>
+      <p class="hint">Bong bóng <b class="up">xanh</b> = tăng, <b class="down">đỏ</b> = giảm trong 24h. Bong bóng càng lớn thì biên độ biến động (hoặc khối lượng, tuỳ chế độ) càng lớn. Rê chuột để xem giá &amp; KLGD · <b>bấm</b> để mở trang phân tích coin · <b>kéo</b> để hất bong bóng. Số liệu gộp từ Binance · Bybit · OKX · Bitget, không có coin ổn định (stablecoin).</p>
+      <p class="hint">Kích thước chỉ nói lên <b>biên độ</b>, không nói lên chất lượng: một coin vốn hoá nhỏ nhảy 40% trong ngày sẽ là bong bóng to nhất màn hình mà vẫn có thể là coin thanh khoản mỏng, dễ trượt giá. Đổi sang <b>Cỡ theo KLGD</b> để thấy tiền thật đang chảy ở đâu.</p>
+    </section>
+  </main>
+
+  <footer class="foot-wrap">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="brand-name">Vdearypto</div>
+        <p>Radar tín hiệu futures — quét toàn thị trường, vào lệnh có kế hoạch. Dữ liệu từ Binance · Bybit · OKX · Bitget.</p>
+      </div>
+      <div class="foot-col"><h4>Sản phẩm</h4>
+        <a href="index.html">Thị trường</a>
+        <a href="bubbles.html">Bong bóng thị trường</a>
+        <a href="coin.html?c=BTC">Phân tích coin</a>
+        <a href="about.html">Giới thiệu</a>
+      </div>
+      <div class="foot-col"><h4>Pháp lý</h4>
+        <a href="terms.html">Điều khoản</a>
+        <a href="privacy.html">Bảo mật</a>
+        <a href="risk.html">Khuyến cáo rủi ro</a>
+      </div>
+      <div class="foot-col"><h4>Liên hệ</h4>
+        <a href="contact.html">Liên hệ</a>
+        <a href="mailto:support@vdear.io">support@vdear.io</a>
+      </div>
+    </div>
+    <p class="hint" style="text-align:center;margin-top:24px">© 2026 Vdearypto · Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
+  </footer>
+
+  <script src="env.js"></script>
+  <script src="js/navmenu.js"></script>
+  <script src="js/favstore.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ticker.js"></script>
+  <script src="js/bubbles.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/integrations.js"></script>
+  <script src="js/fx.js"></script>
+</body>
+</html>

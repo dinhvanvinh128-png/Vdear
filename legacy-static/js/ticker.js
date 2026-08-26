@@ -30,7 +30,8 @@
 
   async function initTicker(mountId) {
     const mount = document.getElementById(mountId);
-    if (!mount) return;
+    if (!mount || mount._mounted) return;  // trang có thể gọi hai lần (tự chạy + dashboard)
+    mount._mounted = true;
     let coins;
     try {
       const market = await API.getMarket();
@@ -95,4 +96,10 @@
   }
 
   window.VdearTicker = { initTicker };
+
+  // Tự gắn khi trang có #ticker mà không có dashboard.js đứng ra gọi (ví dụ
+  // trang Bong bóng). Có khoá _mounted nên gọi trùng cũng không hỏng.
+  const boot = () => initTicker('ticker');
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();

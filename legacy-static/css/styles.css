@@ -717,6 +717,9 @@ body.nd-locked{overflow:hidden}
   overflow:hidden;background:radial-gradient(120% 100% at 50% 0,rgba(216,163,43,.06),transparent 62%),var(--bg-2)}
 #bubbleCanvas{display:block;width:100%;height:min(66vh,560px);touch-action:none}
 @media (max-width:760px){#bubbleCanvas{height:min(62vh,430px)}}
+/* Trang riêng: khung cao hơn vì không phải chia màn hình với bảng nào khác. */
+.bub-page #bubbleCanvas{height:min(78vh,760px)}
+@media (max-width:760px){.bub-page #bubbleCanvas{height:min(72vh,560px)}}
 /* Spotlight của .panel dùng mix-blend-mode:screen, phủ lên canvas sẽ làm nhạt
    màu xanh/đỏ — thứ duy nhất mang nghĩa ở đây. Tắt riêng cho khung này. */
 .bubbles-panel::after{display:none}

@@ -26,7 +26,7 @@
       title: 'Thị trường',
       items: [
         { href: 'index.html', label: 'Bảng thị trường', icon: 'market', desc: 'Biến động 24h · 4 sàn' },
-        { href: 'index.html#bubbles', label: 'Bong bóng coin', icon: 'bubble', desc: 'Xem cả thị trường trong một khung' },
+        { href: 'bubbles.html', label: 'Bong bóng thị trường', icon: 'bubble', desc: 'Cả thị trường trong một khung' },
         { href: 'coin.html?c=BTC', label: 'Phân tích coin', icon: 'coin', desc: 'Chart · RSI · S&R · kế hoạch lệnh' },
         { href: 'index.html?view=fav', label: 'Coin yêu thích', icon: 'star', desc: 'Danh mục bạn đang theo dõi' },
         { href: 'index.html?view=tradfi', label: 'TradFi', icon: 'bank', desc: 'Vàng · Bạc · Dầu' },

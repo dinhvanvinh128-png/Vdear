@@ -86,38 +86,6 @@
         </div>
       </section>
 
-      <!-- Bong bóng thị trường: cả thị trường trong một khung -->
-      <section class="panel bubbles-panel" id="bubbles">
-        <div class="panel-head">
-          <h2>🫧 Bong bóng thị trường <span class="tag">24H</span></h2>
-          <div class="bub-controls">
-            <span class="bub-stat" id="bubStat">Đang tải…</span>
-            <div class="seg" id="bubFilter">
-              <button class="seg-btn active" type="button" data-v="all">Tất cả</button>
-              <button class="seg-btn" type="button" data-v="up">Tăng</button>
-              <button class="seg-btn" type="button" data-v="down">Giảm</button>
-            </div>
-            <div class="seg" id="bubSize">
-              <button class="seg-btn active" type="button" data-v="change">Cỡ theo %</button>
-              <button class="seg-btn" type="button" data-v="vol">Cỡ theo KLGD</button>
-            </div>
-            <select class="bub-select" id="bubCount" aria-label="Số coin hiển thị">
-              <option value="50">Top 50</option>
-              <option value="100" selected>Top 100</option>
-              <option value="150">Top 150</option>
-              <option value="200">Top 200</option>
-            </select>
-            <select class="bub-select" id="bubSector" aria-label="Nhóm coin"></select>
-          </div>
-        </div>
-        <div class="bub-stage">
-          <canvas id="bubbleCanvas" aria-label="Bản đồ bong bóng biến động 24h của thị trường crypto"></canvas>
-          <div class="bub-tip" id="bubTip" hidden></div>
-          <div class="bub-empty" id="bubEmpty" hidden>Không có coin nào khớp bộ lọc này.</div>
-        </div>
-        <p class="hint">Bong bóng <b class="up">xanh</b> = tăng, <b class="down">đỏ</b> = giảm trong 24h. Bong bóng càng lớn thì biên độ biến động (hoặc khối lượng, tuỳ chế độ) càng lớn. Rê chuột để xem giá &amp; KLGD · <b>bấm</b> để mở trang phân tích coin · <b>kéo</b> để hất bong bóng. Số liệu gộp từ Binance · Bybit · OKX · Bitget, không có coin ổn định (stablecoin).</p>
-      </section>
-
       <!-- Gợi ý Long/Short (quét 4h) — chỉ hiện 4, còn lại "Xem thêm" -->
       <section class="panel">
         <div class="panel-head">
@@ -197,6 +165,7 @@
       </div>
       <div class="foot-col"><h4>Sản phẩm</h4>
         <a href="index.html">Thị trường</a>
+        <a href="bubbles.html">Bong bóng thị trường</a>
         <a href="coin.html?c=BTC">Phân tích coin</a>
         <a href="about.html">Giới thiệu</a>
       </div>
@@ -221,7 +190,6 @@
   <script src="js/indicators.js"></script>
   <script src="js/ticker.js"></script>
   <script src="js/dashboard.js"></script>
-  <script src="js/bubbles.js"></script>
   <script src="js/coinrain.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/command.js"></script>
