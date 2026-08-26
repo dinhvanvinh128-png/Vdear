@@ -166,3 +166,30 @@ only to marketing surfaces, never to the terminal views.
 Checklist items enforced from the packs: no emoji as icons (Lucide SVG only),
 visible `:focus-visible` rings, global `prefers-reduced-motion`, semantic colour
 tokens rather than raw hex in components, and tabular numerics throughout.
+
+---
+
+## Deployment
+
+**Production serves the static build in `legacy-static/`**, not the Next.js app.
+
+`vercel.json` sets `outputDirectory: legacy-static` with the install and build
+steps stubbed out, so Vercel publishes that folder as-is instead of detecting the
+root `package.json` and running `next build`. Pushing to the production branch is
+the whole deploy step; nothing needs to be uploaded by hand.
+
+If a deploy ever shows the wrong build, check these in order:
+
+1. **Settings → Git → Production Branch** must equal the branch being pushed.
+   Vercel defaults this to `main`; a push to any other branch produces a
+   *Preview* deployment and leaves production untouched.
+2. **Deployments** — a row marked `Vercel Drop` came from a manual drag-and-drop
+   upload, not from Git. Drops pin production in place and Git pushes will not
+   replace them until a Git deployment is promoted.
+3. **Settings → General → Root Directory** should be empty, since `vercel.json`
+   already points at the output folder.
+
+The Next.js app under `app/`, `lib/` and `components/` is still in the repository
+and still tested, it is simply not what production serves right now. To switch,
+remove `outputDirectory`, `framework`, `buildCommand` and `installCommand` from
+`vercel.json`; the framework preset then takes over again.
