@@ -1,6 +1,6 @@
 # VDEAR — Crypto Market Intelligence
 
-**Live:** https://vdearcrypto-2.vercel.app
+**Live:** https://vdearypto.vercel.app
 
 A data-driven crypto intelligence platform. Not a price dashboard: VDEAR
 aggregates spot flow, market breadth, stablecoin liquidity, on-chain activity and
