@@ -48,13 +48,8 @@
             <button class="seg-btn active" type="button" data-v="change">Cỡ theo %</button>
             <button class="seg-btn" type="button" data-v="vol">Cỡ theo KLGD</button>
           </div>
-          <select class="bub-select" id="bubCount" aria-label="Số coin hiển thị">
-            <option value="50">Top 50</option>
-            <option value="100" selected>Top 100</option>
-            <option value="150">Top 150</option>
-            <option value="200">Top 200</option>
-          </select>
-          <select class="bub-select" id="bubSector" aria-label="Nhóm coin"></select>
+          <select class="bub-select" id="bubSector" aria-label="Danh mục coin"></select>
+          <select class="bub-select bub-page" id="bubPage" aria-label="Nhóm 100 coin theo thứ hạng khối lượng"></select>
         </div>
       </div>
       <div class="bub-stage">
@@ -63,6 +58,7 @@
         <div class="bub-empty" id="bubEmpty" hidden>Không có coin nào khớp bộ lọc này.</div>
       </div>
       <p class="hint">Bong bóng <b class="up">xanh</b> = tăng, <b class="down">đỏ</b> = giảm trong 24h. Bong bóng càng lớn thì biên độ biến động (hoặc khối lượng, tuỳ chế độ) càng lớn. Rê chuột để xem giá &amp; KLGD · <b>bấm</b> để mở trang phân tích coin · <b>kéo</b> để hất bong bóng. Số liệu gộp từ Binance · Bybit · OKX · Bitget, không có coin ổn định (stablecoin).</p>
+      <p class="hint"><b>Toàn bộ coin</b> của sàn đều có mặt, chia thành từng nhóm 100 coin xếp theo khối lượng: nhóm <b>1–100</b> là các coin giao dịch nhiều nhất, càng về sau càng nhỏ và mỏng thanh khoản. Con số cạnh mỗi nhóm là biến động trung bình của chính nhóm đó — nhìn qua là biết tiền đang xanh ở vùng nào của thị trường. Chọn <b>danh mục</b> (Layer 1, Meme, AI…) để chia nhóm trong riêng mảng đó.</p>
       <p class="hint">Kích thước chỉ nói lên <b>biên độ</b>, không nói lên chất lượng: một coin vốn hoá nhỏ nhảy 40% trong ngày sẽ là bong bóng to nhất màn hình mà vẫn có thể là coin thanh khoản mỏng, dễ trượt giá. Đổi sang <b>Cỡ theo KLGD</b> để thấy tiền thật đang chảy ở đâu.</p>
     </section>
   </main>

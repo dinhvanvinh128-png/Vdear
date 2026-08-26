@@ -13,8 +13,9 @@
   const CFG = window.VDEAR_CONFIG;
   const API = window.VdearAPI;
 
-  const FILL = 0.55;        // tổng diện tích bong bóng / diện tích khung
-  const MAXFILL = 0.74;     // trần an toàn sau khi kẹp bán kính
+  const FILL = 0.50;        // tổng diện tích bong bóng / diện tích khung
+  const MAXFILL = 0.72;     // trần an toàn sau khi kẹp bán kính
+  const PAGE_SIZE = 100;    // mỗi trang 100 coin, giống cryptobubbles
   const DAMP = 0.982;       // ma sát mỗi frame (tính theo 60fps)
   const E = 0.55;           // độ nảy khi va chạm
   const WALL = 0.72;        // độ nảy khi chạm biên
@@ -66,7 +67,7 @@
     let market = [];
     let bubbles = [];
     let byBase = {};
-    let opts = { filter: 'all', size: 'change', count: 100, sector: 'all' };
+    let opts = { filter: 'all', size: 'change', page: 0, sector: 'all' };
     let theme = readTheme();
     let running = false, visible = false, rafId = 0;
     const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -104,21 +105,37 @@
     // Cỡ bong bóng: r ~ căn bậc hai của trọng số, rồi chuẩn hoá để TỔNG DIỆN
     // TÍCH bằng một tỉ lệ cố định của khung. Nhờ vậy 50 hay 200 coin đều lấp
     // vừa khung, không bị tràn ra ngoài hay lọt thỏm ở giữa.
-    function weightOf(c) {
-      return opts.size === 'vol'
-        ? Math.max(1, c.quoteVolume || 0)
-        : Math.max(0.12, Math.abs(c.change || 0));
+    // Trọng số quyết định DIỆN TÍCH bong bóng.
+    //  · Theo %: diện tích tỉ lệ thẳng với biên độ — mắt so diện tích, nên đó
+    //    là cách đọc trực tiếp nhất.
+    //  · Theo KLGD: khối lượng trải sáu bậc mười (chục nghìn → chục tỉ USD).
+    //    Cho diện tích tỉ lệ thẳng thì BTC chiếm trọn khung còn lại là một đám
+    //    hạt bằng nhau, không đọc được gì. Nên BÁN KÍNH đi theo log khối lượng,
+    //    chuẩn hoá trong tập đang hiện: chênh lệch bán kính tối đa 10 lần.
+    function weights() {
+      if (opts.size !== 'vol') {
+        return bubbles.map((b) => Math.max(0.12, Math.abs(b.coin.change || 0)));
+      }
+      const ls = bubbles.map((b) => Math.log10(Math.max(1, b.coin.quoteVolume || 0)));
+      let lo = Infinity, hi = -Infinity;
+      for (const l of ls) { if (l < lo) lo = l; if (l > hi) hi = l; }
+      const span = hi - lo || 1;
+      return ls.map((l) => Math.pow(0.10 + 0.90 * ((l - lo) / span), 2));
     }
     function sizeBubbles() {
       if (!bubbles.length || !W || !H) return;
-      const sum = bubbles.reduce((a, b) => a + weightOf(b.coin), 0) || 1;
+      const w = weights();
+      const sum = w.reduce((a, b) => a + b, 0) || 1;
       const k = Math.sqrt((FILL * W * H) / (Math.PI * sum));
-      const rMin = 12, rMax = Math.max(rMin + 4, Math.min(W, H) * 0.19);
+      // Trần bán kính 12% cạnh ngắn. Để rộng hơn thì một coin bơm 170% trong
+      // ngày sẽ chiếm gần một phần tư khung và bóp mọi coin còn lại thành hạt
+      // đậu; kẹp lại cho cỡ bóng đều tay, con số thật vẫn nằm trên nhãn.
+      const rMin = 12, rMax = Math.max(rMin + 4, Math.min(W, H) * 0.12);
       let area = 0;
-      for (const b of bubbles) {
-        b.tr = Math.max(rMin, Math.min(rMax, k * Math.sqrt(weightOf(b.coin))));
+      bubbles.forEach((b, i) => {
+        b.tr = Math.max(rMin, Math.min(rMax, k * Math.sqrt(w[i])));
         area += Math.PI * b.tr * b.tr;
-      }
+      });
       // Sau khi kẹp min/max tổng diện tích có thể vượt trần -> thu nhỏ đều.
       const cap = MAXFILL * W * H;
       if (area > cap) {
@@ -129,15 +146,50 @@
     }
 
     /* ------------------------------- data ------------------------------- */
-    function selection() {
+    // Toàn bộ coin của danh mục đang chọn, đã bỏ stablecoin, xếp theo KLGD.
+    // Đây là "vũ trụ" dùng để chia trang.
+    function pool() {
       const sec = CFG.sectors.find((s) => s.id === opts.sector);
       let list = market;
       if (sec && sec.coins) list = list.filter((c) => sec.coins.includes(c.base));
-      list = list.filter((c) => !CFG.stableCoins.includes(c.base));
-      list = list.slice(0, opts.count);
+      return list.filter((c) => !CFG.stableCoins.includes(c.base));
+    }
+    function pageCount(total) { return Math.max(1, Math.ceil(total / PAGE_SIZE)); }
+
+    // Cắt trang TRƯỚC rồi mới lọc tăng/giảm. Làm ngược lại thì số thứ tự trang
+    // sẽ nhảy mỗi lần thị trường đảo chiều — trang "101-200" hôm nay là những
+    // coin khác hẳn hôm qua, không còn là một mốc để quay lại.
+    function selection() {
+      const all = pool();
+      const pages = pageCount(all.length);
+      if (opts.page >= pages) opts.page = pages - 1;
+      let list = all.slice(opts.page * PAGE_SIZE, (opts.page + 1) * PAGE_SIZE);
       if (opts.filter === 'up') list = list.filter((c) => c.change > 0);
       if (opts.filter === 'down') list = list.filter((c) => c.change < 0);
       return list;
+    }
+
+    // Dropdown trang: mỗi mục là một khối 100 coin kèm mức biến động trung bình
+    // của chính khối đó, để thấy ngay vùng nào của thị trường đang xanh.
+    const pageSel = document.getElementById('bubPage');
+    function renderPages() {
+      if (!pageSel) return;
+      const all = pool();
+      const n = pageCount(all.length);
+      const labels = [];
+      for (let i = 0; i < n; i++) {
+        const block = all.slice(i * PAGE_SIZE, (i + 1) * PAGE_SIZE);
+        const avg = block.length ? block.reduce((a, c) => a + (c.change || 0), 0) / block.length : 0;
+        labels.push(`${i * PAGE_SIZE + 1}–${i * PAGE_SIZE + block.length} · ${avg >= 0 ? '+' : ''}${avg.toFixed(2)}%`);
+      }
+      // Dựng lại cả danh sách sẽ đóng dropdown người dùng đang mở, mà nhãn thì
+      // đổi sau mỗi lần làm mới 30s. Chỉ thay chữ khi số trang không đổi.
+      if (pageSel.options.length === n) {
+        for (let i = 0; i < n; i++) pageSel.options[i].textContent = labels[i];
+      } else {
+        pageSel.innerHTML = labels.map((l, i) => `<option value="${i}">${l}</option>`).join('');
+      }
+      pageSel.value = String(opts.page);
     }
 
     function rebuild() {
@@ -163,11 +215,13 @@
       bubbles = next;
       sizeBubbles();
       bubbles.sort((a, b) => b.tr - a.tr);
+      renderPages();
       if (empty) empty.hidden = bubbles.length > 0;
       if (stat) {
         const up = list.filter((c) => c.change > 0).length;
+        const total = pool().length;
         stat.textContent = list.length
-          ? `${list.length} coin · ${up} tăng / ${list.length - up} giảm`
+          ? `${list.length} coin · ${up} tăng / ${list.length - up} giảm · tổng ${total}`
           : '0 coin';
       }
       if (reduced) settleStatic();
@@ -401,10 +455,10 @@
     const secSel = document.getElementById('bubSector');
     if (secSel) {
       secSel.innerHTML = CFG.sectors.map((s) => `<option value="${s.id}">${s.label}</option>`).join('');
-      secSel.addEventListener('change', () => { opts.sector = secSel.value; rebuild(); });
+      // Đổi danh mục thì số coin đổi hẳn -> quay về trang đầu.
+      secSel.addEventListener('change', () => { opts.sector = secSel.value; opts.page = 0; rebuild(); });
     }
-    const cntSel = document.getElementById('bubCount');
-    if (cntSel) cntSel.addEventListener('change', () => { opts.count = +cntSel.value || 100; rebuild(); });
+    if (pageSel) pageSel.addEventListener('change', () => { opts.page = +pageSel.value || 0; rebuild(); });
 
     // Bảng màu đổi khi bật/tắt nền sáng -> đọc lại token và vẽ lại ngay.
     new MutationObserver(() => { theme = readTheme(); if (reduced) draw(); })

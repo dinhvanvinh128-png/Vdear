@@ -713,6 +713,9 @@ body.nd-locked{overflow:hidden}
 .bub-select{padding:6px 9px;border-radius:10px;border:1px solid var(--line);
   background:var(--panel-2);color:var(--text);font:600 12px inherit;cursor:pointer}
 .bub-stat{color:var(--muted-2);font-size:12px;font-variant-numeric:tabular-nums}
+/* Nhãn trang đổi độ dài theo số (1–100 · +2.31%), khoá bề rộng để thanh điều
+   khiển không giật mỗi lần làm mới. */
+.bub-page{min-width:154px;font-variant-numeric:tabular-nums}
 .bub-stage{position:relative;margin-top:12px;border:1px solid var(--line);border-radius:12px;
   overflow:hidden;background:radial-gradient(120% 100% at 50% 0,rgba(216,163,43,.06),transparent 62%),var(--bg-2)}
 #bubbleCanvas{display:block;width:100%;height:min(66vh,560px);touch-action:none}
