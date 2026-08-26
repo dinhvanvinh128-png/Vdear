@@ -4,9 +4,14 @@
   "description": "Radar tín hiệu futures — quét toàn thị trường, vào lệnh có kế hoạch.",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#080a0f",
-  "theme_color": "#080a0f",
+  "background_color": "#0A0906",
+  "theme_color": "#0A0906",
   "icons": [
-    { "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%232f81f7'/><text x='32' y='45' font-size='40' font-family='Arial' font-weight='bold' fill='%23041' text-anchor='middle'>V</text></svg>", "sizes": "any", "type": "image/svg+xml" }
+    {
+      "src": "img/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
   ]
 }
