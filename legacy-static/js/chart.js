@@ -96,8 +96,22 @@
       const bw2 = plotW / nc;
       let vs = idxAtAnchor - (anchor - this.padL) / bw2;
       this.viewCount = nc;
-      this.viewStart = Math.max(0, Math.min(n - nc, vs));
+      this.viewStart = this._clampStart(vs, nc);
       this.render();
+    }
+
+    // Cho phép kéo VƯỢT QUA cây nến cuối, để lại khoảng trống bên phải — và
+    // vượt qua cây đầu tiên về phía trái. Kẹp cứng ở mép làm biểu đồ như bị
+    // chặn tường: không đẩy được giá sang trái để nhìn chỗ trống phía trước.
+    // Điều kiện duy nhất: luôn còn ít nhất vài cây nến trong khung, nếu không
+    // sẽ kéo tới một màn hình trống trơn không biết đường về.
+    _clampStart(vs, count) {
+      const n = this.candles.length;
+      const c = count || this.viewCount || 1;
+      const keep = Math.max(6, Math.round(c * 0.15));
+      const min = -(c - keep);        // trống bên trái
+      const max = n - keep;           // trống bên phải
+      return Math.max(min, Math.min(max, vs));
     }
 
     // Kéo ngang bao nhiêu pixel thì cửa sổ xem dịch bấy nhiêu nến.
@@ -106,7 +120,7 @@
       const w = this.pc.clientWidth || this.pc.parentElement.clientWidth;
       const bw = (w - this.padL - this.padR) / this.viewCount;
       if (!(bw > 0)) return;
-      this.viewStart = Math.max(0, Math.min(n - this.viewCount, baseVs - dxPx / bw));
+      this.viewStart = this._clampStart(baseVs - dxPx / bw, this.viewCount);
     }
 
     _bind() {
