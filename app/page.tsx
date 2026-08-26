@@ -17,15 +17,15 @@ export default function HomePage() {
       <section className="-mx-4 -mt-5 border-b border-border px-4 pb-6 pt-6">
         <div className="mx-auto max-w-7xl">
           <PageHeader
-            title="VDEAR — Crypto Market Intelligence"
-            subtitle="Data → evidence → score → regime → explanation. Spot flow first; derivatives confirm."
+            title="Vdearypto — Crypto Intelligence Terminal"
+            subtitle="Dữ liệu → bằng chứng → điểm số → trạng thái → giải thích. Spot dẫn dắt; phái sinh xác nhận."
           />
           <IntelligenceDashboard symbol="BTC" />
         </div>
       </section>
 
       <section>
-        <PageHeader title="Global Market" subtitle="Total market cap, dominance and 24h activity" />
+        <PageHeader title="Toàn thị trường" subtitle="Vốn hoá, thị phần và hoạt động 24h" />
         <MarketOverview />
       </section>
 

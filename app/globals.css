@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -30,7 +30,7 @@
   --down: 224 87 79;      /* #E0574F */
   --warn: 216 163 43;     /* gold */
   --info: 156 122 34;     /* dim gold */
-  --radius: 3px;
+  --radius: 14px;   /* bằng .panel của bản tĩnh */
 }
 
 /* Light theme (toggled by adding data-theme="light" on <html>).
@@ -55,6 +55,25 @@
 html, body {
   background: rgb(var(--bg));
   color: rgb(var(--text));
+}
+
+/* Nền có quầng vàng giống bản tĩnh, nếu không hai trang cùng màu nền vẫn cho
+   cảm giác khác nhau: một bên phẳng lì, một bên có chiều sâu. */
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(216,163,43,.10), transparent 60%),
+    radial-gradient(1000px 500px at -10% 10%, rgba(216,163,43,.08), transparent 55%),
+    rgb(var(--bg));
+  background-attachment: fixed;
+}
+
+/* Tiêu đề dùng Chakra Petch như bản tĩnh; con số dùng JetBrains Mono. */
+h1, h2, h3, .font-display {
+  font-family: 'Chakra Petch', Inter, system-ui, sans-serif;
+  letter-spacing: .2px;
+}
+.tnum, table td, table th, .font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
 body {

@@ -1,19 +1,16 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * VDEAR Crypto — design tokens.
+ * Vdearypto — design tokens.
  *
- * The type system inverts the usual dashboard hierarchy on purpose: the DEFAULT
- * face is monospace, not sans. Everything the instrument reports — nav, labels,
- * tables, every number — is set in IBM Plex Mono. The serif is reserved for the
- * few places a human judgement is being expressed: the regime name, the WHY /
- * RISKS prose, the hero score. The machine speaks mono; the analyst speaks serif.
+ * Chữ và hình khối lấy đúng theo bản tĩnh (legacy-static/css/styles.css) để hai
+ * nửa của cùng một website không trông như hai sản phẩm khác nhau:
+ * Chakra Petch cho tiêu đề, Inter cho nội dung, JetBrains Mono cho con số.
+ * Trước đây toàn bộ app đặt mặc định là monospace — đó là chủ ý cũ, nhưng nó
+ * lệch hẳn với dashboard chính nên bỏ.
  *
- * No component declares a font family, so `sans` here is what the whole app
- * inherits through preflight.
- *
- * Semantic colors (up/down/warn/info) are CSS variables so themes can be
- * swapped without touching components.
+ * Semantic colors (up/down/warn/info) vẫn là CSS variable để đổi nền sáng/tối
+ * mà không phải đụng vào component.
  */
 const config: Config = {
   darkMode: 'class',
@@ -39,18 +36,21 @@ const config: Config = {
         info: 'rgb(var(--info) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-        mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-        serif: ['Newsreader', 'ui-serif', 'Georgia', 'serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
+        display: ['"Chakra Petch"', 'Inter', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        // serif cũ (Newsreader) không có trong bản tĩnh; trỏ về Inter để không
+        // còn khối chữ nào rơi ra ngoài hệ chữ chung.
+        serif: ['Inter', 'system-ui', 'sans-serif'],
       },
-      /* Machined edges, not app-store rounding. rounded-full is a separate key,
-         so dots and pills stay circular. */
+      /* Bo góc theo bản tĩnh: panel 14px, nút và ô nhỏ 10px. */
       borderRadius: {
-        DEFAULT: 'var(--radius)',
-        md: 'var(--radius)',
-        lg: '4px',
-        xl: '4px',
-        '2xl': '4px',
+        DEFAULT: '10px',
+        sm: '8px',
+        md: '10px',
+        lg: 'var(--radius)',
+        xl: 'var(--radius)',
+        '2xl': 'var(--radius)',
       },
       keyframes: {
         marquee: {

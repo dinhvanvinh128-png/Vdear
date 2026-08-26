@@ -4,7 +4,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl space-y-2">
         <p className="max-w-3xl">
           <span className="font-semibold text-text">Vdearypto</span> cung cấp dữ liệu và công cụ
-          phân tích thị trường nhằm mục đích thông tin, không phải lời khuyên đầu tư. VDEAR Crypto
+          phân tích thị trường nhằm mục đích thông tin, không phải lời khuyên đầu tư. Vdearypto
           provides market data and analytics for informational purposes only — not financial advice.
         </p>
         <p>

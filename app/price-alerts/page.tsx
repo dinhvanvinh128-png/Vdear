@@ -47,7 +47,7 @@ export default function PriceAlertsPage() {
         fired.current.add(a.id);
         changed = true;
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          new Notification(`VDEAR alert: ${a.base} ${a.op} $${fmtPrice(a.price)}`, { body: `Now $${fmtPrice(p)}` });
+          new Notification(`Vdearypto alert: ${a.base} ${a.op} $${fmtPrice(a.price)}`, { body: `Now $${fmtPrice(p)}` });
         }
         return { ...a, triggered: true };
       }
@@ -75,7 +75,7 @@ export default function PriceAlertsPage() {
     <div className="space-y-4">
       <PageHeader
         title="Price Alerts"
-        subtitle="Browser alerts fire while VDEAR is open. Email/Telegram delivery is a later phase."
+        subtitle="Browser alerts fire while Vdearypto is open. Email/Telegram delivery is a later phase."
         right={perm !== 'granted'
           ? <Button size="sm" variant="outline" onClick={askPerm}><Bell className="h-4 w-4" /> Enable notifications</Button>
           : <Badge variant="up">Notifications on</Badge>}

@@ -53,4 +53,4 @@ export function themeColor(token: ThemeToken, alpha?: number): string {
 }
 
 /** The app's monospace stack, for canvas `ctx.font` and chart layout options. */
-export const CHART_FONT_FAMILY = '"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace';
+export const CHART_FONT_FAMILY = '"JetBrains Mono", ui-monospace, SFMono-Regular, monospace';

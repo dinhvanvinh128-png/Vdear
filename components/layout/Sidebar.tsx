@@ -9,9 +9,18 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-panel lg:flex">
       <Link href="/" className="flex items-center gap-2 px-5 py-4">
-        <span className="grid h-8 w-8 place-items-center border border-brand/70 text-sm font-medium text-brand">V</span>
-        <span className="text-[13px] font-medium uppercase tracking-[0.18em]">
-          VDEAR<span className="text-muted"> CRYPTO</span>
+        <span
+          className="grid h-9 w-9 flex-none place-items-center rounded-[10px]
+                     bg-gradient-to-br from-brand to-brand-2 shadow-[0_4px_14px_rgba(216,163,43,.35)]"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 32 32" width="22" height="22" className="block">
+            <path fill="#0A0906" d="M3 4 L16 27.5 L28 4 L24.2 4 L16 20 L7.2 4 Z" />
+          </svg>
+        </span>
+        <span className="min-w-0">
+          <span className="block font-display text-[17px] font-bold tracking-[.5px]">Vdearypto</span>
+          <span className="block text-[11px] text-muted">Crypto Intelligence Terminal</span>
         </span>
       </Link>
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-6">

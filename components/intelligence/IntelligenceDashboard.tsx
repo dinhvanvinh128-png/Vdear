@@ -118,7 +118,7 @@ export function IntelligenceDashboard({ symbol = 'BTC' }: { symbol?: string }) {
       <Scenarios report={d.analyst} />
 
       <p className="text-[11px] leading-relaxed text-muted">
-        VDEAR reports probability and confidence derived from market data. It is informational
+        Vdearypto reports probability and confidence derived from market data. It is informational
         analysis, not financial advice.{' '}
         <Link href="/status" className="underline underline-offset-2">Data source status</Link>
       </p>

@@ -12,8 +12,8 @@ const SITE = siteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: 'VDEAR — Crypto Market Intelligence',
-    template: '%s · VDEAR',
+    default: 'Vdearypto — Crypto Intelligence Terminal',
+    template: '%s · Vdearypto',
   },
   description:
     'Spot-flow-driven crypto market intelligence: cumulative volume delta, market breadth, '
@@ -25,24 +25,24 @@ export const metadata: Metadata = {
     'accumulation distribution', 'on-chain', 'whale flow', 'Binance', 'OKX', 'Bybit', 'Bitget',
   ],
   openGraph: {
-    title: 'VDEAR — Crypto Market Intelligence',
+    title: 'Vdearypto — Crypto Intelligence Terminal',
     description:
       'Data to evidence to score to regime. Spot flow first; derivatives confirm.',
-    url: SITE, siteName: 'VDEAR', type: 'website',
+    url: SITE, siteName: 'Vdearypto', type: 'website',
   },
-  twitter: { card: 'summary_large_image', title: 'VDEAR — Crypto Market Intelligence' },
+  twitter: { card: 'summary_large_image', title: 'Vdearypto — Crypto Intelligence Terminal' },
   robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0A1113',
+  themeColor: '#0A0906',   // bằng --bg; giá trị cũ là màu của bảng màu trước
   width: 'device-width',
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning>
+    <html lang="vi" data-theme="dark" suppressHydrationWarning>
       <body className="min-h-screen bg-bg text-text antialiased">
         <div className="flex">
           <Sidebar />

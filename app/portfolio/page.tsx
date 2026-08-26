@@ -61,7 +61,7 @@ export default function PortfolioPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Portfolio" subtitle="Track holdings against live VDEAR index prices. Stored locally on this device." />
+      <PageHeader title="Portfolio" subtitle="Track holdings against live Vdearypto index prices. Stored locally on this device." />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Invested" value={fmtUsd(totalInvested)} />

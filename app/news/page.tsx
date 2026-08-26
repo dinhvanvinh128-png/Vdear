@@ -20,7 +20,7 @@ export default function NewsPage() {
             <div className="text-sm font-semibold">News source not configured</div>
             <p className="max-w-md text-xs text-muted">
               {data?.meta.note ?? 'Set NEWS_API_KEY and wire a licensed provider (e.g. CryptoPanic / CoinDesk).'}
-              {' '}VDEAR shows headlines, source and summary only — never full article text.
+              {' '}Vdearypto shows headlines, source and summary only — never full article text.
             </p>
           </CardContent>
         </Card>

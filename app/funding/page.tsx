@@ -11,7 +11,7 @@ export default function FundingPage() {
     <div className="space-y-4">
       <PageHeader
         title="Funding Rate"
-        subtitle="Per-exchange funding + VDEAR average. High funding ≠ a guaranteed reversal."
+        subtitle="Per-exchange funding + Vdearypto average. High funding ≠ a guaranteed reversal."
         right={<CoinPicker value={coin} onChange={setCoin} />}
       />
       <CoinDerivatives base={coin} />

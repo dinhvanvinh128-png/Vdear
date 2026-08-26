@@ -39,7 +39,7 @@ export default function CoinPage({ params }: { params: { symbol: string } }) {
 
       <p className="text-xs leading-relaxed text-muted">
         Data aggregated from Binance · OKX · Bybit · Bitget, with on-chain and liquidity data from
-        Coin Metrics, DeFiLlama and GeckoTerminal. VDEAR reports probability and confidence —
+        Coin Metrics, DeFiLlama and GeckoTerminal. Vdearypto reports probability and confidence —
         informational analysis, not financial advice.
       </p>
     </div>

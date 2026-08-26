@@ -128,7 +128,7 @@ export default function StatusPage() {
               Premium providers — optional enhancements
             </h2>
             <p className="mb-2 text-xs text-muted">
-              VDEAR runs entirely on the free sources above. These add depth when a key is
+              Vdearypto runs entirely on the free sources above. These add depth when a key is
               present; when one is not, its metrics are shown as unavailable rather than estimated.
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
