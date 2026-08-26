@@ -65,7 +65,14 @@ deployment, not implementation.
 
 ## 3. Plan
 
-**Phase 0 — decide what production serves.** This is a call for the owner,
+**Phase 0 — attempted, and it revealed a second requirement.** Removing the
+overrides from `vercel.json` was not enough: the Vercel project itself is
+configured for a static output, so it kept building `legacy-static/` while the
+drawer pointed at app routes, and every module link returned the static 404.
+Reverted. The switch needs the dashboard change in README §Deployment as well,
+which only the project owner can make.
+
+**Phase 0 (revised) — decide what production serves.** This is a call for the owner,
 not for me: keep the static site and port modules into it one at a time, or
 switch `vercel.json` to build the Next.js app and get every module at once.
 The second is faster but changes the whole surface in one deploy.

@@ -171,25 +171,26 @@ tokens rather than raw hex in components, and tabular numerics throughout.
 
 ## Deployment
 
-**Production builds the Next.js app.** `vercel.json` carries no framework or
-output overrides, so Vercel detects Next and runs `next build`.
+**Production serves the static build in `legacy-static/`.** `vercel.json` sets
+`outputDirectory` there with install and build stubbed out, so Vercel publishes
+that folder as-is rather than running `next build`.
 
-The static site in `legacy-static/` is not gone and is not duplicated in git.
-`npm run prebuild` (`scripts/copy-static.mjs`) copies it into `public/` before
-every build, so `legacy-static/` stays the only place to edit it and the two
-can never drift. `index.html` is published as `classic.html`, because `/` now
-belongs to the Next app.
+The Next.js app under `app/`, `lib/` and `components/` — 26 routes, 39 API
+routes, 11 engines, 10 providers, the scoring and quality layers — is in the
+repository and tested, but is **not** what production serves.
 
-| URL | Served by |
-|---|---|
-| `/`, `/money-flow`, `/breadth`, `/coins`, … | Next.js app |
-| `/classic.html` | the futures dashboard, ticker, 4H scan |
-| `/bubbles.html` | the market bubble view |
-| `/coin.html?c=BTC` | the canvas chart with S/R and Entry/TP/SL |
-| `/about.html` `/terms.html` `/privacy.html` `/risk.html` `/contact.html` | the Vietnamese pages |
+Switching it on takes two changes, and both are needed:
 
-`public/` is generated, so it is in `.gitignore`.
+1. Remove `framework`, `installCommand`, `buildCommand` and `outputDirectory`
+   from `vercel.json`. `npm run prebuild` (`scripts/copy-static.mjs`) then
+   copies `legacy-static/` into `public/` so the static pages keep working, with
+   `index.html` published as `classic.html` since `/` becomes the Next home.
+2. **In the Vercel dashboard**, Settings → Build & Deployment: set Framework
+   Preset to *Next.js* and clear any Output Directory override. A project
+   configured for a static output keeps building statically even after
+   `vercel.json` changes, and the symptom is every app route returning the
+   static 404 page.
 
-**Rolling back to the static-only site** is one commit: put `framework: null`,
-`installCommand`, `buildCommand` and `outputDirectory: legacy-static` back into
-`vercel.json`.
+Until step 2 is done, the drawer must not link to app routes — they will 404.
+Entries for unbuilt modules carry `soon: true` in `legacy-static/js/navmenu.js`
+and render as inert rows.
