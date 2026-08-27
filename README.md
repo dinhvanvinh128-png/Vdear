@@ -210,37 +210,49 @@ Dòng tiền ròng của ETF (tiền thực vào/ra quỹ mỗi ngày) tính t�
 khớp lệnh — khối lượng là nhà đầu tư sang tay nhau, tiền không chạm tới quỹ.
 Không nguồn miễn phí nào công bố số này.
 
-### Nguồn: CoinGlass API v4
+### Hai nguồn
 
-Đường dẫn lấy từ tài liệu chính thức, không phải đoán:
-
-| Tài sản | Endpoint | Gói yêu cầu |
+| Nguồn | Tài sản | Trạng thái xác minh |
 | --- | --- | --- |
-| BTC | `GET /api/etf/bitcoin/flow-history` | mọi gói, kể cả Hobbyist |
-| ETH | `GET /api/etf/ethereum/flow-history` | mọi gói |
-| SOL | `GET /api/etf/solana/flow-history` | mọi gói |
-| XRP | `GET /api/etf/xrp/flow-history` | mọi gói |
+| **CoinGlass** | BTC, ETH, SOL, XRP | **Đã đối chiếu tài liệu chính thức.** `GET /api/etf/{bitcoin,ethereum,solana,xrp}/flow-history`, header `CG-API-KEY`. Có ở **mọi gói kể cả Hobbyist**. Kèm dòng tiền **từng quỹ** trong `etf_flows[]`. |
+| **SoSoValue** | phủ rộng hơn | **Chưa đối chiếu được.** Xem cảnh báo bên dưới. |
 
-Xác thực bằng header `CG-API-KEY`. Mỗi bản ghi trả về `timestamp`, `flow_usd`,
-`price_usd` và `etf_flows[]` — dòng tiền của **từng quỹ** kèm mã (`etf_ticker`),
-nên bảng "quỹ đóng góp nhiều nhất" lấy thẳng từ API, không phải danh sách mã tự
-gõ tay.
+Đặt một trong hai, hoặc cả hai. Có cả hai thì mỗi tài sản thử CoinGlass trước
+rồi mới rơi xuống SoSoValue, và **cột ngày trong bảng ghi rõ mỗi con số đến từ
+nguồn nào** — hai nguồn không cùng độ tin cậy thì không được trộn lẫn im lặng.
 
-**CoinGlass chỉ có 4 tài sản trên.** DOGE, LINK, AVAX, HBAR, LTC, DOT, HYPE,
-BNB không nằm trong tài liệu. Hàm trả về mảng `supported` để giao diện ghi rõ
-"CoinGlass không cung cấp ETF của tài sản này", phân biệt với "lần gọi này
-không lấy được" — không để trống mập mờ như thể đang chờ dữ liệu.
+Cột "quỹ đóng góp nhiều nhất" chỉ có ở các dòng CoinGlass, vì mã quỹ lấy thẳng
+từ API. Không có thì để `—`, không tự chế mã chứng khoán.
+
+### Cảnh báo về SoSoValue
+
+`m.sosovalue.com/...` là **giao diện web, không phải API** — đọc dữ liệu từ đó
+là scrape, vi phạm điều khoản và bị CORS chặn. Hàm này chỉ gọi API chính thức.
+
+Nhưng đường dẫn và tên trường của API đó **chưa kiểm chứng được từ môi trường
+phát triển** (mọi host bên ngoài đều bị chặn). Nên:
+
+* Toàn bộ đường dẫn / method / tên header / mã tài sản đều **ghi đè được bằng
+  biến môi trường** (`SOSOVALUE_ETF_PATH`, `SOSOVALUE_ETF_METHOD`,
+  `SOSOVALUE_KEY_HEADER`, `SOSOVALUE_TYPE_MAP`).
+* Gọi hỏng thì `errors[]` ghi **đúng thứ đã gọi** — `HTTP 404 · POST /openapi/... type=us-doge-spot`.
+* Dạng dữ liệu không khớp thì báo **các tên trường nó thấy được**, ví dụ
+  `Không nhận ra dạng dữ liệu (trường thấy: id, name, updateTime)`.
+
+Nghĩa là sai thì sửa bằng env var, không phải sửa code rồi deploy lại. Và
+không có nhánh nào đoán ra một con số khi không đọc được dữ liệu.
 
 ### Bật lên
 
-1. Lấy API key ở CoinGlass.
-2. Vercel → Settings → Environment Variables → thêm `COINGLASS_API_KEY`.
+1. Lấy API key ở CoinGlass và/hoặc SoSoValue.
+2. Vercel → Settings → Environment Variables → `COINGLASS_API_KEY`,
+   `SOSOVALUE_API_KEY`.
 3. Redeploy.
 
-Chưa có key → hàm trả `configured:false`, giao diện hiện "chưa cấu hình nguồn"
-và để trống. Gọi hỏng → `available:false` kèm lý do từng tài sản trong `errors`.
-Không đường nào trong file đó sinh ra số liệu.
+Chưa có key nào → `configured:false`, giao diện hiện "chưa cấu hình nguồn" và
+để trống. Có key mà gọi hỏng → `available:false` kèm lý do từng tài sản. Không
+đường nào trong `api/etf-flow.js` sinh ra số liệu.
 
-`COINGLASS_API_BASE` ghi đè base URL nếu gói của bạn dùng host khác (mặc định
-`https://open-api-v4.coinglass.com`). Cùng một key này cũng phục vụ các mục
-thanh lý (liquidation) trong app Next.
+**Key chỉ nằm ở biến môi trường.** Không commit vào repo, không dán vào chat,
+không để lọt vào thông báo lỗi — hàm scrub key ra khỏi mọi message trước khi
+trả về. Key đã lộ ở đâu đó thì coi như hỏng: revoke và tạo key mới.

@@ -831,3 +831,7 @@ body.nd-locked{overflow:hidden}
 /* Dòng tài sản nguồn không có: mờ đi để không lẫn với dòng có số thật, nhưng
    vẫn đọc được — nó đang nói một điều có ý nghĩa, không phải chỗ trống. */
 .etf-table tr.etf-na td{opacity:.7}
+/* Nhãn nguồn của từng con số. Hai nguồn có độ tin cậy khác nhau (CoinGlass đã
+   đối chiếu tài liệu, SoSoValue thì chưa) nên phải nói rõ số nào của ai. */
+.etf-src{display:block;margin-top:2px;font-size:10px;letter-spacing:.4px;text-transform:uppercase;
+  color:var(--muted-2);font-family:'JetBrains Mono',monospace}

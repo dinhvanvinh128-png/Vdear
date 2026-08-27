@@ -104,13 +104,13 @@
     const assets = CFG.etf.assets;
     if (!flow) {
       return `<p class="hint">Dòng tiền ETF <b>chưa cấu hình nguồn</b>. Số này chỉ nhà cung cấp
-        có API mới công bố; cần đặt <code>COINGLASS_API_KEY</code> ở biến môi trường phía server.
-        Chừng nào chưa có, ở đây để trống — trang này không ước lượng dòng tiền.</p>`;
+        có API mới công bố; cần đặt <code>COINGLASS_API_KEY</code> và/hoặc <code>SOSOVALUE_API_KEY</code>
+        ở biến môi trường phía server. Chừng nào chưa có, ở đây để trống — trang này không ước lượng dòng tiền.</p>`;
     }
     const got = assets.filter((a) => flow.assets && flow.assets[a.symbol]);
     if (!got.length) {
       const why = (flow.errors || []).slice(0, 4).join(' · ');
-      return `<p class="hint">Đã cấu hình <code>COINGLASS_API_KEY</code> nhưng lần gọi này nguồn
+      return `<p class="hint">Đã cấu hình nguồn (${(flow.sources || []).join(', ') || '—'}) nhưng lần gọi này
         không trả về tài sản nào.${why ? ' Lý do: ' + why + '.' : ''} Không có số thật thì để trống.</p>`;
     }
     const rows = assets.map((a) => {
@@ -134,7 +134,7 @@
         <td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
         <td><span class="mv-pill ${cls}">${fmtFlow(net)}</span></td>
         <td class="etf-funds">${top || '<span class="muted small">—</span>'}</td>
-        <td class="muted small">${d.date || '—'}</td>
+        <td class="muted small">${d.date || '—'}${d.source ? `<span class="etf-src">${d.source}</span>` : ''}</td>
       </tr>`;
     }).join('');
     const sup = flow.supported || [];
@@ -145,9 +145,10 @@
         <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Quỹ đóng góp nhiều nhất</th><th>Ngày</th></tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
-      <p class="hint">${got.length}/${supported} tài sản CoinGlass có ETF đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
-        ${outside.length ? `<b>Nguồn không công bố</b> ETF của ${outside.join(', ')} — CoinGlass chỉ có
-        ${sup.join(', ')}. Đó là giới hạn của nguồn, không phải đang chờ dữ liệu.` : ''}</p>`;
+      <p class="hint">${got.length}/${supported} tài sản đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
+        Nguồn đang bật: <b>${(flow.sources || []).join(' + ') || '—'}</b>. Cột ngày ghi rõ mỗi con số đến từ đâu.
+        ${outside.length ? `<b>Nguồn không công bố</b> ETF của ${outside.join(', ')} — đó là giới hạn của
+        nguồn đang bật, không phải đang chờ dữ liệu.` : ''}</p>`;
   }
 
   /* BẢNG PHỤ: giá cổ phiếu quỹ, chỉ những quỹ đã biết chắc mã niêm yết. */
