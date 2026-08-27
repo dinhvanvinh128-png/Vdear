@@ -210,27 +210,44 @@ Dòng tiền ròng của ETF (tiền thực vào/ra quỹ mỗi ngày) tính t�
 khớp lệnh — khối lượng là nhà đầu tư sang tay nhau, tiền không chạm tới quỹ.
 Không nguồn miễn phí nào công bố số này.
 
-### Hai nguồn
+### Nguồn: SoSoValue
 
-| Nguồn | Tài sản | Trạng thái xác minh |
-| --- | --- | --- |
-| **CoinGlass** | BTC, ETH, SOL, XRP | **Đã đối chiếu tài liệu chính thức.** `GET /api/etf/{bitcoin,ethereum,solana,xrp}/flow-history`, header `CG-API-KEY`. Có ở **mọi gói kể cả Hobbyist**. Kèm dòng tiền **từng quỹ** trong `etf_flows[]`. |
-| **SoSoValue** | phủ rộng hơn | **Chưa đối chiếu được.** Xem cảnh báo bên dưới. |
+`POST /openapi/v2/etf/currentEtfDataMetrics`, header `x-soso-api-key`, body
+`{"type":"us-<symbol>-spot"}`. **Một nguồn duy nhất** phủ cả 12 tài sản — nên
+cả bảng cùng một ngày và cùng một cách tính, không phải giải thích vì sao dòng
+này lệch dòng kia.
 
-Đặt một trong hai, hoặc cả hai. Có cả hai thì mỗi tài sản thử CoinGlass trước
-rồi mới rơi xuống SoSoValue, và **cột ngày trong bảng ghi rõ mỗi con số đến từ
-nguồn nào** — hai nguồn không cùng độ tin cậy thì không được trộn lẫn im lặng.
+Đường dẫn **đã xác nhận chạy được**: API trả HTTP 200 kèm dữ liệu thật, với các
+trường `totalNetAssets`, `totalNetAssetsPercentage`, `dailyNetInflow`,
+`cumNetInflow`, `dailyTotalValueTraded`, `totalTokenHoldings`, `list`. Đó là
+tên trường thật, đọc từ phản hồi thật, không phải phỏng đoán. `list` là bảng
+chia theo từng quỹ, dùng để dựng cột "quỹ đóng góp nhiều nhất".
+
+Giá trị có thể là số trần, chuỗi số, hoặc object bọc `{value, date}` — bộ đọc
+chịu được cả ba. Không đọc ra thì **báo lỗi kèm chẩn đoán**, không suy ra số.
+
+`m.sosovalue.com/...` là **giao diện web, không phải API** — đọc dữ liệu từ đó
+là scrape, vi phạm điều khoản và bị CORS chặn. Hàm này chỉ gọi API chính thức.
+
+### Sai thì sửa bằng env, không phải sửa code
+
+Đường dẫn / method / tên header / mã tài sản đều ghi đè được
+(`SOSOVALUE_API_BASE`, `SOSOVALUE_ETF_PATH`, `SOSOVALUE_ETF_METHOD`,
+`SOSOVALUE_KEY_HEADER`, `SOSOVALUE_TYPE_MAP`). Và hàm tự chẩn đoán:
+
+* Gọi hỏng → `errors[]` ghi **đúng thứ đã gọi**:
+  `HTTP 404 · POST /openapi/... type=us-doge-spot`.
+* Đọc không ra → báo **từng trường ứng viên kèm kiểu của nó**:
+  `dailyNetInflow=null · list=mảng[0]`, hoặc `dailyNetInflow={amount,asOf}`.
+  Biết kiểu thì sửa dứt điểm; biết mỗi tên trường thì vẫn phải đoán thêm vòng.
 
 ### Một ngày cho cả bảng
 
-Hai nguồn chốt số lệch nhau: một bên đã có hôm nay, bên kia mới đến hôm qua.
-Cứ mỗi tài sản lấy bản ghi mới nhất của riêng nó thì bảng trộn hai ngày mà
-không ai biết — cộng lại ra một con số không tồn tại trong thực tế.
-
-Nên hàm chốt **một ngày cho cả bảng**: ngày mà nhiều tài sản có nhất (hoà thì
-lấy ngày mới hơn). CoinGlass trả về cả lịch sử nên nó lần ngược lại đúng bản
-ghi của ngày đó. Tài sản nào nguồn chưa chốt xong ngày ấy thì giữ ngày riêng
-nhưng **bị đánh dấu ⚠** ở cột ngày, và bảng hiện cảnh báo `mixedDates`.
+Cùng một nguồn nhưng mỗi tài sản chốt số xong vào lúc khác nhau. Bảng trộn hai
+ngày mà không nói ra thì cộng lại ra một con số không tồn tại. Hàm chốt **một
+ngày cho cả bảng**: ngày mà nhiều tài sản có nhất (hoà thì lấy ngày mới hơn).
+Tài sản nào nguồn chưa chốt xong ngày ấy thì giữ ngày riêng nhưng **bị đánh dấu
+⚠** ở cột ngày, và bảng hiện cảnh báo `mixedDates`.
 
 ### Số 0 không phải là chỗ trống
 
@@ -238,44 +255,14 @@ Ngày không quỹ nào tạo/huỷ chứng chỉ thì dòng tiền **đúng b�
 liệu, không phải thiếu dữ liệu. `$0` hiện ra với chip trung tính (không xanh
 không đỏ); chỉ khi thật sự không đọc được mới hiện `—`.
 
-Cột "quỹ đóng góp nhiều nhất" chỉ có ở các dòng CoinGlass, vì mã quỹ lấy thẳng
-từ API. Không có thì để `—`, không tự chế mã chứng khoán.
-
-### Cảnh báo về SoSoValue
-
-`m.sosovalue.com/...` là **giao diện web, không phải API** — đọc dữ liệu từ đó
-là scrape, vi phạm điều khoản và bị CORS chặn. Hàm này chỉ gọi API chính thức.
-
-Đường dẫn thì **đã xác nhận là đúng** — API trả về HTTP 200 kèm dữ liệu, với
-các trường `totalNetAssets`, `totalNetAssetsPercentage`, `dailyNetInflow`,
-`cumNetInflow`, `dailyTotalValueTraded`, `totalTokenHoldings`, `list`. Đó là
-tên trường thật, đọc từ phản hồi thật, không phải phỏng đoán.
-
-Điều còn lại chưa chắc là **kiểu của từng giá trị** (số trần, chuỗi số, hay
-object bọc `{value, date}`). Bộ đọc chịu được cả ba, và `list` được dùng để
-dựng cột "quỹ đóng góp nhiều nhất". Cơ chế tự chẩn đoán vẫn giữ nguyên:
-
-* Toàn bộ đường dẫn / method / tên header / mã tài sản đều **ghi đè được bằng
-  biến môi trường** (`SOSOVALUE_ETF_PATH`, `SOSOVALUE_ETF_METHOD`,
-  `SOSOVALUE_KEY_HEADER`, `SOSOVALUE_TYPE_MAP`).
-* Gọi hỏng thì `errors[]` ghi **đúng thứ đã gọi** — `HTTP 404 · POST /openapi/... type=us-doge-spot`.
-* Dạng dữ liệu không khớp thì báo **từng trường ứng viên kèm kiểu của nó**, ví
-  dụ `dailyNetInflow=null · list=mảng[0]` hoặc
-  `dailyNetInflow={amount,asOf}`. Biết kiểu thì sửa dứt điểm, chứ báo mỗi tên
-  trường thì vẫn phải đoán thêm một vòng.
-
-Nghĩa là sai thì sửa bằng env var, không phải sửa code rồi deploy lại. Và
-không có nhánh nào đoán ra một con số khi không đọc được dữ liệu.
-
 ### Bật lên
 
-1. Lấy API key ở CoinGlass và/hoặc SoSoValue.
-2. Vercel → Settings → Environment Variables → `COINGLASS_API_KEY`,
-   `SOSOVALUE_API_KEY`.
+1. Lấy API key ở SoSoValue.
+2. Vercel → Settings → Environment Variables → `SOSOVALUE_API_KEY`.
 3. Redeploy.
 
-Chưa có key nào → `configured:false`, giao diện hiện "chưa cấu hình nguồn" và
-để trống. Có key mà gọi hỏng → `available:false` kèm lý do từng tài sản. Không
+Chưa có key → `configured:false`, giao diện hiện "chưa cấu hình nguồn" và để
+trống. Có key mà gọi hỏng → `available:false` kèm lý do từng tài sản. Không
 đường nào trong `api/etf-flow.js` sinh ra số liệu.
 
 **Key chỉ nằm ở biến môi trường.** Không commit vào repo, không dán vào chat,

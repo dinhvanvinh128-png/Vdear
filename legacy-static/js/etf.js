@@ -7,7 +7,7 @@
  *   DÒNG TIỀN  (net creations/redemptions) là tiền thực chảy vào/ra quỹ. Nó
  *              tính từ số chứng chỉ quỹ phát hành thêm hoặc mua lại trong ngày,
  *              KHÔNG suy ra được từ giá hay khối lượng khớp lệnh. Không nguồn
- *              miễn phí nào công bố; cần CoinGlass có API key, mà key
+ *              miễn phí nào công bố; cần SoSoValue có API key, mà key
  *              phải nằm ở server. Bản tĩnh không có server, nên phần dòng tiền
  *              hiển thị "chưa cấu hình nguồn" thay vì một con số ước lượng.
  *
@@ -110,13 +110,13 @@
     const assets = CFG.etf.assets;
     if (!flow) {
       return `<p class="hint">Dòng tiền ETF <b>chưa cấu hình nguồn</b>. Số này chỉ nhà cung cấp
-        có API mới công bố; cần đặt <code>COINGLASS_API_KEY</code> và/hoặc <code>SOSOVALUE_API_KEY</code>
+        có API mới công bố; cần đặt <code>SOSOVALUE_API_KEY</code>
         ở biến môi trường phía server. Chừng nào chưa có, ở đây để trống — trang này không ước lượng dòng tiền.</p>`;
     }
     const got = assets.filter((a) => flow.assets && flow.assets[a.symbol]);
     if (!got.length) {
       const why = (flow.errors || []).slice(0, 4).join(' · ');
-      return `<p class="hint">Đã cấu hình nguồn (${(flow.sources || []).join(', ') || '—'}) nhưng lần gọi này
+      return `<p class="hint">Đã cấu hình <code>SOSOVALUE_API_KEY</code> nhưng lần gọi này nguồn
         không trả về tài sản nào.${why ? ' Lý do: ' + why + '.' : ''} Không có số thật thì để trống.</p>`;
     }
     const rows = assets.map((a) => {
@@ -141,22 +141,23 @@
         <td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
         <td><span class="mv-pill ${cls}">${fmtFlow(net)}</span></td>
         <td class="etf-funds">${top || '<span class="muted small">—</span>'}</td>
-        <td class="muted small${d.offDate ? ' etf-off' : ''}">${d.date || '—'}${d.offDate ? ' ⚠' : ''}${d.source ? `<span class="etf-src">${d.source}</span>` : ''}</td>
+        <td class="muted small${d.offDate ? ' etf-off' : ''}">${d.date || '—'}${d.offDate ? ' ⚠' : ''}</td>
       </tr>`;
     }).join('');
     const sup = flow.supported || [];
     const supported = sup.length || got.length;
     const miss = (flow.errors || []).length;
-    const outside = assets.filter((a) => sup.indexOf(a.symbol) < 0).map((a) => a.symbol);
+    // Nguồn phủ cả 12; giữ nhánh này phòng khi nguồn rút bớt tài sản.
+    const outside = assets.filter((a) => sup.length && sup.indexOf(a.symbol) < 0).map((a) => a.symbol);
     return `<div class="table-wrap"><table class="movers etf-table">
         <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Quỹ đóng góp nhiều nhất</th><th>Ngày</th></tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
       <p class="hint">Số liệu ngày <b>${flow.date || '—'}</b> · ${got.length}/${supported} tài sản đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
         ${flow.mixedDates ? '<b>⚠ Có dòng lệch ngày</b> — nguồn chưa chốt xong ngày này cho tài sản đó; dòng lệch được đánh dấu ⚠ ở cột ngày. Đừng cộng cả bảng lại thành một con số.' : ''}
-        Nguồn đang bật: <b>${(flow.sources || []).join(' + ') || '—'}</b>. Cột ngày ghi rõ mỗi con số đến từ đâu.
+        Nguồn: <b>SoSoValue</b>.
         ${outside.length ? `<b>Nguồn không công bố</b> ETF của ${outside.join(', ')} — đó là giới hạn của
-        nguồn đang bật, không phải đang chờ dữ liệu.` : ''}</p>`;
+        nguồn, không phải đang chờ dữ liệu.` : ''}</p>`;
   }
 
   /* BẢNG PHỤ: giá cổ phiếu quỹ, chỉ những quỹ đã biết chắc mã niêm yết. */
