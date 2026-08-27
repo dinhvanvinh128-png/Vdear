@@ -249,7 +249,26 @@ tồn tại thì tài sản ròng không thể bằng 0. Vỏ rỗng = không d�
 sản ròng, không giá trị giao dịch, không quỹ nào — tài sản đó vào `notCovered`
 và bảng ghi "Nguồn không công bố".
 
-### Thử mã tài sản, có kiểm chứng
+### Lấy bảng tổng quan, không phải 12 lần gọi riêng
+
+Trang "Tổng quan ETF Crypto Giao ngay Mỹ / All US" của SoSoValue liệt kê cả 12
+tài sản kèm đủ bốn chỉ số trong **một bảng**, ở mã loại `us-crypto-spot` (đuôi
+URL của chính trang đó). Nên hàm gọi bảng đó **một lần** thay vì hỏi từng tài
+sản: cùng một ảnh chụp, cùng một ngày, và không phải đoán mã riêng của từng tài
+sản — mã sai chính là thứ làm XRP và HYPE ra `$0` trong khi thật ra là $28.14M
+và $14.71M.
+
+Việc chọn cách nào **không dựa vào phỏng đoán**: bảng tổng quan chỉ được dùng
+khi nhận ra được ít nhất 4 tài sản trong `list` của nó. Nhận ra ít hơn nghĩa là
+`list` không phải bảng theo tài sản, và hàm rơi xuống cách gọi từng tài sản,
+ghi lý do vào `overviewNote`. Trường `via` cho biết đường nào đã chạy.
+
+Mã quỹ (IBIT, GBTC, ETHA…) không có trong bảng tổng quan nên vẫn phải gọi riêng
+— nhưng **chỉ cho tài sản có dòng tiền khác 0** (ngày không ai tạo/huỷ chứng chỉ
+thì chẳng quỹ nào để xếp hạng), và lần gọi đó **chỉ lấy danh sách quỹ**, không
+được ghi đè con số đã đúng của bảng tổng quan.
+
+### Thử mã tài sản, có kiểm chứng (chỉ khi bảng tổng quan không dùng được)
 
 `us-btc-spot`, `us-eth-spot`, `us-sol-spot` đã chạy thật. Các tài sản khác trả
 vỏ rỗng với cùng khuôn đó — khuôn đúng, mã có thể khác, vì vài nguồn dùng tên

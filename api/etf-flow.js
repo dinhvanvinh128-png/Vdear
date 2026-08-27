@@ -44,6 +44,32 @@ const KEY_HEADER = process.env.SOSOVALUE_KEY_HEADER || 'x-soso-api-key';
 const NET_KEYS = ['dailyNetInflow', 'netInflow', 'daily_net_inflow', 'flow_usd', 'netFlow', 'value'];
 
 /*
+ * BẢNG TỔNG QUAN — cách lấy chính.
+ *
+ * Trang "Tổng quan ETF Crypto Giao ngay Mỹ / All US" của SoSoValue liệt kê cả
+ * 12 tài sản kèm đủ 4 chỉ số trong MỘT bảng. Nó phải đến từ một lần gọi, và mã
+ * loại của nó là us-crypto-spot (chính là đuôi URL của trang đó).
+ *
+ * Gọi một lần lấy cả bảng thì hơn hẳn gọi 12 lần: cùng một ảnh chụp, cùng một
+ * ngày, và KHÔNG phải đoán mã riêng của từng tài sản — mã sai chính là thứ làm
+ * XRP và HYPE ra $0 trong khi thật ra là $28.14M và $14.71M.
+ *
+ * Không dùng được thì rơi xuống cách gọi từng tài sản như cũ. Việc chọn cách
+ * nào KHÔNG dựa vào phỏng đoán: chỉ nhận bảng tổng quan khi nhận ra được đủ
+ * nhiều tài sản trong đó (xem OVERVIEW_MIN).
+ */
+const OVERVIEW_TYPE = process.env.SOSOVALUE_OVERVIEW_TYPE || 'us-crypto-spot';
+const OVERVIEW_MIN = 4;
+
+// Mã loại -> ký hiệu tài sản, cho những tên không trùng ký hiệu.
+const SLUG_TO_SYMBOL = {
+  ripple: 'XRP', dogecoin: 'DOGE', chainlink: 'LINK', avalanche: 'AVAX',
+  hedera: 'HBAR', litecoin: 'LTC', polkadot: 'DOT', hyperliquid: 'HYPE',
+  binancecoin: 'BNB', 'binance-coin': 'BNB', bitcoin: 'BTC', ethereum: 'ETH',
+  solana: 'SOL',
+};
+
+/*
  * 12 tài sản, mỗi tài sản một danh sách MÃ LOẠI để thử.
  *
  * us-btc-spot / us-eth-spot / us-sol-spot đã chạy thật (trả về số khớp với
@@ -258,6 +284,80 @@ function read(payload) {
   };
 }
 
+/*
+ * Tìm ký hiệu tài sản trong một dòng của bảng tổng quan. Chấp nhận cả mã loại
+ * (us-xrp-spot, us-ripple-spot) lẫn ký hiệu trần (XRP). Không nhận ra thì trả
+ * null — dòng đó bị bỏ, không gán bừa cho tài sản nào.
+ */
+function rowSymbol(row, known) {
+  if (!row || typeof row !== 'object') return null;
+  for (const k of ['type', 'assetType', 'etfType', 'symbol', 'asset', 'assetSymbol', 'code', 'ticker', 'name']) {
+    const v = row[k];
+    if (typeof v !== 'string' || !v.trim()) continue;
+    const raw = v.trim();
+    const m = raw.toLowerCase().match(/^us[-_]([a-z0-9-]+)[-_]spot$/);
+    if (m) {
+      const slug = m[1];
+      const sym = SLUG_TO_SYMBOL[slug] || slug.toUpperCase();
+      if (known.has(sym)) return sym;
+      continue;
+    }
+    const up = raw.toUpperCase();
+    if (known.has(up)) return up;
+    const bySlug = SLUG_TO_SYMBOL[raw.toLowerCase()];
+    if (bySlug && known.has(bySlug)) return bySlug;
+  }
+  return null;
+}
+
+/* Số quỹ của một dòng: đếm mảng con nếu có, không thì tìm trường đếm. */
+function rowFundCount(row) {
+  for (const k of ['list', 'etfList', 'funds']) {
+    if (Array.isArray(row[k])) return row[k].length;
+  }
+  return pick(row, ['etfCount', 'count', 'fundCount', 'num', 'quantity']);
+}
+
+/*
+ * Đọc bảng tổng quan thành từng tài sản. CHỈ dùng khi nhận ra được ít nhất
+ * OVERVIEW_MIN tài sản — nhận ra ít quá nghĩa là `list` không phải bảng theo
+ * tài sản (rất có thể là bảng theo quỹ), lúc đó không được dùng.
+ */
+function readOverview(payload, symbols) {
+  let d = payload;
+  for (const k of ['data', 'result', 'body']) {
+    if (d && typeof d === 'object' && d[k] && typeof d[k] === 'object') d = d[k];
+  }
+  if (Array.isArray(d)) d = d.length ? newest(d) : null;
+  if (!d || typeof d !== 'object' || !Array.isArray(d.list)) return { ok: false, note: 'không có mảng list' };
+
+  const known = new Set(symbols);
+  const topDate = pickDate(d, DATE_KEYS.concat(NET_KEYS));
+  const rows = {};
+  const seen = [];
+  for (const row of d.list) {
+    const sym = rowSymbol(row, known);
+    if (!sym || rows[sym]) continue;
+    const netInflow = pick(row, NET_KEYS);
+    if (netInflow == null) continue;          // đọc không ra thì bỏ, không gán 0
+    seen.push(sym);
+    rows[sym] = {
+      netInflow,
+      totalNetAssets: pick(row, ['totalNetAssets', 'netAssets', 'totalNetAsset']),
+      traded: pick(row, ['dailyTotalValueTraded', 'totalValueTraded', 'volume', 'dailyVolume']),
+      cumNetInflow: pick(row, ['cumNetInflow', 'cumulativeNetInflow', 'totalNetInflow']),
+      fundCount: rowFundCount(row),
+      date: pickDate(row, DATE_KEYS.concat(NET_KEYS)) || topDate,
+      funds: [],
+      source: 'sosovalue',
+    };
+  }
+  if (seen.length < OVERVIEW_MIN) {
+    return { ok: false, note: `chỉ nhận ra ${seen.length} tài sản trong list (cần ${OVERVIEW_MIN})` };
+  }
+  return { ok: true, rows, date: topDate, seen };
+}
+
 /* Một lần gọi cho một mã loại. */
 async function fetchOne(type, key) {
   const url = BASE.replace(/\/+$/, '') + PATH;
@@ -285,8 +385,8 @@ async function fetchOne(type, key) {
     return { ok: false, message: scrub(body.msg || body.message || `code ${body.code}`, key) };
   }
   const r = read(body);
-  if (!r.ok) return { ok: false, message: `Không đọc được dòng tiền${r.note ? ' — ' + r.note : ''}` };
-  return { ok: true, data: r.data, diag: r.diag };
+  if (!r.ok) return { ok: false, message: `Không đọc được dòng tiền${r.note ? ' — ' + r.note : ''}`, body };
+  return { ok: true, data: r.data, diag: r.diag, body };
 }
 
 /*
@@ -348,7 +448,50 @@ module.exports = async function handler(req, res) {
   }
 
   const types = typeMap();
-  const results = await pool(ASSETS, async (a) => ({ symbol: a.symbol, res: await fetchAsset(a, key, types) }), 4);
+  const symbols = ASSETS.map((a) => a.symbol);
+
+  /*
+   * BƯỚC 1 — thử bảng tổng quan: một lần gọi ra cả 12 tài sản, cùng một ảnh
+   * chụp, không phải đoán mã của từng tài sản.
+   */
+  const fromOverview = {};
+  let overviewNote = null;
+  {
+    const r = await fetchOne(OVERVIEW_TYPE, key);
+    if (!r.ok && !r.body) overviewNote = r.message;
+    else {
+      const ov = readOverview(r.body, symbols);
+      if (ov.ok) Object.assign(fromOverview, ov.rows);
+      else overviewNote = ov.note;
+    }
+  }
+  const missing = ASSETS.filter((a) => !fromOverview[a.symbol]);
+
+  /*
+   * BƯỚC 2 — chỉ những tài sản bảng tổng quan không có mới phải gọi riêng.
+   * Bảng chạy tốt thì đây là mảng rỗng: một lần gọi thay cho mười hai.
+   */
+  const results = await pool(missing, async (a) => ({ symbol: a.symbol, res: await fetchAsset(a, key, types) }), 4);
+
+  /*
+   * BƯỚC 3 — chi tiết từng quỹ. Bảng tổng quan cho số theo TÀI SẢN, không có
+   * mã quỹ; muốn cột "quỹ đóng góp nhiều nhất" thì phải gọi riêng.
+   *
+   * Chỉ gọi cho tài sản có dòng tiền KHÁC 0 — ngày không ai tạo/huỷ chứng chỉ
+   * thì chẳng quỹ nào đóng góp gì để mà xếp hạng. Thường là 4-5 lần gọi.
+   *
+   * Và chỉ lấy DUY NHẤT phần danh sách quỹ: số của bảng tổng quan đã đúng, mã
+   * riêng có thể sai (vỏ rỗng) — để nó ghi đè là hỏng cả những dòng đang đúng.
+   */
+  const detailed = ASSETS.filter((a) => fromOverview[a.symbol] && fromOverview[a.symbol].netInflow);
+  await pool(detailed, async (a) => {
+    const r = await fetchAsset(a, key, types);
+    if (r.ok && r.data.funds && r.data.funds.length) fromOverview[a.symbol].funds = r.data.funds;
+  }, 4);
+
+  for (const sym of Object.keys(fromOverview)) {
+    results.push({ symbol: sym, res: { ok: true, data: fromOverview[sym], diag: { via: 'overview' } } });
+  }
 
   /*
    * CHỐT MỘT NGÀY CHO CẢ BẢNG. Cùng một nguồn nhưng mỗi tài sản chốt số xong
@@ -393,8 +536,10 @@ module.exports = async function handler(req, res) {
    * cả bảng là một con số duy nhất lặp 12 lần. Trông vẫn hợp lý nên không ai
    * nhận ra; phải nói thẳng ra.
    */
+  // Nhiều tài sản cùng bằng 0 là chuyện BÌNH THƯỜNG — ngày yên ắng thì phần
+  // lớn quỹ không tạo/huỷ chứng chỉ nào. Chỉ báo động khi cùng một số KHÁC 0.
   const vals = Object.values(data).map((v) => v.netInflow);
-  const sameValue = vals.length > 2 && vals.every((v) => v === vals[0]);
+  const sameValue = vals.length > 2 && vals[0] !== 0 && vals.every((v) => v === vals[0]);
 
   return json(res, 200, {
     configured: true,
@@ -402,8 +547,11 @@ module.exports = async function handler(req, res) {
     sources: ['sosovalue'],
     // Tài sản nguồn THỰC SỰ phục vụ — không phải 12 mã ta hỏi. Vỏ rỗng không
     // tính là được phục vụ.
-    supported: ASSETS.map((a) => a.symbol).filter((sym) => notCovered.indexOf(sym) < 0),
+    supported: symbols.filter((sym) => notCovered.indexOf(sym) < 0),
     notCovered,
+    // Bảng tổng quan có chạy không, và nếu không thì vì sao.
+    via: Object.keys(fromOverview).length ? 'overview' : 'per-asset',
+    overviewNote,
     generatedAt: new Date().toISOString(),
     date: target,
     mixedDates: dates.size > 1,
