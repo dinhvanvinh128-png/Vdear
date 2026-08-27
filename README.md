@@ -237,9 +237,22 @@ là scrape, vi phạm điều khoản và bị CORS chặn. Hàm này chỉ gọ
 
 * Gọi hỏng → `errors[]` ghi **đúng thứ đã gọi**:
   `HTTP 404 · POST /openapi/... type=us-doge-spot`.
+* Số ra **không khớp trang sosovalue.com** → gọi `/api/etf-flow?diag=1`. Nó
+  trả về, cho từng tài sản: các khoá thật của bản ghi, tên trường đã lấy, và
+  **mọi số đọc được bên trong object bọc đó**. Ví dụ
+  `netCandidates: {value: 0.53, valueUsd: 232100000}` cho biết ngay là đang
+  lấy nhầm `value` thay vì `valueUsd`. Chỉ tên trường và số, không bao giờ kèm
+  key.
+* Mọi tài sản ra **cùng một con số** → `sameValue: true`, và bảng tự hiện cảnh
+  báo đừng tin nó. Nghĩa là nhà cung cấp không dùng tham số `type`, trả cùng
+  một bản ghi cho cả 12 lần gọi. Trông vẫn hợp lý nên không ai nhận ra.
 * Đọc không ra → báo **từng trường ứng viên kèm kiểu của nó**:
   `dailyNetInflow=null · list=mảng[0]`, hoặc `dailyNetInflow={amount,asOf}`.
   Biết kiểu thì sửa dứt điểm; biết mỗi tên trường thì vẫn phải đoán thêm vòng.
+
+Phản hồi dạng **mảng** thì lấy bản ghi có ngày mới nhất, không phải phần tử
+đầu — nhà cung cấp xếp cũ-trước thì `d[0]` là ngày cũ nhất, số hiện ra sai hoàn
+toàn mà trông vẫn hợp lý.
 
 ### Một ngày cho cả bảng
 

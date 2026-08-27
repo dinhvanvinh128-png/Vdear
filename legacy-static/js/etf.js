@@ -154,6 +154,9 @@
         <tbody>${rows}</tbody>
       </table></div>
       <p class="hint">Số liệu ngày <b>${flow.date || '—'}</b> · ${got.length}/${supported} tài sản đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
+        ${flow.sameValue ? `<br><b>⚠ Mọi tài sản đang ra cùng một con số.</b> Gần như chắc chắn nguồn
+        không dùng tham số phân biệt tài sản, nên trả cùng một bản ghi cho cả 12 lần gọi. <b>Đừng tin
+        bảng này</b> cho tới khi sửa xong — gọi <code>/api/etf-flow?diag=1</code> để xem nguồn thực sự trả gì.` : ''}
         ${flow.mixedDates ? '<b>⚠ Có dòng lệch ngày</b> — nguồn chưa chốt xong ngày này cho tài sản đó; dòng lệch được đánh dấu ⚠ ở cột ngày. Đừng cộng cả bảng lại thành một con số.' : ''}
         Nguồn: <b>SoSoValue</b>.
         ${outside.length ? `<b>Nguồn không công bố</b> ETF của ${outside.join(', ')} — đó là giới hạn của

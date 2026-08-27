@@ -163,12 +163,45 @@ function readFunds(list) {
     .sort((a, b) => Math.abs(b.flow) - Math.abs(a.flow));
 }
 
+const DATE_KEYS = ['lastUpdateDate', 'date', 'tradingDay', 'timestamp', 'updateTime'];
+
+/*
+ * Mảng thì phải lấy bản ghi MỚI NHẤT theo ngày, không phải phần tử đầu. Nhà
+ * cung cấp xếp cũ-trước thì d[0] là ngày cũ nhất — số hiện ra sai hoàn toàn mà
+ * trông vẫn hợp lý. Không đọc được ngày của phần tử nào thì mới đành lấy d[0].
+ */
+function newest(arr) {
+  let best = null;
+  for (const row of arr) {
+    if (!row || typeof row !== 'object') continue;
+    const d = pickDate(row, DATE_KEYS.concat(NET_KEYS));
+    if (!d) continue;
+    if (!best || d > best.date) best = { date: d, row };
+  }
+  return best ? best.row : arr[0];
+}
+
+/*
+ * Liệt kê MỌI số đọc được bên trong object bọc. Khi số hiện ra không khớp
+ * trang của nhà cung cấp, đây là thứ nói cho biết đã lấy nhầm trường nào —
+ * thay vì đoán thêm một vòng nữa.
+ */
+function candidates(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  const out = {};
+  for (const k of Object.keys(v).slice(0, 20)) {
+    const n = num(v[k]);
+    if (n != null) out[k] = n;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 function read(payload) {
   let d = payload;
   for (const k of ['data', 'result', 'body']) {
     if (d && typeof d === 'object' && d[k] && typeof d[k] === 'object') d = d[k];
   }
-  if (Array.isArray(d)) d = d[0];
+  if (Array.isArray(d)) d = d.length ? newest(d) : null;
   if (!d || typeof d !== 'object') return { ok: false, note: 'phản hồi không phải object' };
 
   const netInflow = pick(d, NET_KEYS);
@@ -180,9 +213,20 @@ function read(payload) {
       netInflow,
       cumNetInflow: pick(d, ['cumNetInflow', 'cumulativeNetInflow', 'totalNetInflow']),
       totalNetAssets: pick(d, ['totalNetAssets', 'netAssets', 'totalNetAsset']),
-      date: pickDate(d, ['lastUpdateDate', 'date', 'tradingDay', 'timestamp', 'updateTime'].concat(NET_KEYS)),
+      date: pickDate(d, DATE_KEYS.concat(NET_KEYS)),
       funds: readFunds(d.list),
       source: 'sosovalue',
+    },
+    // Chỉ trả về khi gọi kèm ?diag=1. Tên trường + các số đọc được bên trong,
+    // đủ để đối chiếu với trang của nhà cung cấp và sửa dứt điểm.
+    diag: {
+      keys: Object.keys(d).slice(0, 20),
+      wasArray: Array.isArray(payload && payload.data),
+      netField: NET_KEYS.find((k) => d[k] != null) || null,
+      netCandidates: candidates(d[NET_KEYS.find((k) => d[k] != null)]),
+      listLen: Array.isArray(d.list) ? d.list.length : null,
+      listKeys: Array.isArray(d.list) && d.list[0] && typeof d.list[0] === 'object'
+        ? Object.keys(d.list[0]).slice(0, 12) : null,
     },
   };
 }
@@ -215,7 +259,7 @@ async function fetchAsset(asset, key, types) {
   }
   const r = read(body);
   if (!r.ok) return { ok: false, message: `Không đọc được dòng tiền${r.note ? ' — ' + r.note : ''}` };
-  return { ok: true, data: r.data };
+  return { ok: true, data: r.data, diag: r.diag };
 }
 
 async function pool(items, worker, size) {
@@ -229,6 +273,9 @@ async function pool(items, worker, size) {
 
 module.exports = async function handler(req, res) {
   const key = (process.env.SOSOVALUE_API_KEY || '').trim();
+  // ?diag=1 -> kèm mô tả dạng dữ liệu thật của nhà cung cấp. Chỉ tên trường và
+  // các số đọc được, không bao giờ kèm key.
+  const wantDiag = !!(req && req.query && String(req.query.diag || '') === '1');
   if (!key) {
     return json(res, 200, {
       configured: false,
@@ -261,13 +308,24 @@ module.exports = async function handler(req, res) {
   const data = {};
   const errors = [];
   const dates = new Set();
+  const diag = {};
   for (const r of results) {
     if (!r.res.ok) { errors.push(`${r.symbol}: ${r.res.message}`); continue; }
     let row = r.res.data;
     if (row.date && row.date !== target) row = { ...row, offDate: true };
     if (row.date) dates.add(row.date);
     data[r.symbol] = row;
+    if (wantDiag) diag[r.symbol] = r.res.diag;
   }
+
+  /*
+   * Cờ báo động: mọi tài sản ra CÙNG một con số. Nghĩa là tham số `type` không
+   * được nhà cung cấp dùng đến — nó trả cùng một bản ghi cho mọi lần gọi, và
+   * cả bảng là một con số duy nhất lặp 12 lần. Trông vẫn hợp lý nên không ai
+   * nhận ra; phải nói thẳng ra.
+   */
+  const vals = Object.values(data).map((v) => v.netInflow);
+  const sameValue = vals.length > 2 && vals.every((v) => v === vals[0]);
 
   return json(res, 200, {
     configured: true,
@@ -277,7 +335,9 @@ module.exports = async function handler(req, res) {
     generatedAt: new Date().toISOString(),
     date: target,
     mixedDates: dates.size > 1,
+    sameValue,
     assets: data,
     errors: errors.slice(0, 24),
+    ...(wantDiag ? { diag } : {}),
   });
 };
