@@ -811,6 +811,10 @@ body.nd-locked{overflow:hidden}
 .etf-name{white-space:normal}
 .etf-name b{display:block;font-family:'Chakra Petch',sans-serif;font-size:13.5px}
 .etf-name small{display:block;color:var(--muted-2);font-size:11px;line-height:1.3;margin-top:1px}
+/* Số quỹ đang niêm yết của tài sản, như "x12" bên SoSoValue. */
+.etf-count{display:inline-block;margin-top:3px;padding:1px 6px;border-radius:6px;
+  border:1px solid var(--line);background:var(--panel-2);color:var(--muted-2);
+  font-family:'JetBrains Mono',monospace;font-size:10.5px}
 /* Thẻ TradFi khi chưa có giá: không phải link, không mời bấm vào chỗ trống. */
 .tf-card.tf-off{cursor:default;opacity:.72}
 .tf-card.tf-off:hover{transform:none;box-shadow:none}

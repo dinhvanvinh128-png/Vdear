@@ -237,6 +237,9 @@ function read(payload) {
       netInflow,
       cumNetInflow: pick(d, ['cumNetInflow', 'cumulativeNetInflow', 'totalNetInflow']),
       totalNetAssets: pick(d, ['totalNetAssets', 'netAssets', 'totalNetAsset']),
+      traded: pick(d, ['dailyTotalValueTraded', 'totalValueTraded', 'volume', 'dailyVolume']),
+      // SoSoValue hiện "x12", "x11" — số quỹ đang niêm yết của tài sản đó.
+      fundCount: Array.isArray(d.list) ? d.list.length : null,
       date: pickDate(d, DATE_KEYS.concat(NET_KEYS)),
       funds: readFunds(d.list),
       source: 'sosovalue',
@@ -287,13 +290,19 @@ async function fetchOne(type, key) {
 }
 
 /*
- * VỎ RỖNG: nguồn trả HTTP 200 đúng khuôn nhưng KHÔNG có ngày, dòng tiền bằng 0
- * và không quỹ nào. Ngày giao dịch thật thì luôn có ngày — bản ghi thế này
- * nghĩa là nguồn không nhận ra mã tài sản, không phải "hôm nay không ai mua".
- * Nhận nó làm dữ liệu là bày ra một số 0 giả.
+ * VỎ RỖNG vs SỐ 0 THẬT — phân biệt bằng TÀI SẢN RÒNG, không phải bằng ngày.
+ *
+ * Trang SoSoValue cho thấy LINK, HBAR, AVAX, DOGE, DOT có dòng tiền đúng bằng
+ * $0.00 nhưng tài sản ròng $170.25M, $56.88M, $37.03M... Quỹ có thật, chỉ là
+ * hôm đó không ai tạo/huỷ chứng chỉ. Đó là DỮ LIỆU, phải hiện $0.
+ *
+ * Vỏ rỗng là bản ghi mà MỌI chỉ số đều trống: không dòng tiền, không tài sản
+ * ròng, không giá trị giao dịch, không quỹ nào. Quỹ có tồn tại thì tài sản
+ * ròng không thể bằng 0 — nên bản ghi thế này nghĩa là nguồn không nhận ra mã
+ * tài sản. Nhận nó làm dữ liệu là bày ra một số 0 giả.
  */
 function isShell(d) {
-  return !d.date && !d.netInflow && !(d.funds && d.funds.length);
+  return !d.netInflow && !d.totalNetAssets && !d.traded && !(d.funds && d.funds.length);
 }
 
 /*

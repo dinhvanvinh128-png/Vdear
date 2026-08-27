@@ -221,7 +221,12 @@ này lệch dòng kia.
 trường `totalNetAssets`, `totalNetAssetsPercentage`, `dailyNetInflow`,
 `cumNetInflow`, `dailyTotalValueTraded`, `totalTokenHoldings`, `list`. Đó là
 tên trường thật, đọc từ phản hồi thật, không phải phỏng đoán. `list` là bảng
-chia theo từng quỹ, dùng để dựng cột "quỹ đóng góp nhiều nhất".
+chia theo từng quỹ, dùng để dựng cột "quỹ đóng góp nhiều nhất" và đếm số quỹ
+đang niêm yết (SoSoValue hiện là "×12", "×11").
+
+Bảng lấy đủ bốn chỉ số nguồn công bố, không chỉ dòng tiền:
+`dailyNetInflow` → **Dòng tiền ròng ngày**, `totalNetAssets` → **Tài sản ròng**,
+`dailyTotalValueTraded` → **GT giao dịch**, `list.length` → **số quỹ**.
 
 Giá trị có thể là số trần, chuỗi số, hoặc object bọc `{value, date}` — bộ đọc
 chịu được cả ba. Không đọc ra thì **báo lỗi kèm chẩn đoán**, không suy ra số.
@@ -229,15 +234,20 @@ chịu được cả ba. Không đọc ra thì **báo lỗi kèm chẩn đoán**
 `m.sosovalue.com/...` là **giao diện web, không phải API** — đọc dữ liệu từ đó
 là scrape, vi phạm điều khoản và bị CORS chặn. Hàm này chỉ gọi API chính thức.
 
-### Vỏ rỗng không phải là số 0
+### Vỏ rỗng không phải là số 0 — phân biệt bằng TÀI SẢN RÒNG
 
-Nguồn trả HTTP 200 đúng khuôn cho cả những mã tài sản nó không nhận ra: dòng
-tiền `0`, **không ngày**, không quỹ nào. Ngày giao dịch thật thì luôn có ngày —
-bản ghi thế này nghĩa là *nguồn không có tài sản đó*, không phải *hôm nay không
-ai mua*. Nhận nó làm dữ liệu là bày ra một số 0 giả trông y như thật.
+Nguồn trả HTTP 200 đúng khuôn cho cả những mã tài sản nó không nhận ra: mọi chỉ
+số bằng 0, không quỹ nào.
 
-Hàm loại vỏ rỗng và xếp tài sản đó vào `notCovered`, bảng ghi "Nguồn không công
-bố". Chỉ số 0 **kèm ngày thật** mới hiện là `$0`.
+Nhưng **số 0 thật cũng tồn tại**: trang SoSoValue cho thấy LINK, HBAR, AVAX,
+DOGE, DOT có dòng tiền đúng `$0.00` mà tài sản ròng vẫn là $170.25M, $56.88M,
+$37.03M… Quỹ có thật, chỉ là hôm đó không ai tạo/huỷ chứng chỉ. Đó là **dữ
+liệu**, phải hiện `$0`.
+
+Nên dấu hiệu phân biệt **không phải** thiếu ngày, mà là **tài sản ròng**: quỹ có
+tồn tại thì tài sản ròng không thể bằng 0. Vỏ rỗng = không dòng tiền, không tài
+sản ròng, không giá trị giao dịch, không quỹ nào — tài sản đó vào `notCovered`
+và bảng ghi "Nguồn không công bố".
 
 ### Thử mã tài sản, có kiểm chứng
 

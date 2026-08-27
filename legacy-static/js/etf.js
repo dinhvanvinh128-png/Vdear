@@ -23,7 +23,7 @@
    * số 0 (lỗi cũ) là nói dối: người xem đọc thành "không có dữ liệu".
    */
   function fmtUsd(n) {
-    if (!Number.isFinite(n)) return '—';
+    if (n == null || !Number.isFinite(n)) return '—';
     if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
     if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
     if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
@@ -132,19 +132,25 @@
         // Nhãn ngắn: câu giải thích đầy đủ nằm một lần ở dưới bảng. Lặp lại
         // nguyên câu trên 8 dòng vừa rối vừa kéo bảng rộng ra trên điện thoại.
         return `<tr class="etf-na"><td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
-          <td colspan="3" class="muted small">${supported ? 'Lần gọi này không lấy được' : 'Nguồn không công bố'}</td></tr>`;
+          <td colspan="5" class="muted small">${supported ? 'Lần gọi này không lấy được' : 'Nguồn không công bố'}</td></tr>`;
       }
       const net = d.netInflow;
       // 0 không phải tiền vào cũng không phải tiền ra -> chip trung tính.
       const cls = net == null || net === 0 ? '' : net > 0 ? 'up' : 'down';
+      // Nguồn ghi một ngày cho cả bảng, bản ghi từng tài sản có thể không kèm
+      // ngày riêng. Thiếu thì lấy ngày chung, đừng bỏ trống.
+      const day = d.date || flow.date || null;
       const top = (d.funds || []).slice(0, 3)
         .map((f) => `<span class="etf-fund ${f.flow === 0 ? '' : f.flow > 0 ? 'up' : 'down'}">${f.ticker} ${fmtFlow(f.flow)}</span>`)
         .join('');
       return `<tr>
-        <td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
+        <td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small>${
+          d.fundCount ? `<span class="etf-count">×${d.fundCount} quỹ</span>` : ''}</td>
         <td><span class="mv-pill ${cls}">${fmtFlow(net)}</span></td>
+        <td class="mv-price">${fmtUsd(d.totalNetAssets)}</td>
+        <td class="muted small">${fmtUsd(d.traded)}</td>
         <td class="etf-funds">${top || '<span class="muted small">—</span>'}</td>
-        <td class="muted small${d.offDate ? ' etf-off' : ''}">${d.date || '—'}${d.offDate ? ' ⚠' : ''}</td>
+        <td class="muted small${d.offDate ? ' etf-off' : ''}">${day || '—'}${d.offDate ? ' ⚠' : ''}</td>
       </tr>`;
     }).join('');
     const sup = flow.supported || [];
@@ -153,7 +159,7 @@
     // Nguồn phủ cả 12; giữ nhánh này phòng khi nguồn rút bớt tài sản.
     const outside = assets.filter((a) => sup.length && sup.indexOf(a.symbol) < 0).map((a) => a.symbol);
     return `<div class="table-wrap"><table class="movers etf-table">
-        <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Quỹ đóng góp nhiều nhất</th><th>Ngày</th></tr></thead>
+        <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Tài sản ròng</th><th>GT giao dịch</th><th>Quỹ đóng góp nhiều nhất</th><th>Ngày</th></tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
       <p class="hint">Số liệu ngày <b>${flow.date || '—'}</b> · ${got.length}/${supported} tài sản đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
