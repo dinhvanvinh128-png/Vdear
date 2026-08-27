@@ -43,10 +43,34 @@ const KEY_HEADER = process.env.SOSOVALUE_KEY_HEADER || 'x-soso-api-key';
  */
 const NET_KEYS = ['dailyNetInflow', 'netInflow', 'daily_net_inflow', 'flow_usd', 'netFlow', 'value'];
 
-// 12 tài sản. Mã loại theo khuôn us-<symbol>-spot; sai thì sửa bằng
-// SOSOVALUE_TYPE_MAP chứ không phải sửa code.
-const ASSETS = ['BTC', 'ETH', 'XRP', 'SOL', 'DOGE', 'LINK', 'AVAX', 'HBAR', 'LTC', 'DOT', 'HYPE', 'BNB']
-  .map((symbol) => ({ symbol, type: `us-${symbol.toLowerCase()}-spot` }));
+/*
+ * 12 tài sản, mỗi tài sản một danh sách MÃ LOẠI để thử.
+ *
+ * us-btc-spot / us-eth-spot / us-sol-spot đã chạy thật (trả về số khớp với
+ * trang của SoSoValue, kèm mã quỹ IBIT/GBTC/ETHA/BSOL...). Các tài sản còn lại
+ * trả về VỎ RỖNG với cùng khuôn đó, nên khuôn đúng nhưng mã có thể khác — vài
+ * nguồn dùng tên đầy đủ (ripple, dogecoin) thay vì mã ngắn.
+ *
+ * Nên thử lần lượt và CHỈ NHẬN bản ghi có ngày thật. Đây không phải đoán bừa:
+ * mỗi lần thử đều được kiểm chứng, thử hết mà không có bản ghi nào có ngày thì
+ * báo "nguồn không có tài sản này" chứ không nhận vỏ rỗng làm dữ liệu.
+ *
+ * Biết chắc mã đúng thì đặt SOSOVALUE_TYPE_MAP để khỏi phải thử.
+ */
+const ASSETS = [
+  { symbol: 'BTC',  types: ['us-btc-spot'] },
+  { symbol: 'ETH',  types: ['us-eth-spot'] },
+  { symbol: 'XRP',  types: ['us-xrp-spot', 'us-ripple-spot'] },
+  { symbol: 'SOL',  types: ['us-sol-spot'] },
+  { symbol: 'DOGE', types: ['us-doge-spot', 'us-dogecoin-spot'] },
+  { symbol: 'LINK', types: ['us-link-spot', 'us-chainlink-spot'] },
+  { symbol: 'AVAX', types: ['us-avax-spot', 'us-avalanche-spot'] },
+  { symbol: 'HBAR', types: ['us-hbar-spot', 'us-hedera-spot'] },
+  { symbol: 'LTC',  types: ['us-ltc-spot', 'us-litecoin-spot'] },
+  { symbol: 'DOT',  types: ['us-dot-spot', 'us-polkadot-spot'] },
+  { symbol: 'HYPE', types: ['us-hype-spot', 'us-hyperliquid-spot'] },
+  { symbol: 'BNB',  types: ['us-bnb-spot', 'us-binancecoin-spot', 'us-binance-coin-spot'] },
+];
 
 function typeMap() {
   const raw = (process.env.SOSOVALUE_TYPE_MAP || '').trim();
@@ -231,8 +255,8 @@ function read(payload) {
   };
 }
 
-async function fetchAsset(asset, key, types) {
-  const type = types[asset.symbol] || asset.type;
+/* Một lần gọi cho một mã loại. */
+async function fetchOne(type, key) {
   const url = BASE.replace(/\/+$/, '') + PATH;
   const headers = { [KEY_HEADER]: key, accept: 'application/json' };
   const opts = { method: METHOD, headers };
@@ -260,6 +284,35 @@ async function fetchAsset(asset, key, types) {
   const r = read(body);
   if (!r.ok) return { ok: false, message: `Không đọc được dòng tiền${r.note ? ' — ' + r.note : ''}` };
   return { ok: true, data: r.data, diag: r.diag };
+}
+
+/*
+ * VỎ RỖNG: nguồn trả HTTP 200 đúng khuôn nhưng KHÔNG có ngày, dòng tiền bằng 0
+ * và không quỹ nào. Ngày giao dịch thật thì luôn có ngày — bản ghi thế này
+ * nghĩa là nguồn không nhận ra mã tài sản, không phải "hôm nay không ai mua".
+ * Nhận nó làm dữ liệu là bày ra một số 0 giả.
+ */
+function isShell(d) {
+  return !d.date && !d.netInflow && !(d.funds && d.funds.length);
+}
+
+/*
+ * Thử lần lượt các mã loại, CHỈ NHẬN bản ghi không phải vỏ rỗng. Hết mã mà vẫn
+ * rỗng -> báo nguồn không có tài sản này, kèm danh sách đã thử.
+ */
+async function fetchAsset(asset, key, override) {
+  const list = override[asset.symbol] ? [override[asset.symbol]] : asset.types;
+  const tried = [];
+  let lastErr = null;
+  for (const type of list) {
+    const r = await fetchOne(type, key);
+    tried.push(type);
+    if (!r.ok) { lastErr = r.message; continue; }
+    if (!isShell(r.data)) return { ok: true, data: r.data, diag: { ...r.diag, type } };
+    lastErr = null;                      // gọi được, chỉ là rỗng
+  }
+  if (lastErr) return { ok: false, message: lastErr, tried };
+  return { ok: false, empty: true, message: `Nguồn không có ETF cho tài sản này (đã thử: ${tried.join(', ')})`, tried };
 }
 
 async function pool(items, worker, size) {
@@ -307,10 +360,17 @@ module.exports = async function handler(req, res) {
 
   const data = {};
   const errors = [];
+  const notCovered = [];
   const dates = new Set();
   const diag = {};
   for (const r of results) {
-    if (!r.res.ok) { errors.push(`${r.symbol}: ${r.res.message}`); continue; }
+    if (!r.res.ok) {
+      // Nguồn KHÔNG CÓ tài sản này khác hẳn với gọi hỏng. Gộp làm một là để
+      // người xem tưởng đợi thêm sẽ có.
+      if (r.res.empty) notCovered.push(r.symbol);
+      else errors.push(`${r.symbol}: ${r.res.message}`);
+      continue;
+    }
     let row = r.res.data;
     if (row.date && row.date !== target) row = { ...row, offDate: true };
     if (row.date) dates.add(row.date);
@@ -331,7 +391,10 @@ module.exports = async function handler(req, res) {
     configured: true,
     available: Object.keys(data).length > 0,
     sources: ['sosovalue'],
-    supported: ASSETS.map((a) => a.symbol),   // một nguồn phủ cả 12
+    // Tài sản nguồn THỰC SỰ phục vụ — không phải 12 mã ta hỏi. Vỏ rỗng không
+    // tính là được phục vụ.
+    supported: ASSETS.map((a) => a.symbol).filter((sym) => notCovered.indexOf(sym) < 0),
+    notCovered,
     generatedAt: new Date().toISOString(),
     date: target,
     mixedDates: dates.size > 1,

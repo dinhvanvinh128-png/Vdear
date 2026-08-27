@@ -125,7 +125,10 @@
         // Phân biệt rõ hai chuyện khác hẳn nhau: nguồn KHÔNG CÓ tài sản này,
         // với nguồn có mà lần gọi này hỏng. Gộp làm một là để người xem tưởng
         // đợi thêm sẽ có.
-        const supported = (flow.supported || []).indexOf(a.symbol) >= 0;
+        // notCovered = nguồn trả lời được nhưng không có ETF cho tài sản này.
+        // supported = nguồn có, chỉ lần gọi này hỏng.
+        const supported = (flow.notCovered || []).indexOf(a.symbol) < 0
+          && (flow.supported || []).indexOf(a.symbol) >= 0;
         // Nhãn ngắn: câu giải thích đầy đủ nằm một lần ở dưới bảng. Lặp lại
         // nguyên câu trên 8 dòng vừa rối vừa kéo bảng rộng ra trên điện thoại.
         return `<tr class="etf-na"><td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>

@@ -229,6 +229,28 @@ chịu được cả ba. Không đọc ra thì **báo lỗi kèm chẩn đoán**
 `m.sosovalue.com/...` là **giao diện web, không phải API** — đọc dữ liệu từ đó
 là scrape, vi phạm điều khoản và bị CORS chặn. Hàm này chỉ gọi API chính thức.
 
+### Vỏ rỗng không phải là số 0
+
+Nguồn trả HTTP 200 đúng khuôn cho cả những mã tài sản nó không nhận ra: dòng
+tiền `0`, **không ngày**, không quỹ nào. Ngày giao dịch thật thì luôn có ngày —
+bản ghi thế này nghĩa là *nguồn không có tài sản đó*, không phải *hôm nay không
+ai mua*. Nhận nó làm dữ liệu là bày ra một số 0 giả trông y như thật.
+
+Hàm loại vỏ rỗng và xếp tài sản đó vào `notCovered`, bảng ghi "Nguồn không công
+bố". Chỉ số 0 **kèm ngày thật** mới hiện là `$0`.
+
+### Thử mã tài sản, có kiểm chứng
+
+`us-btc-spot`, `us-eth-spot`, `us-sol-spot` đã chạy thật. Các tài sản khác trả
+vỏ rỗng với cùng khuôn đó — khuôn đúng, mã có thể khác, vì vài nguồn dùng tên
+đầy đủ (`us-ripple-spot`, `us-dogecoin-spot`, `us-hyperliquid-spot`) thay cho
+mã ngắn.
+
+Nên mỗi tài sản có một danh sách mã để thử lần lượt, và **chỉ nhận bản ghi có
+ngày thật**. Đây không phải đoán bừa: mỗi lần thử đều được kiểm chứng bằng dữ
+liệu trả về, thử hết mà vẫn rỗng thì báo "nguồn không có tài sản này" kèm danh
+sách đã thử. Biết chắc mã đúng thì đặt `SOSOVALUE_TYPE_MAP` để khỏi phải thử.
+
 ### Sai thì sửa bằng env, không phải sửa code
 
 Đường dẫn / method / tên header / mã tài sản đều ghi đè được
