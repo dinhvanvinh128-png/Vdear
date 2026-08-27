@@ -47,10 +47,10 @@ const NET_KEYS = ['dailyNetInflow', 'netInflow', 'daily_net_inflow', 'flow_usd',
  * BẢNG TỔNG QUAN — cách lấy chính.
  *
  * Trang "Tổng quan ETF Crypto Giao ngay Mỹ / All US" của SoSoValue liệt kê cả
- * 12 tài sản kèm đủ 4 chỉ số trong MỘT bảng. Nó phải đến từ một lần gọi, và mã
+ * mọi tài sản kèm đủ 4 chỉ số trong MỘT bảng. Nó phải đến từ một lần gọi, và mã
  * loại của nó là us-crypto-spot (chính là đuôi URL của trang đó).
  *
- * Gọi một lần lấy cả bảng thì hơn hẳn gọi 12 lần: cùng một ảnh chụp, cùng một
+ * Gọi một lần lấy cả bảng thì hơn hẳn gọi từng tài sản: cùng một ảnh chụp, cùng một
  * ngày, và KHÔNG phải đoán mã riêng của từng tài sản — mã sai chính là thứ làm
  * XRP và HYPE ra $0 trong khi thật ra là $28.14M và $14.71M.
  *
@@ -59,7 +59,10 @@ const NET_KEYS = ['dailyNetInflow', 'netInflow', 'daily_net_inflow', 'flow_usd',
  * nhiều tài sản trong đó (xem OVERVIEW_MIN).
  */
 const OVERVIEW_TYPE = process.env.SOSOVALUE_OVERVIEW_TYPE || 'us-crypto-spot';
+// Ngưỡng nhận bảng tổng quan. Không bao giờ được vượt quá số tài sản đang hỏi:
+// hỏi 3 mà đòi nhận ra 4 thì bảng tổng quan không đời nào dùng được.
 const OVERVIEW_MIN = 4;
+const overviewMin = (n) => Math.min(OVERVIEW_MIN, n);
 
 // Mã loại -> ký hiệu tài sản, cho những tên không trùng ký hiệu.
 const SLUG_TO_SYMBOL = {
@@ -70,7 +73,7 @@ const SLUG_TO_SYMBOL = {
 };
 
 /*
- * 12 tài sản, mỗi tài sản một danh sách MÃ LOẠI để thử.
+ * Các tài sản đang theo dõi, mỗi tài sản một danh sách MÃ LOẠI để thử.
  *
  * us-btc-spot / us-eth-spot / us-sol-spot đã chạy thật (trả về số khớp với
  * trang của SoSoValue, kèm mã quỹ IBIT/GBTC/ETHA/BSOL...). Các tài sản còn lại
@@ -84,18 +87,9 @@ const SLUG_TO_SYMBOL = {
  * Biết chắc mã đúng thì đặt SOSOVALUE_TYPE_MAP để khỏi phải thử.
  */
 const ASSETS = [
-  { symbol: 'BTC',  types: ['us-btc-spot'] },
-  { symbol: 'ETH',  types: ['us-eth-spot'] },
-  { symbol: 'XRP',  types: ['us-xrp-spot', 'us-ripple-spot'] },
-  { symbol: 'SOL',  types: ['us-sol-spot'] },
-  { symbol: 'DOGE', types: ['us-doge-spot', 'us-dogecoin-spot'] },
-  { symbol: 'LINK', types: ['us-link-spot', 'us-chainlink-spot'] },
-  { symbol: 'AVAX', types: ['us-avax-spot', 'us-avalanche-spot'] },
-  { symbol: 'HBAR', types: ['us-hbar-spot', 'us-hedera-spot'] },
-  { symbol: 'LTC',  types: ['us-ltc-spot', 'us-litecoin-spot'] },
-  { symbol: 'DOT',  types: ['us-dot-spot', 'us-polkadot-spot'] },
-  { symbol: 'HYPE', types: ['us-hype-spot', 'us-hyperliquid-spot'] },
-  { symbol: 'BNB',  types: ['us-bnb-spot', 'us-binancecoin-spot', 'us-binance-coin-spot'] },
+  { symbol: 'BTC', types: ['us-btc-spot'] },
+  { symbol: 'ETH', types: ['us-eth-spot'] },
+  { symbol: 'SOL', types: ['us-sol-spot'] },
 ];
 
 function typeMap() {
@@ -352,8 +346,9 @@ function readOverview(payload, symbols) {
       source: 'sosovalue',
     };
   }
-  if (seen.length < OVERVIEW_MIN) {
-    return { ok: false, note: `chỉ nhận ra ${seen.length} tài sản trong list (cần ${OVERVIEW_MIN})` };
+  const need = overviewMin(known.size);
+  if (seen.length < need) {
+    return { ok: false, note: `chỉ nhận ra ${seen.length} tài sản trong list (cần ${need})` };
   }
   return { ok: true, rows, date: topDate, seen };
 }
@@ -451,7 +446,7 @@ module.exports = async function handler(req, res) {
   const symbols = ASSETS.map((a) => a.symbol);
 
   /*
-   * BƯỚC 1 — thử bảng tổng quan: một lần gọi ra cả 12 tài sản, cùng một ảnh
+   * BƯỚC 1 — thử bảng tổng quan: một lần gọi ra tất cả tài sản, cùng một ảnh
    * chụp, không phải đoán mã của từng tài sản.
    */
   const fromOverview = {};
@@ -469,7 +464,7 @@ module.exports = async function handler(req, res) {
 
   /*
    * BƯỚC 2 — chỉ những tài sản bảng tổng quan không có mới phải gọi riêng.
-   * Bảng chạy tốt thì đây là mảng rỗng: một lần gọi thay cho mười hai.
+   * Bảng chạy tốt thì đây là mảng rỗng: một lần gọi thay cho tất cả.
    */
   const results = await pool(missing, async (a) => ({ symbol: a.symbol, res: await fetchAsset(a, key, types) }), 4);
 

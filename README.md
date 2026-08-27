@@ -213,7 +213,7 @@ Không nguồn miễn phí nào công bố số này.
 ### Nguồn: SoSoValue
 
 `POST /openapi/v2/etf/currentEtfDataMetrics`, header `x-soso-api-key`, body
-`{"type":"us-<symbol>-spot"}`. **Một nguồn duy nhất** phủ cả 12 tài sản — nên
+`{"type":"us-<symbol>-spot"}`. **Một nguồn duy nhất** phủ hết danh sách theo dõi — nên
 cả bảng cùng một ngày và cùng một cách tính, không phải giải thích vì sao dòng
 này lệch dòng kia.
 
@@ -251,7 +251,7 @@ và bảng ghi "Nguồn không công bố".
 
 ### Lấy bảng tổng quan, không phải 12 lần gọi riêng
 
-Trang "Tổng quan ETF Crypto Giao ngay Mỹ / All US" của SoSoValue liệt kê cả 12
+Trang "Tổng quan ETF Crypto Giao ngay Mỹ / All US" của SoSoValue liệt kê mọi
 tài sản kèm đủ bốn chỉ số trong **một bảng**, ở mã loại `us-crypto-spot` (đuôi
 URL của chính trang đó). Nên hàm gọi bảng đó **một lần** thay vì hỏi từng tài
 sản: cùng một ảnh chụp, cùng một ngày, và không phải đoán mã riêng của từng tài
@@ -259,7 +259,9 @@ sản — mã sai chính là thứ làm XRP và HYPE ra `$0` trong khi thật ra
 và $14.71M.
 
 Việc chọn cách nào **không dựa vào phỏng đoán**: bảng tổng quan chỉ được dùng
-khi nhận ra được ít nhất 4 tài sản trong `list` của nó. Nhận ra ít hơn nghĩa là
+khi nhận ra được ít nhất 4 tài sản trong `list` của nó — hoặc bằng số tài sản
+đang theo dõi, nếu theo dõi ít hơn 4 (hỏi 3 mà đòi nhận ra 4 thì bảng tổng quan
+không đời nào dùng được). Nhận ra ít hơn nghĩa là
 `list` không phải bảng theo tài sản, và hàm rơi xuống cách gọi từng tài sản,
 ghi lý do vào `overviewNote`. Trường `via` cho biết đường nào đã chạy.
 
@@ -296,7 +298,7 @@ sách đã thử. Biết chắc mã đúng thì đặt `SOSOVALUE_TYPE_MAP` đ�
   key.
 * Mọi tài sản ra **cùng một con số** → `sameValue: true`, và bảng tự hiện cảnh
   báo đừng tin nó. Nghĩa là nhà cung cấp không dùng tham số `type`, trả cùng
-  một bản ghi cho cả 12 lần gọi. Trông vẫn hợp lý nên không ai nhận ra.
+  một bản ghi cho mọi lần gọi. Trông vẫn hợp lý nên không ai nhận ra.
 * Đọc không ra → báo **từng trường ứng viên kèm kiểu của nó**:
   `dailyNetInflow=null · list=mảng[0]`, hoặc `dailyNetInflow={amount,asOf}`.
   Biết kiểu thì sửa dứt điểm; biết mỗi tên trường thì vẫn phải đoán thêm vòng.

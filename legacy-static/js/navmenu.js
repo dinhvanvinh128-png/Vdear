@@ -46,7 +46,7 @@
       items: [
         { href: '/', label: 'Tổng quan thị trường', icon: 'market', desc: 'Tâm lý · tín hiệu 4H · biến động 24h' },
         { href: '/#movers', label: 'Biến động 24h', icon: 'table', desc: 'Toàn bộ coin, lọc theo nhóm' },
-        { href: '/#etf', label: 'Dòng tiền ETF', icon: 'etf', desc: '12 tài sản · tiền vào/ra quỹ mỗi ngày' },
+        { href: '/#etf', label: 'Dòng tiền ETF', icon: 'etf', desc: 'BTC · ETH · SOL — tiền vào/ra quỹ mỗi ngày' },
         { href: 'bubbles.html', label: 'Bong bóng thị trường', icon: 'bubble', desc: 'Cả thị trường trong một khung' },
         { href: '/#futures-radar', label: 'Futures Radar', icon: 'radar', desc: 'RSI · S&R · Price Action · Entry/TP/SL' },
         { label: 'Spot Radar', icon: 'spot', desc: 'CVD · buy/sell · order book', soon: true },

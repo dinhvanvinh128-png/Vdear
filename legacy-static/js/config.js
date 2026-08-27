@@ -99,16 +99,7 @@ window.VDEAR_CONFIG = {
     assets: [
       { symbol: 'BTC', label: 'Bitcoin' },
       { symbol: 'ETH', label: 'Ethereum' },
-      { symbol: 'XRP', label: 'XRP' },
       { symbol: 'SOL', label: 'Solana' },
-      { symbol: 'DOGE', label: 'Dogecoin' },
-      { symbol: 'LINK', label: 'Chainlink' },
-      { symbol: 'AVAX', label: 'Avalanche' },
-      { symbol: 'HBAR', label: 'Hedera' },
-      { symbol: 'LTC', label: 'Litecoin' },
-      { symbol: 'DOT', label: 'Polkadot' },
-      { symbol: 'HYPE', label: 'Hyperliquid' },
-      { symbol: 'BNB', label: 'BNB' },
     ],
 
     // Bảng giá cổ phiếu quỹ. CHỈ liệt kê những quỹ mà mã niêm yết đã biết chắc.

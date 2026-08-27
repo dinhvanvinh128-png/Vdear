@@ -104,7 +104,7 @@
   /*
    * BẢNG CHÍNH: một dòng cho mỗi tài sản, số lấy thẳng từ /api/etf-flow.
    * Tài sản nào nguồn không trả về thì ghi rõ là không lấy được — cách này cho
-   * phép hiển thị đủ 12 tài sản mà không phải đoán mã niêm yết của từng quỹ.
+   * phép hiển thị đủ các tài sản mà không phải đoán mã niêm yết của từng quỹ.
    */
   function flowTable(flow) {
     const assets = CFG.etf.assets;
@@ -156,7 +156,7 @@
     const sup = flow.supported || [];
     const supported = sup.length || got.length;
     const miss = (flow.errors || []).length;
-    // Nguồn phủ cả 12; giữ nhánh này phòng khi nguồn rút bớt tài sản.
+    // Nguồn phủ hết danh sách; giữ nhánh này phòng khi nguồn rút bớt tài sản.
     const outside = assets.filter((a) => sup.length && sup.indexOf(a.symbol) < 0).map((a) => a.symbol);
     return `<div class="table-wrap"><table class="movers etf-table">
         <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Tài sản ròng</th><th>GT giao dịch</th><th>Quỹ đóng góp nhiều nhất</th><th>Ngày</th></tr></thead>
@@ -164,7 +164,7 @@
       </table></div>
       <p class="hint">Số liệu ngày <b>${flow.date || '—'}</b> · ${got.length}/${supported} tài sản đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
         ${flow.sameValue ? `<br><b>⚠ Mọi tài sản đang ra cùng một con số.</b> Gần như chắc chắn nguồn
-        không dùng tham số phân biệt tài sản, nên trả cùng một bản ghi cho cả 12 lần gọi. <b>Đừng tin
+        không dùng tham số phân biệt tài sản, nên trả cùng một bản ghi cho mọi lần gọi. <b>Đừng tin
         bảng này</b> cho tới khi sửa xong — gọi <code>/api/etf-flow?diag=1</code> để xem nguồn thực sự trả gì.` : ''}
         ${flow.mixedDates ? '<b>⚠ Có dòng lệch ngày</b> — nguồn chưa chốt xong ngày này cho tài sản đó; dòng lệch được đánh dấu ⚠ ở cột ngày. Đừng cộng cả bảng lại thành một con số.' : ''}
         Nguồn: <b>SoSoValue</b>.
