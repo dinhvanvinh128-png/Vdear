@@ -102,6 +102,93 @@
   }
 
   /*
+   * BIỂU ĐỒ KHỐI 3D (isometric) — dòng tiền từng quỹ.
+   *
+   * Phép chiếu thật, không dùng CSS 3D transform: transform vỡ khi phóng to,
+   * và không kiểm soát được thứ tự che khuất giữa các khối.
+   *
+   *   sx = (x - y) * CX          +x đi phải-xuống, +y đi trái-xuống
+   *   sy = (x + y) * CY - z      z đi THẲNG LÊN, nên cạnh đứng luôn thẳng đứng
+   *
+   * (x + y) lớn hơn = gần người xem hơn, nên mặt thấy được là mặt ở x lớn nhất
+   * (phải) và y lớn nhất (trái), cộng mặt trên.
+   *
+   * Xếp một hàng duy nhất: khoảng cách giữa hai khối đúng bằng bề rộng chiếu
+   * của một khối, nên KHÔNG khối nào che khối nào — hai hàng thì khối trước
+   * che khối sau và không đọc được nữa.
+   */
+  const ISO = { CX: 31, CY: 17, BW: 1, GAP: 1.27, MAXH: 185, MINH: 6 };
+
+  function isoChart(asset, d) {
+    const funds = d.funds || [];
+    if (!funds.length) return '';
+    const { CX, CY, BW, GAP, MAXH, MINH } = ISO;
+    const P = (x, y, z) => [(x - y) * CX, (x + y) * CY - z];
+    const pts = (a) => a.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    const max = funds.reduce((m, f) => Math.max(m, Math.abs(f.flow)), 0);
+
+    /*
+     * Đặt tâm khối thứ i tại (i·g, −i·g).
+     *
+     * Vì sy phụ thuộc (x + y), mà (x + y) của mọi khối đều như nhau, nên CẢ HÀNG
+     * NẰM TRÊN CÙNG MỘT ĐƯỜNG NGANG của màn hình. Xếp thẳng theo trục x (cách
+     * làm đầu tiên) khiến hàng tụt dần xuống phải, vì +x vừa sang phải vừa đi
+     * xuống — nhìn như cầu thang chứ không phải như ảnh mẫu.
+     *
+     * (x + y) bằng nhau cũng có nghĩa mọi khối cách người xem như nhau: không
+     * khối nào che khối nào, khỏi phải sắp thứ tự vẽ.
+     */
+    const at = (i) => [i * GAP, -i * GAP];
+    const half = BW;                       // nửa bề rộng chiếu, tính bằng đơn vị a
+    const aOf = (i) => (at(i)[0] - at(i)[1]);
+    const aMin = aOf(0) - half - 0.55, aMax = aOf(funds.length - 1) + half + 0.55;
+    const bTop = -0.5, bBot = 2 * BW + 0.5, slab = 13;
+
+    // Bệ đỡ vẽ thẳng bằng toạ độ màn hình: sx = a·CX, sy = b·CY.
+    const L = aMin * CX, R = aMax * CX, T = bTop * CY, B = bBot * CY;
+    const base = `<polygon class="iso-base top" points="${L.toFixed(1)},${T.toFixed(1)} ${R.toFixed(1)},${T.toFixed(1)} ${R.toFixed(1)},${B.toFixed(1)} ${L.toFixed(1)},${B.toFixed(1)}"/>
+      <polygon class="iso-base front" points="${L.toFixed(1)},${B.toFixed(1)} ${R.toFixed(1)},${B.toFixed(1)} ${R.toFixed(1)},${(B + slab).toFixed(1)} ${L.toFixed(1)},${(B + slab).toFixed(1)}"/>`;
+
+    let bars = '';
+    let top = Infinity;
+    funds.forEach((f, i) => {
+      const h = max > 0 ? Math.max(MINH, (Math.abs(f.flow) / max) * MAXH) : MINH;
+      const dir = f.flow === 0 ? 'flat' : f.flow > 0 ? 'up' : 'down';
+      const [cx, cy] = at(i);
+      const x0 = cx, x1 = cx + BW, y0 = cy, y1 = cy + BW;
+      const fTop = [P(x0, y0, h), P(x1, y0, h), P(x1, y1, h), P(x0, y1, h)];
+      const fRight = [P(x1, y0, h), P(x1, y1, h), P(x1, y1, 0), P(x1, y0, 0)];
+      const fLeft = [P(x0, y1, h), P(x1, y1, h), P(x1, y1, 0), P(x0, y1, 0)];
+      const cap = P(cx + BW / 2, cy + BW / 2, h);
+      top = Math.min(top, cap[1]);
+      // Giá trị ở trên đỉnh, mã quỹ ở dưới bệ — cả hai NẰM NGANG. Viết chữ lên
+      // mặt khối (rộng có 31px, lại nghiêng) thì gần như không đọc được.
+      bars += `<g class="iso-bar ${dir}">
+        <polygon class="iso-face left" points="${pts(fLeft)}"/>
+        <polygon class="iso-face right" points="${pts(fRight)}"/>
+        <polygon class="iso-face top" points="${pts(fTop)}"/>
+        <text class="iso-val" x="${cap[0].toFixed(1)}" y="${(cap[1] - 11).toFixed(1)}">${fmtFlow(f.flow)}</text>
+        <text class="iso-tick" x="${cap[0].toFixed(1)}" y="${(B + slab + 15).toFixed(1)}">${f.ticker}</text>
+      </g>`;
+    });
+
+    const padX = 16;
+    const vy = Math.min(top - 24, T) - 6;
+    const vh = (B + slab + 22) - vy;
+    const vb = [L - padX, vy, (R - L) + padX * 2, vh];
+    /*
+     * Hình vẽ để aria-hidden, kèm danh sách chỉ dành cho trình đọc màn hình.
+     * Nhồi 12 con số vào một aria-label thì nghe không ra gì.
+     */
+    return `<div class="iso-wrap"><svg class="iso" aria-hidden="true" role="presentation"
+        viewBox="${vb.map((n) => n.toFixed(1)).join(' ')}"
+        width="${Math.round(vb[2])}" height="${Math.round(vb[3])}">
+        ${base}${bars}
+      </svg></div>
+      <ul class="sr-only">${funds.map((f) => `<li>${f.ticker}: ${fmtFlow(f.flow)}</li>`).join('')}</ul>`;
+  }
+
+  /*
    * DÒNG CHI TIẾT: mở ra khi bấm vào tài sản. Liệt kê ĐỦ các quỹ kèm dòng tiền
    * của riêng từng quỹ — thứ dựng nên con số tổng ở dòng trên.
    *
@@ -111,16 +198,7 @@
    */
   function detailRow(id, asset, d) {
     const funds = d.funds || [];
-    const max = funds.reduce((m, f) => Math.max(m, Math.abs(f.flow)), 0);
-    const items = funds.map((f) => {
-      const w = max > 0 ? Math.max(1.5, (Math.abs(f.flow) / max) * 100) : 0;
-      const dir = f.flow === 0 ? 'flat' : f.flow > 0 ? 'up' : 'down';
-      return `<li class="efd-item">
-        <span class="efd-ticker">${f.ticker}</span>
-        <span class="efd-bar"><i class="efd-fill ${dir}" style="width:${w.toFixed(1)}%"></i></span>
-        <span class="efd-val ${dir}">${fmtFlow(f.flow)}</span>
-      </li>`;
-    }).join('');
+    const items = isoChart(asset, d);
     // Nguồn nói có bao nhiêu quỹ, mà chi tiết chỉ về được ít hơn -> nói ra.
     const short = d.fundCount && funds.length < d.fundCount
       ? `<p class="efd-note">Nguồn ghi ${d.fundCount} quỹ nhưng chỉ trả về chi tiết của ${funds.length}.</p>`
@@ -128,7 +206,7 @@
     return `<tr class="etf-detail" id="${id}" hidden><td colspan="6">
       <div class="efd">
         <h4>${asset.symbol} · dòng tiền từng quỹ <span class="muted small">ngày ${d.date || '—'}</span></h4>
-        <ul class="efd-list">${items}</ul>${short}
+        ${items}${short}
       </div></td></tr>`;
   }
 

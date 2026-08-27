@@ -318,10 +318,31 @@ Tài sản nào nguồn chưa chốt xong ngày ấy thì giữ ngày riêng nh�
 ### Bấm vào tài sản để xem từng quỹ
 
 Bảng chính chỉ đủ chỗ cho 3 quỹ đóng góp lớn nhất, nhưng API trả về **tất cả**.
-Bấm vào tên tài sản để mở dòng chi tiết: đủ các quỹ, mỗi quỹ một thanh dài theo
-**trị tuyệt đối** so với quỹ lớn nhất — quỹ rút tiền ra vẫn nhìn thấy được độ
-lớn thay vì tụt về 0. Chiều dài chỉ để so sánh tương đối; con số thật luôn ghi
-bên cạnh.
+Bấm vào tên tài sản để mở **biểu đồ khối 3D** (isometric): mỗi quỹ một cột,
+chiều cao theo **trị tuyệt đối** so với quỹ lớn nhất — quỹ rút tiền ra vẫn thấy
+được độ lớn thay vì tụt về 0, quỹ đứng im vẫn còn một tấm mỏng thay vì biến
+mất. Giá trị ghi trên đỉnh, mã quỹ ghi dưới bệ, **cả hai nằm ngang**.
+
+Vẽ bằng SVG với phép chiếu isometric thật, không dùng CSS 3D transform —
+transform vỡ khi phóng to và không kiểm soát được thứ tự che khuất:
+
+```
+sx = (x − y)·CX        sy = (x + y)·CY − z
+```
+
+Tâm cột thứ i đặt tại `(i·g, −i·g)`. Vì `sy` chỉ phụ thuộc `(x + y)`, mà tổng
+đó bằng nhau ở mọi cột, nên **cả hàng nằm trên cùng một đường ngang** — xếp
+thẳng theo trục x thì hàng tụt dần xuống phải như cầu thang, vì `+x` vừa sang
+phải vừa đi xuống. `(x + y)` bằng nhau cũng có nghĩa mọi cột cách người xem như
+nhau: không cột nào che cột nào, khỏi phải sắp thứ tự vẽ.
+
+Ba mặt ba độ sáng là toàn bộ thứ tạo ra cảm giác khối, nên nền sáng phải đổi cả
+ba (bạc hà nhạt trên nền trắng chỉ đạt 2.12:1, gần như tàng hình) mà vẫn giữ
+đúng thứ tự trên > phải > trái. Mặt trên đạt ≥3:1 so với nền panel ở cả hai nền,
+và mọi mặt có viền mảnh để đường bao của khối luôn đọc được.
+
+Hình vẽ `aria-hidden`; con số đến với trình đọc màn hình qua một danh sách
+`.sr-only` — nhồi 12 con số vào một `aria-label` thì nghe không ra gì.
 
 Nút là `<button>` thật với `aria-expanded`/`aria-controls`, nên bàn phím và trình
 đọc màn hình dùng được. Tài sản không có dữ liệu quỹ thì **không dựng nút** —

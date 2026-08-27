@@ -856,23 +856,46 @@ tr.etf-main.open{background:var(--panel-2)}
 .efd h4 .muted{text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px}
 /* Bó lại: thanh bar kéo ngang cả bảng thì mắt phải đi quá xa mới so được
    hai dòng với nhau. */
-.efd-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-width:720px}
-.efd-item{display:grid;grid-template-columns:64px 1fr 104px;align-items:center;gap:10px}
-.efd-ticker{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700}
-.efd-bar{height:8px;border-radius:4px;background:var(--panel);border:1px solid var(--line);
-  overflow:hidden}
-.efd-fill{display:block;height:100%;border-radius:3px}
-.efd-fill.up{background:#3E8F62} .efd-fill.down{background:#C6483F}
-.efd-fill.flat{background:var(--line-2)}
-.efd-val{text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;
-  font-variant-numeric:tabular-nums}
-.efd-val.up{color:var(--up)} .efd-val.down{color:var(--down)} .efd-val.flat{color:var(--muted-2)}
-/* Nền sáng: --up chỉ đạt 2.35:1 trên panel sáng. Cặp đậm hơn: 5.87:1 / 6.14:1. */
-:root[data-theme="light"] .efd-val.up{color:#1F6B45}
-:root[data-theme="light"] .efd-val.down{color:#9E3A33}
-.efd-note{margin:10px 0 0;font-size:12px;color:var(--muted-2)}
-@media (max-width:560px){
-  .efd-item{grid-template-columns:56px 1fr 88px;gap:8px}
-  .efd-val{font-size:11.5px}
-}
+/* ---- Biểu đồ khối 3D (isometric) ---- */
+.iso-wrap{overflow-x:auto;overflow-y:hidden;margin:2px 0 4px;padding-bottom:4px}
+.iso{display:block;max-width:none}
+
+/* Ba mặt, ba độ sáng — đó là toàn bộ thứ tạo ra cảm giác khối. Mặt trên sáng
+   nhất (hứng sáng), mặt phải vừa, mặt trái tối nhất. */
+/* Viền mảnh quanh mọi mặt: giữ được đường bao của khối kể cả khi màu mặt và
+   màu nền gần nhau — nền sáng là chỗ hay bị nhất. */
+.iso-face{stroke:var(--iso-edge);stroke-width:.75;stroke-linejoin:round}
+.iso{--iso-edge:rgba(0,0,0,.28)}
+:root[data-theme="light"] .iso{--iso-edge:rgba(20,40,30,.35)}
+.iso-face.top{fill:var(--iso-top)}
+.iso-face.right{fill:var(--iso-right)}
+.iso-face.left{fill:var(--iso-left)}
+.iso-bar.up{--iso-top:#B6F0D2;--iso-right:#79CFA1;--iso-left:#4E9E75}
+.iso-bar.down{--iso-top:#F3B8B2;--iso-right:#D9756C;--iso-left:#A44A43}
+.iso-bar.flat{--iso-top:#9AA0A6;--iso-right:#70767C;--iso-left:#4C5155}
+/* Nền sáng: xanh bạc hà nhạt trên panel sáng gần như tàng hình. Đẩy cả ba mặt
+   đậm xuống, vẫn giữ đúng thứ tự sáng-tối để khối không bẹt. */
+:root[data-theme="light"] .iso-bar.up{--iso-top:#3E9C6C;--iso-right:#33835A;--iso-left:#276147}
+:root[data-theme="light"] .iso-bar.down{--iso-top:#D0726A;--iso-right:#AE4F47;--iso-left:#853832}
+:root[data-theme="light"] .iso-bar.flat{--iso-top:#8A9096;--iso-right:#6E747A;--iso-left:#53585D}
+
+.iso-base.top{fill:var(--iso-base-top)}
+.iso-base.front{fill:var(--iso-base-front)}
+.iso{--iso-base-top:rgba(255,255,255,.075);--iso-base-front:rgba(255,255,255,.035)}
+:root[data-theme="light"] .iso{--iso-base-top:rgba(30,24,8,.09);--iso-base-front:rgba(30,24,8,.05)}
+
+.iso-val{fill:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;
+  font-weight:700;text-anchor:middle}
+/* Mã quỹ nằm TRÊN mặt khối, nên phải tương phản với mặt khối chứ không phải
+   với nền trang — nền sáng thì mặt khối đậm nên chữ phải sáng, và ngược lại. */
+/* Mã quỹ nằm DƯỚI bệ, trên nền trang — nên dùng màu chữ phụ của trang. Viết
+   lên mặt khối (rộng 31px, lại nghiêng) thì gần như không đọc được. */
+.iso-tick{fill:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10.5px;
+  font-weight:700;letter-spacing:.3px;text-anchor:middle}
+
+/* Chỉ dành cho trình đọc màn hình: hình vẽ đã aria-hidden, con số phải đến
+   được với người dùng bàn phím/đọc màn hình bằng đường khác. Dùng clip-path
+   chứ không display:none — display:none thì trình đọc cũng bỏ qua luôn. */
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 :root[data-theme="light"] .etf-table td.etf-off{color:#9E3A33}
