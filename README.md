@@ -313,6 +313,22 @@ ngày cho cả bảng**: ngày mà nhiều tài sản có nhất (hoà thì lấ
 Tài sản nào nguồn chưa chốt xong ngày ấy thì giữ ngày riêng nhưng **bị đánh dấu
 ⚠** ở cột ngày, và bảng hiện cảnh báo `mixedDates`.
 
+### Làm mới
+
+Dữ liệu này đổi **mỗi ngày một lần**, sau khi phiên Mỹ đóng cửa — nên không cần
+nhịp 30s như bảng coin. Nhưng không làm mới lần nào thì tab mở qua đêm sẽ hiện
+số hôm qua mà không báo gì; đó mới là vấn đề thật.
+
+Bảng ETF tự lấy lại **mỗi 15 phút** khi tab đang hiện, và **mỗi khi bạn quay lại
+tab** sau hơn 5 phút — trình duyệt hay bóp nghẹt `setInterval` ở tab ẩn, nên chỉ
+dựa vào nhịp định kỳ là không đủ. Hàm server đặt `s-maxage=300` nên phần lớn lần
+gọi dừng ở CDN, không chạm tới nhà cung cấp. Chân bảng ghi **giờ lấy số**.
+
+Lấy lại mà hỏng thì **giữ nguyên bảng đang có**. `fetchFlow` trả `null` khi hàm
+server lỗi, và vẽ lại với `null` sẽ thay bảng đúng bằng câu "chưa cấu hình
+nguồn" — vừa xoá mất dữ liệu người ta đang đọc, vừa nói sai, vì key vẫn cấu hình
+đủ.
+
 ### Số 0 không phải là chỗ trống
 
 Ngày không quỹ nào tạo/huỷ chứng chỉ thì dòng tiền **đúng bằng 0** — đó là dữ

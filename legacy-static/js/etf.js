@@ -204,22 +204,75 @@
       + (stamp ? `<p class="hint">Báo giá tính đến <b>${stamp}</b> (giờ nguồn).</p>` : '');
   }
 
+  function stamp(at) {
+    const t = new Date(at);
+    const two = (n) => String(n).padStart(2, '0');
+    return `${two(t.getHours())}:${two(t.getMinutes())}`;
+  }
+
   function render(mountId, payload) {
     const el = document.getElementById(mountId);
     if (!el) return;
+    // Nói rõ số này lấy lúc mấy giờ. Dữ liệu ngày mà không ghi giờ lấy thì
+    // người xem không biết đang nhìn hôm nay hay hôm qua.
+    const foot = `<p class="hint etf-stamp">Lấy lúc <b>${stamp(payload.at)}</b> ·
+      nguồn công bố mỗi ngày một lần sau khi phiên Mỹ đóng cửa · trang tự lấy lại mỗi
+      ${Math.round(REFRESH_MS / 60000)} phút và mỗi khi bạn quay lại tab.</p>`;
     el.innerHTML = `<div class="etf-group"><h3>Dòng tiền ròng theo tài sản</h3>${flowTable(payload.flow)}</div>
-      <div class="etf-group"><h3>Giá cổ phiếu quỹ</h3>${quoteTable(payload.rows)}</div>`;
+      <div class="etf-group"><h3>Giá cổ phiếu quỹ</h3>${quoteTable(payload.rows)}</div>${foot}`;
+  }
+
+  /*
+   * Dữ liệu này đổi mỗi ngày một lần, nên không cần nhịp 30s như bảng coin.
+   * Nhưng KHÔNG làm mới lần nào thì tab mở qua đêm sẽ hiện số hôm qua mà không
+   * báo gì — đó mới là vấn đề. 15 phút là đủ, và hàm server đã cache ở CDN 5
+   * phút nên phần lớn lần gọi không chạm tới nhà cung cấp.
+   */
+  const REFRESH_MS = 15 * 60000;
+  const STALE_MS = 5 * 60000;      // quay lại tab sau ngần này thì lấy lại
+  let lastAt = 0;
+  let hadFlow = false;             // đã từng có bảng dòng tiền tử tế chưa
+  let busy = false;
+
+  async function refresh(mountId) {
+    if (busy) return;
+    busy = true;
+    try {
+      const payload = await load();
+      /*
+       * fetchFlow KHÔNG ném lỗi khi hàm server hỏng — nó trả null. Vẽ lại với
+       * null sẽ thay bảng đang đúng bằng câu "chưa cấu hình nguồn", vừa xoá mất
+       * dữ liệu người ta đang đọc, vừa nói sai: key vẫn cấu hình đủ, chỉ là lần
+       * gọi này hỏng. Đang có số tử tế mà lấy lại không ra thì giữ nguyên.
+       */
+      if (!payload.flow && hadFlow) return;
+      lastAt = Date.now();
+      hadFlow = !!payload.flow;
+      render(mountId, { ...payload, at: lastAt });
+    } catch (e) {
+      // Hỏng hẳn cũng giữ nguyên bảng đang có, vì lý do trên.
+    } finally { busy = false; }
   }
 
   async function init(mountId) {
     const el = document.getElementById(mountId);
     if (!el) return;
     el.innerHTML = '<p class="hint">Đang tải báo giá ETF…</p>';
-    try { render(mountId, await load()); }
-    catch (e) {
+    try {
+      const payload = await load();
+      lastAt = Date.now();
+      hadFlow = !!payload.flow;
+      render(mountId, { ...payload, at: lastAt });
+    } catch (e) {
       el.innerHTML = '<p class="hint">Không lấy được báo giá ETF. Trang này không hiển thị số liệu ước lượng.</p>';
     }
+    setInterval(() => { if (!document.hidden) refresh(mountId); }, REFRESH_MS);
+    // Quan trọng hơn cả nhịp định kỳ: người ta mở lại tab hôm sau. Trình duyệt
+    // hay bóp nghẹt setInterval ở tab ẩn, nên phải bắt cả lúc tab hiện lại.
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && Date.now() - lastAt > STALE_MS) refresh(mountId);
+    });
   }
 
-  window.VdearETF = { init, load };
+  window.VdearETF = { init, load, refresh };
 })();

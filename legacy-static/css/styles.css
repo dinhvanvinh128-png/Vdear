@@ -837,4 +837,5 @@ body.nd-locked{overflow:hidden}
 .etf-table tr.etf-na td{opacity:.7}
 /* Dòng có ngày khác ngày chung của bảng. */
 .etf-table td.etf-off{color:var(--down)}
+.etf-stamp{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
 :root[data-theme="light"] .etf-table td.etf-off{color:#9E3A33}
