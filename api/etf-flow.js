@@ -177,31 +177,29 @@ async function call(url, opts) {
  *   { timestamp, flow_usd, price_usd, etf_flows: [{ etf_ticker, flow_usd }] }
  * Không tin thứ tự mảng — lấy phần tử có timestamp lớn nhất.
  */
-function cgLatest(rows) {
-  if (!Array.isArray(rows) || !rows.length) return null;
-  let best = null;
+function cgParse(rows) {
+  if (!Array.isArray(rows)) return [];
+  const out = [];
   for (const r of rows) {
     const t = num(r && r.timestamp);
-    if (t == null) continue;
-    if (!best || t > best.t) best = { t, row: r };
+    const flow = num(r && r.flow_usd);
+    if (t == null || flow == null) continue;      // không đọc được -> bỏ, không suy đoán
+    const funds = Array.isArray(r.etf_flows)
+      ? r.etf_flows
+          .map((f) => ({ ticker: String((f && f.etf_ticker) || '').toUpperCase(), flow: num(f && f.flow_usd) }))
+          .filter((f) => f.ticker && f.flow != null)
+          .sort((a, b) => Math.abs(b.flow) - Math.abs(a.flow))
+      : [];
+    out.push({
+      netInflow: flow,
+      price: num(r.price_usd),
+      date: new Date(t > 1e12 ? t : t * 1000).toISOString().slice(0, 10),
+      funds,
+      source: 'coinglass',
+    });
   }
-  if (!best) return null;
-  const r = best.row;
-  const flow = num(r.flow_usd);
-  if (flow == null) return null;                 // không đọc được số -> coi như không có
-  const funds = Array.isArray(r.etf_flows)
-    ? r.etf_flows
-        .map((f) => ({ ticker: String((f && f.etf_ticker) || '').toUpperCase(), flow: num(f && f.flow_usd) }))
-        .filter((f) => f.ticker && f.flow != null)
-        .sort((a, b) => Math.abs(b.flow) - Math.abs(a.flow))
-    : [];
-  return {
-    netInflow: flow,
-    price: num(r.price_usd),
-    date: new Date(best.t).toISOString().slice(0, 10),
-    funds,
-    source: 'coinglass',
-  };
+  // Mới nhất trước. Không tin thứ tự mảng của nhà cung cấp.
+  return out.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
 async function fromCoinGlass(asset, key) {
@@ -216,9 +214,9 @@ async function fromCoinGlass(asset, key) {
   if (body && body.code != null && String(body.code) !== '0') {
     return { ok: false, message: scrub(body.msg || `code ${body.code}`, [key]) };
   }
-  const data = cgLatest(body && body.data);
-  if (!data) return { ok: false, message: 'Không có bản ghi đọc được' };
-  return { ok: true, data };
+  const history = cgParse(body && body.data);
+  if (!history.length) return { ok: false, message: 'Không có bản ghi đọc được' };
+  return { ok: true, history };
 }
 
 /* ------------------------------ SoSoValue ------------------------------ */
@@ -331,34 +329,67 @@ module.exports = async function handler(req, res) {
   const types = typeMap();
   const supported = ASSETS.filter((a) => (cgKey && a.cg) || ssKey).map((a) => a.symbol);
 
+  // Vòng 1: hỏi cả hai nguồn. CoinGlass trả về CẢ LỊCH SỬ, chưa chọn ngày.
   const results = await pool(ASSETS, async (a) => {
     const errs = [];
-    // CoinGlass trước: đây là nguồn đã đối chiếu tài liệu.
+    let cg = null, ss = null;
     if (cgKey && a.cg) {
       const r = await fromCoinGlass(a, cgKey);
-      if (r.ok) return { symbol: a.symbol, data: r.data, errs };
-      errs.push(`${a.symbol} (CoinGlass): ${r.message}`);
+      if (r.ok) cg = r.history;
+      else errs.push(`${a.symbol} (CoinGlass): ${r.message}`);
     }
-    if (ssKey) {
+    if (ssKey && !cg) {
       const r = await fromSoSoValue(a, ssKey, types);
-      if (r.ok) return { symbol: a.symbol, data: r.data, errs };
-      errs.push(`${a.symbol} (SoSoValue): ${r.message}`);
+      if (r.ok) ss = r.data;
+      else errs.push(`${a.symbol} (SoSoValue): ${r.message}`);
     }
-    return { symbol: a.symbol, data: null, errs };
+    return { symbol: a.symbol, cg, ss, errs };
   }, 4);
+
+  /*
+   * Vòng 2: CHỌN NGÀY CHUNG.
+   *
+   * Hai nguồn công bố lệch nhau: một bên đã chốt hôm qua, bên kia đã có hôm
+   * nay. Cứ mỗi tài sản lấy bản ghi mới nhất của riêng nó thì bảng trộn hai
+   * ngày khác nhau mà không ai biết — cộng lại ra một con số không tồn tại
+   * trong thực tế. Nên chốt MỘT ngày cho cả bảng: ngày mới nhất mà nhiều tài
+   * sản có nhất, rồi CoinGlass lấy đúng bản ghi của ngày đó trong lịch sử.
+   */
+  const tally = new Map();
+  for (const r of results) {
+    const d = r.cg ? r.cg[0].date : r.ss ? r.ss.date : null;
+    if (d) tally.set(d, (tally.get(d) || 0) + 1);
+  }
+  let target = null;
+  for (const [d, n] of tally) {
+    const best = target ? tally.get(target) : -1;
+    if (n > best || (n === best && d > target)) target = d;
+  }
 
   const data = {};
   const errors = [];
+  const dates = new Set();
   for (const r of results) {
-    if (r.data) data[r.symbol] = r.data;
-    else errors.push(...r.errs);
+    let picked = null;
+    if (r.cg) picked = r.cg.find((row) => row.date === target) || r.cg[0];
+    else if (r.ss) picked = r.ss;
+    if (!picked) { errors.push(...r.errs); continue; }
+    // Dòng nào không phải ngày chung thì đánh dấu, để giao diện nói ra chứ
+    // không im lặng trộn lẫn.
+    if (picked.date && picked.date !== target) picked = { ...picked, offDate: true };
+    if (picked.date) dates.add(picked.date);
+    data[r.symbol] = picked;
+    errors.push(...r.errs);
   }
+
   return json(res, 200, {
     configured: true,
     available: Object.keys(data).length > 0,
     sources,
     supported,
     generatedAt: new Date().toISOString(),
+    date: target,
+    mixedDates: dates.size > 1,
     assets: data,
     errors: errors.slice(0, 24),
   });

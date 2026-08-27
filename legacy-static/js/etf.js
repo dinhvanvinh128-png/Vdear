@@ -17,11 +17,17 @@
 (function () {
   const CFG = window.VDEAR_CONFIG;
 
+  /*
+   * n phải là số dương đã lấy trị tuyệt đối. SỐ 0 LÀ MỘT GIÁ TRỊ THẬT — ngày
+   * không có quỹ nào tạo/huỷ chứng chỉ thì dòng tiền đúng bằng 0. Trả '—' cho
+   * số 0 (lỗi cũ) là nói dối: người xem đọc thành "không có dữ liệu".
+   */
   function fmtUsd(n) {
-    if (!(n > 0)) return '—';
+    if (!Number.isFinite(n)) return '—';
     if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
     if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
     if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+    if (n === 0) return '$0';
     return '$' + n.toFixed(2);
   }
 
@@ -90,9 +96,9 @@
   }
 
   function fmtFlow(v) {
-    if (v == null) return '—';
-    const sign = v > 0 ? '+' : v < 0 ? '−' : '';
-    return sign + fmtUsd(Math.abs(v));
+    if (v == null || !Number.isFinite(v)) return '—';   // thiếu dữ liệu
+    if (v === 0) return '$0';                           // có dữ liệu, và bằng 0
+    return (v > 0 ? '+' : '−') + fmtUsd(Math.abs(v));
   }
 
   /*
@@ -126,15 +132,16 @@
           <td colspan="3" class="muted small">${supported ? 'Lần gọi này không lấy được' : 'Nguồn không công bố'}</td></tr>`;
       }
       const net = d.netInflow;
-      const cls = net == null ? '' : net >= 0 ? 'up' : 'down';
+      // 0 không phải tiền vào cũng không phải tiền ra -> chip trung tính.
+      const cls = net == null || net === 0 ? '' : net > 0 ? 'up' : 'down';
       const top = (d.funds || []).slice(0, 3)
-        .map((f) => `<span class="etf-fund ${f.flow >= 0 ? 'up' : 'down'}">${f.ticker} ${fmtFlow(f.flow)}</span>`)
+        .map((f) => `<span class="etf-fund ${f.flow === 0 ? '' : f.flow > 0 ? 'up' : 'down'}">${f.ticker} ${fmtFlow(f.flow)}</span>`)
         .join('');
       return `<tr>
         <td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
         <td><span class="mv-pill ${cls}">${fmtFlow(net)}</span></td>
         <td class="etf-funds">${top || '<span class="muted small">—</span>'}</td>
-        <td class="muted small">${d.date || '—'}${d.source ? `<span class="etf-src">${d.source}</span>` : ''}</td>
+        <td class="muted small${d.offDate ? ' etf-off' : ''}">${d.date || '—'}${d.offDate ? ' ⚠' : ''}${d.source ? `<span class="etf-src">${d.source}</span>` : ''}</td>
       </tr>`;
     }).join('');
     const sup = flow.supported || [];
@@ -145,7 +152,8 @@
         <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Quỹ đóng góp nhiều nhất</th><th>Ngày</th></tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
-      <p class="hint">${got.length}/${supported} tài sản đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
+      <p class="hint">Số liệu ngày <b>${flow.date || '—'}</b> · ${got.length}/${supported} tài sản đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
+        ${flow.mixedDates ? '<b>⚠ Có dòng lệch ngày</b> — nguồn chưa chốt xong ngày này cho tài sản đó; dòng lệch được đánh dấu ⚠ ở cột ngày. Đừng cộng cả bảng lại thành một con số.' : ''}
         Nguồn đang bật: <b>${(flow.sources || []).join(' + ') || '—'}</b>. Cột ngày ghi rõ mỗi con số đến từ đâu.
         ${outside.length ? `<b>Nguồn không công bố</b> ETF của ${outside.join(', ')} — đó là giới hạn của
         nguồn đang bật, không phải đang chờ dữ liệu.` : ''}</p>`;

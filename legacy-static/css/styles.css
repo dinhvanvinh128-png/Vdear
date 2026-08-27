@@ -835,3 +835,6 @@ body.nd-locked{overflow:hidden}
    đối chiếu tài liệu, SoSoValue thì chưa) nên phải nói rõ số nào của ai. */
 .etf-src{display:block;margin-top:2px;font-size:10px;letter-spacing:.4px;text-transform:uppercase;
   color:var(--muted-2);font-family:'JetBrains Mono',monospace}
+/* Dòng có ngày khác ngày chung của bảng. */
+.etf-table td.etf-off{color:var(--down)}
+:root[data-theme="light"] .etf-table td.etf-off{color:#9E3A33}

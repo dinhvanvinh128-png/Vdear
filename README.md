@@ -221,6 +221,23 @@ Không nguồn miễn phí nào công bố số này.
 rồi mới rơi xuống SoSoValue, và **cột ngày trong bảng ghi rõ mỗi con số đến từ
 nguồn nào** — hai nguồn không cùng độ tin cậy thì không được trộn lẫn im lặng.
 
+### Một ngày cho cả bảng
+
+Hai nguồn chốt số lệch nhau: một bên đã có hôm nay, bên kia mới đến hôm qua.
+Cứ mỗi tài sản lấy bản ghi mới nhất của riêng nó thì bảng trộn hai ngày mà
+không ai biết — cộng lại ra một con số không tồn tại trong thực tế.
+
+Nên hàm chốt **một ngày cho cả bảng**: ngày mà nhiều tài sản có nhất (hoà thì
+lấy ngày mới hơn). CoinGlass trả về cả lịch sử nên nó lần ngược lại đúng bản
+ghi của ngày đó. Tài sản nào nguồn chưa chốt xong ngày ấy thì giữ ngày riêng
+nhưng **bị đánh dấu ⚠** ở cột ngày, và bảng hiện cảnh báo `mixedDates`.
+
+### Số 0 không phải là chỗ trống
+
+Ngày không quỹ nào tạo/huỷ chứng chỉ thì dòng tiền **đúng bằng 0** — đó là dữ
+liệu, không phải thiếu dữ liệu. `$0` hiện ra với chip trung tính (không xanh
+không đỏ); chỉ khi thật sự không đọc được mới hiện `—`.
+
 Cột "quỹ đóng góp nhiều nhất" chỉ có ở các dòng CoinGlass, vì mã quỹ lấy thẳng
 từ API. Không có thì để `—`, không tự chế mã chứng khoán.
 
