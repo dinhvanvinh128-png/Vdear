@@ -229,15 +229,23 @@ từ API. Không có thì để `—`, không tự chế mã chứng khoán.
 `m.sosovalue.com/...` là **giao diện web, không phải API** — đọc dữ liệu từ đó
 là scrape, vi phạm điều khoản và bị CORS chặn. Hàm này chỉ gọi API chính thức.
 
-Nhưng đường dẫn và tên trường của API đó **chưa kiểm chứng được từ môi trường
-phát triển** (mọi host bên ngoài đều bị chặn). Nên:
+Đường dẫn thì **đã xác nhận là đúng** — API trả về HTTP 200 kèm dữ liệu, với
+các trường `totalNetAssets`, `totalNetAssetsPercentage`, `dailyNetInflow`,
+`cumNetInflow`, `dailyTotalValueTraded`, `totalTokenHoldings`, `list`. Đó là
+tên trường thật, đọc từ phản hồi thật, không phải phỏng đoán.
+
+Điều còn lại chưa chắc là **kiểu của từng giá trị** (số trần, chuỗi số, hay
+object bọc `{value, date}`). Bộ đọc chịu được cả ba, và `list` được dùng để
+dựng cột "quỹ đóng góp nhiều nhất". Cơ chế tự chẩn đoán vẫn giữ nguyên:
 
 * Toàn bộ đường dẫn / method / tên header / mã tài sản đều **ghi đè được bằng
   biến môi trường** (`SOSOVALUE_ETF_PATH`, `SOSOVALUE_ETF_METHOD`,
   `SOSOVALUE_KEY_HEADER`, `SOSOVALUE_TYPE_MAP`).
 * Gọi hỏng thì `errors[]` ghi **đúng thứ đã gọi** — `HTTP 404 · POST /openapi/... type=us-doge-spot`.
-* Dạng dữ liệu không khớp thì báo **các tên trường nó thấy được**, ví dụ
-  `Không nhận ra dạng dữ liệu (trường thấy: id, name, updateTime)`.
+* Dạng dữ liệu không khớp thì báo **từng trường ứng viên kèm kiểu của nó**, ví
+  dụ `dailyNetInflow=null · list=mảng[0]` hoặc
+  `dailyNetInflow={amount,asOf}`. Biết kiểu thì sửa dứt điểm, chứ báo mỗi tên
+  trường thì vẫn phải đoán thêm một vòng.
 
 Nghĩa là sai thì sửa bằng env var, không phải sửa code rồi deploy lại. Và
 không có nhánh nào đoán ra một con số khi không đọc được dữ liệu.

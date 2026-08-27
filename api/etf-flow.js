@@ -47,6 +47,13 @@ const SS_PATH = process.env.SOSOVALUE_ETF_PATH || '/openapi/v2/etf/currentEtfDat
 const SS_METHOD = (process.env.SOSOVALUE_ETF_METHOD || 'POST').toUpperCase();
 const SS_KEY_HEADER = process.env.SOSOVALUE_KEY_HEADER || 'x-soso-api-key';
 
+/*
+ * Tên trường dòng tiền ròng. dailyNetInflow là tên SoSoValue thực sự dùng —
+ * xác nhận từ phản hồi thật của API chứ không phải phỏng đoán; các tên còn lại
+ * giữ lại để chịu được thay đổi nhỏ.
+ */
+const NET_KEYS = ['dailyNetInflow', 'netInflow', 'daily_net_inflow', 'flow_usd', 'netFlow', 'value'];
+
 // 12 tài sản người dùng yêu cầu. cg = đoạn đường dẫn CoinGlass (null = nguồn
 // này không có). ss = mã loại SoSoValue, theo khuôn us-<symbol>-spot; sai thì
 // sửa bằng SOSOVALUE_TYPE_MAP chứ không phải sửa code.
@@ -78,18 +85,61 @@ function num(x) {
   return Number.isFinite(n) ? n : null;
 }
 
-/* Lấy trường đầu tiên đọc được trong danh sách tên có thể có. */
-function pick(obj, names) {
-  for (const k of names) {
-    if (obj && obj[k] != null) { const v = num(obj[k]); if (v != null) return v; }
+/*
+ * SoSoValue KHÔNG trả số trần: dailyNetInflow & co. là object bọc quanh giá
+ * trị. Nên đọc cả hai kiểu — số/chuỗi số thì lấy thẳng, object thì lần vào
+ * trường giá trị bên trong. Vẫn không tìm thấy -> null, KHÔNG suy ra số.
+ */
+function deepNum(v) {
+  if (v == null) return null;
+  const direct = num(v);
+  if (direct != null) return direct;
+  if (typeof v === 'object' && !Array.isArray(v)) {
+    for (const k of ['value', 'val', 'amount', 'num', 'total', 'usd', 'usdValue', 'data']) {
+      const n = num(v[k]);
+      if (n != null) return n;
+    }
   }
   return null;
 }
 
-/* Ngày: chấp nhận chuỗi ISO/yyyy-mm-dd hoặc epoch ms/giây. */
+/* Lấy trường đầu tiên đọc được trong danh sách tên có thể có. */
+function pick(obj, names) {
+  for (const k of names) {
+    if (obj && obj[k] != null) { const v = deepNum(obj[k]); if (v != null) return v; }
+  }
+  return null;
+}
+
+/*
+ * Khi vẫn không đọc được: mô tả TỪNG trường ứng viên đã thấy — null, mảng, hay
+ * object với những khoá nào. Chỉ tên khoá và kiểu, không kèm giá trị. Đủ để
+ * sửa dứt điểm ở lần sau thay vì đoán thêm một vòng nữa.
+ */
+function fieldNote(d, names) {
+  const out = [];
+  for (const k of names) {
+    if (!d || !(k in d)) continue;
+    const v = d[k];
+    if (v === null) out.push(`${k}=null`);
+    else if (Array.isArray(v)) out.push(`${k}=mảng[${v.length}]${v[0] && typeof v[0] === 'object' ? '{' + Object.keys(v[0]).slice(0, 8).join(',') + '}' : ''}`);
+    else if (typeof v === 'object') out.push(`${k}={${Object.keys(v).slice(0, 8).join(',')}}`);
+    else out.push(`${k}=${typeof v}`);
+  }
+  // Không có tên nào khớp -> liệt kê các khoá thật sự có, nếu không thông báo
+  // lỗi rỗng thì lần sau vẫn phải đoán tiếp.
+  if (!out.length) return d ? 'không có trường nào khớp; khoá thấy được: ' + Object.keys(d).slice(0, 12).join(', ') : '';
+  return out.join(' · ');
+}
+
+/* Ngày: chấp nhận chuỗi ISO/yyyy-mm-dd hoặc epoch ms/giây, trần hoặc lồng. */
 function pickDate(obj, names) {
   for (const k of names) {
-    const v = obj && obj[k];
+    let v = obj && obj[k];
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      // Object bọc: ngày thường nằm cạnh giá trị bên trong.
+      v = v.date != null ? v.date : v.lastUpdateDate != null ? v.lastUpdateDate : v.time;
+    }
     if (v == null) continue;
     if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
     const n = num(v);
@@ -183,9 +233,11 @@ function ssRead(payload) {
     if (d && typeof d === 'object' && d[k] && typeof d[k] === 'object') d = d[k];
   }
   if (Array.isArray(d)) d = d[0];
-  if (!d || typeof d !== 'object') return { ok: false, keys: [] };
-  const netInflow = pick(d, ['dailyNetInflow', 'netInflow', 'daily_net_inflow', 'flow_usd', 'netFlow']);
-  if (netInflow == null) return { ok: false, keys: Object.keys(d).slice(0, 12) };
+  if (!d || typeof d !== 'object') return { ok: false, note: 'phản hồi không phải object' };
+
+  const netInflow = pick(d, NET_KEYS);
+  if (netInflow == null) return { ok: false, note: fieldNote(d, NET_KEYS.concat(['list'])) };
+
   return {
     ok: true,
     data: {
@@ -193,11 +245,32 @@ function ssRead(payload) {
       cumNetInflow: pick(d, ['cumNetInflow', 'cumulativeNetInflow', 'totalNetInflow']),
       totalNetAssets: pick(d, ['totalNetAssets', 'netAssets', 'totalNetAsset']),
       price: pick(d, ['price', 'price_usd', 'lastPrice']),
-      date: pickDate(d, ['lastUpdateDate', 'date', 'tradingDay', 'timestamp', 'updateTime']),
-      funds: [],                 // nguồn này chưa xác minh có tách theo quỹ
+      date: pickDate(d, ['lastUpdateDate', 'date', 'tradingDay', 'timestamp', 'updateTime'].concat(NET_KEYS)),
+      funds: ssFunds(d.list),
       source: 'sosovalue',
     },
   };
+}
+
+/*
+ * `list` là mảng theo từng quỹ. Đọc được mã + dòng tiền thì dựng cột "quỹ đóng
+ * góp nhiều nhất" như bên CoinGlass; không đọc được thì trả mảng rỗng và cột
+ * đó để trống, chứ không bịa mã chứng khoán.
+ */
+function ssFunds(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((f) => {
+      if (!f || typeof f !== 'object') return null;
+      let ticker = '';
+      for (const k of ['ticker', 'etf_ticker', 'etfTicker', 'symbol', 'code', 'tickerName']) {
+        if (typeof f[k] === 'string' && f[k].trim()) { ticker = f[k].trim().toUpperCase(); break; }
+      }
+      const flow = pick(f, NET_KEYS);
+      return ticker && flow != null ? { ticker, flow } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => Math.abs(b.flow) - Math.abs(a.flow));
 }
 
 async function fromSoSoValue(asset, key, types) {
@@ -222,10 +295,7 @@ async function fromSoSoValue(asset, key, types) {
   }
   const read = ssRead(body);
   if (!read.ok) {
-    return {
-      ok: false,
-      message: `Không nhận ra dạng dữ liệu${read.keys.length ? ' (trường thấy: ' + read.keys.join(', ') + ')' : ''}`,
-    };
+    return { ok: false, message: `Không đọc được dòng tiền${read.note ? ' — ' + read.note : ''}` };
   }
   return { ok: true, data: read.data };
 }
