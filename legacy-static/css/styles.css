@@ -838,4 +838,41 @@ body.nd-locked{overflow:hidden}
 /* Dòng có ngày khác ngày chung của bảng. */
 .etf-table td.etf-off{color:var(--down)}
 .etf-stamp{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
+
+/* ---- Bấm vào tài sản để mở dòng tiền từng quỹ ---- */
+.etf-toggle{display:flex;align-items:flex-start;gap:7px;width:100%;padding:0;border:0;
+  background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.etf-toggle:hover .etf-caret{color:var(--accent)}
+.etf-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.etf-caret{flex:none;margin-top:2px;color:var(--muted-2);font-size:11px;line-height:1.5;
+  transition:transform .16s ease}
+tr.etf-main.open .etf-caret{transform:rotate(90deg)}
+tr.etf-main.has-detail:hover{background:var(--panel-2)}
+tr.etf-main.open{background:var(--panel-2)}
+
+.efd{padding:12px 4px 16px}
+.efd h4{margin:0 0 10px;font-size:12px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--muted)}
+.efd h4 .muted{text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px}
+/* Bó lại: thanh bar kéo ngang cả bảng thì mắt phải đi quá xa mới so được
+   hai dòng với nhau. */
+.efd-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-width:720px}
+.efd-item{display:grid;grid-template-columns:64px 1fr 104px;align-items:center;gap:10px}
+.efd-ticker{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700}
+.efd-bar{height:8px;border-radius:4px;background:var(--panel);border:1px solid var(--line);
+  overflow:hidden}
+.efd-fill{display:block;height:100%;border-radius:3px}
+.efd-fill.up{background:#3E8F62} .efd-fill.down{background:#C6483F}
+.efd-fill.flat{background:var(--line-2)}
+.efd-val{text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;
+  font-variant-numeric:tabular-nums}
+.efd-val.up{color:var(--up)} .efd-val.down{color:var(--down)} .efd-val.flat{color:var(--muted-2)}
+/* Nền sáng: --up chỉ đạt 2.35:1 trên panel sáng. Cặp đậm hơn: 5.87:1 / 6.14:1. */
+:root[data-theme="light"] .efd-val.up{color:#1F6B45}
+:root[data-theme="light"] .efd-val.down{color:#9E3A33}
+.efd-note{margin:10px 0 0;font-size:12px;color:var(--muted-2)}
+@media (max-width:560px){
+  .efd-item{grid-template-columns:56px 1fr 88px;gap:8px}
+  .efd-val{font-size:11.5px}
+}
 :root[data-theme="light"] .etf-table td.etf-off{color:#9E3A33}

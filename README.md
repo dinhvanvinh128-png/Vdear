@@ -315,6 +315,23 @@ ngày cho cả bảng**: ngày mà nhiều tài sản có nhất (hoà thì lấ
 Tài sản nào nguồn chưa chốt xong ngày ấy thì giữ ngày riêng nhưng **bị đánh dấu
 ⚠** ở cột ngày, và bảng hiện cảnh báo `mixedDates`.
 
+### Bấm vào tài sản để xem từng quỹ
+
+Bảng chính chỉ đủ chỗ cho 3 quỹ đóng góp lớn nhất, nhưng API trả về **tất cả**.
+Bấm vào tên tài sản để mở dòng chi tiết: đủ các quỹ, mỗi quỹ một thanh dài theo
+**trị tuyệt đối** so với quỹ lớn nhất — quỹ rút tiền ra vẫn nhìn thấy được độ
+lớn thay vì tụt về 0. Chiều dài chỉ để so sánh tương đối; con số thật luôn ghi
+bên cạnh.
+
+Nút là `<button>` thật với `aria-expanded`/`aria-controls`, nên bàn phím và trình
+đọc màn hình dùng được. Tài sản không có dữ liệu quỹ thì **không dựng nút** —
+nút bấm ra chỗ trống là nút lừa người. Nguồn ghi nhiều quỹ hơn số chi tiết trả
+về thì dòng chi tiết nói thẳng ra chênh lệch đó.
+
+Handler gắn một lần ở gốc (uỷ quyền sự kiện), và những dòng đang mở được nhớ
+lại rồi mở lại sau mỗi lần vẽ lại — nhịp làm mới 15 phút không được đóng sập
+cái người ta đang đọc.
+
 ### Làm mới
 
 Dữ liệu này đổi **mỗi ngày một lần**, sau khi phiên Mỹ đóng cửa — nên không cần

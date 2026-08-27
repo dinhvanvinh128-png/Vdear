@@ -102,6 +102,37 @@
   }
 
   /*
+   * DÒNG CHI TIẾT: mở ra khi bấm vào tài sản. Liệt kê ĐỦ các quỹ kèm dòng tiền
+   * của riêng từng quỹ — thứ dựng nên con số tổng ở dòng trên.
+   *
+   * Thanh bar dài theo TRỊ TUYỆT ĐỐI so với quỹ lớn nhất, nên quỹ rút tiền ra
+   * cũng nhìn thấy được độ lớn chứ không tụt về 0. Chiều dài chỉ để so sánh
+   * tương đối; con số thật luôn ghi bên cạnh.
+   */
+  function detailRow(id, asset, d) {
+    const funds = d.funds || [];
+    const max = funds.reduce((m, f) => Math.max(m, Math.abs(f.flow)), 0);
+    const items = funds.map((f) => {
+      const w = max > 0 ? Math.max(1.5, (Math.abs(f.flow) / max) * 100) : 0;
+      const dir = f.flow === 0 ? 'flat' : f.flow > 0 ? 'up' : 'down';
+      return `<li class="efd-item">
+        <span class="efd-ticker">${f.ticker}</span>
+        <span class="efd-bar"><i class="efd-fill ${dir}" style="width:${w.toFixed(1)}%"></i></span>
+        <span class="efd-val ${dir}">${fmtFlow(f.flow)}</span>
+      </li>`;
+    }).join('');
+    // Nguồn nói có bao nhiêu quỹ, mà chi tiết chỉ về được ít hơn -> nói ra.
+    const short = d.fundCount && funds.length < d.fundCount
+      ? `<p class="efd-note">Nguồn ghi ${d.fundCount} quỹ nhưng chỉ trả về chi tiết của ${funds.length}.</p>`
+      : '';
+    return `<tr class="etf-detail" id="${id}" hidden><td colspan="6">
+      <div class="efd">
+        <h4>${asset.symbol} · dòng tiền từng quỹ <span class="muted small">ngày ${d.date || '—'}</span></h4>
+        <ul class="efd-list">${items}</ul>${short}
+      </div></td></tr>`;
+  }
+
+  /*
    * BẢNG CHÍNH: một dòng cho mỗi tài sản, số lấy thẳng từ /api/etf-flow.
    * Tài sản nào nguồn không trả về thì ghi rõ là không lấy được — cách này cho
    * phép hiển thị đủ các tài sản mà không phải đoán mã niêm yết của từng quỹ.
@@ -140,18 +171,27 @@
       // Nguồn ghi một ngày cho cả bảng, bản ghi từng tài sản có thể không kèm
       // ngày riêng. Thiếu thì lấy ngày chung, đừng bỏ trống.
       const day = d.date || flow.date || null;
-      const top = (d.funds || []).slice(0, 3)
+      const funds = d.funds || [];
+      const top = funds.slice(0, 3)
         .map((f) => `<span class="etf-fund ${f.flow === 0 ? '' : f.flow > 0 ? 'up' : 'down'}">${f.ticker} ${fmtFlow(f.flow)}</span>`)
         .join('');
-      return `<tr>
-        <td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small>${
-          d.fundCount ? `<span class="etf-count">×${d.fundCount} quỹ</span>` : ''}</td>
+      // Bấm vào tài sản để xem ĐỦ các quỹ, không chỉ 3 quỹ đầu. Không có dữ
+      // liệu quỹ thì không dựng nút — nút bấm ra chỗ trống là nút lừa người.
+      const id = 'etfd-' + a.symbol;
+      const name = `<b>${a.symbol}</b><small>${a.label}</small>${
+        d.fundCount ? `<span class="etf-count">×${d.fundCount} quỹ</span>` : ''}`;
+      const head = funds.length
+        ? `<button type="button" class="etf-toggle" aria-expanded="false" aria-controls="${id}"
+             data-sym="${a.symbol}"><span class="etf-caret" aria-hidden="true">▸</span><span>${name}</span></button>`
+        : name;
+      return `<tr class="etf-main${funds.length ? ' has-detail' : ''}" data-sym="${a.symbol}">
+        <td class="etf-name">${head}</td>
         <td><span class="mv-pill ${cls}">${fmtFlow(net)}</span></td>
         <td class="mv-price">${fmtUsd(d.totalNetAssets)}</td>
         <td class="muted small">${fmtUsd(d.traded)}</td>
         <td class="etf-funds">${top || '<span class="muted small">—</span>'}</td>
         <td class="muted small${d.offDate ? ' etf-off' : ''}">${day || '—'}${d.offDate ? ' ⚠' : ''}</td>
-      </tr>`;
+      </tr>${funds.length ? detailRow(id, a, d) : ''}`;
     }).join('');
     const sup = flow.supported || [];
     const supported = sup.length || got.length;
@@ -220,6 +260,39 @@
       ${Math.round(REFRESH_MS / 60000)} phút và mỗi khi bạn quay lại tab.</p>`;
     el.innerHTML = `<div class="etf-group"><h3>Dòng tiền ròng theo tài sản</h3>${flowTable(payload.flow)}</div>
       <div class="etf-group"><h3>Giá cổ phiếu quỹ</h3>${quoteTable(payload.rows)}</div>${foot}`;
+    wireToggles(el);
+  }
+
+  /*
+   * Đóng/mở dòng chi tiết. Gắn MỘT handler ở gốc thay vì mỗi nút một cái, để
+   * vẽ lại bảng (mỗi 15 phút) không phải gỡ handler cũ.
+   *
+   * Vẽ lại làm mất trạng thái đang mở, nên nhớ lại và mở lại — người đang đọc
+   * chi tiết một quỹ mà tự dưng bị đóng sập là rất khó chịu.
+   */
+  const openRows = new Set();
+
+  function setOpen(el, sym, open) {
+    const btn = el.querySelector(`.etf-toggle[data-sym="${sym}"]`);
+    const detail = document.getElementById('etfd-' + sym);
+    if (!btn || !detail) return;
+    detail.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.closest('tr').classList.toggle('open', open);
+    if (open) openRows.add(sym); else openRows.delete(sym);
+  }
+
+  function wireToggles(el) {
+    if (!el.dataset.wired) {
+      el.addEventListener('click', (e) => {
+        const btn = e.target.closest('.etf-toggle');
+        if (!btn || !el.contains(btn)) return;
+        setOpen(el, btn.dataset.sym, btn.getAttribute('aria-expanded') !== 'true');
+      });
+      el.dataset.wired = '1';
+    }
+    // Sau khi vẽ lại: khôi phục những dòng đang mở.
+    openRows.forEach((sym) => setOpen(el, sym, true));
   }
 
   /*
