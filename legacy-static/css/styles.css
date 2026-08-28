@@ -880,18 +880,25 @@ tr.etf-main.open{background:var(--panel-2)}
 :root[data-theme="light"] .iso-bar.flat{--iso-top:#8A9096;--iso-right:#6E747A;--iso-left:#53585D}
 
 .iso-base.top{fill:var(--iso-base-top)}
-.iso-base.front{fill:var(--iso-base-front)}
-.iso{--iso-base-top:rgba(255,255,255,.075);--iso-base-front:rgba(255,255,255,.035)}
-:root[data-theme="light"] .iso{--iso-base-top:rgba(30,24,8,.09);--iso-base-front:rgba(30,24,8,.05)}
+.iso-base.right{fill:var(--iso-base-right)}
+.iso-base.left{fill:var(--iso-base-left)}
+.iso{--iso-base-top:rgba(255,255,255,.085);--iso-base-right:rgba(255,255,255,.05);
+  --iso-base-left:rgba(255,255,255,.03)}
+:root[data-theme="light"] .iso{--iso-base-top:rgba(30,24,8,.10);
+  --iso-base-right:rgba(30,24,8,.062);--iso-base-left:rgba(30,24,8,.038)}
 
 .iso-val{fill:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;
   font-weight:700;text-anchor:middle}
 /* Mã quỹ nằm TRÊN mặt khối, nên phải tương phản với mặt khối chứ không phải
    với nền trang — nền sáng thì mặt khối đậm nên chữ phải sáng, và ngược lại. */
-/* Mã quỹ nằm DƯỚI bệ, trên nền trang — nên dùng màu chữ phụ của trang. Viết
-   lên mặt khối (rộng 31px, lại nghiêng) thì gần như không đọc được. */
-.iso-tick{fill:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10.5px;
-  font-weight:700;letter-spacing:.3px;text-anchor:middle}
+/* Mã quỹ in ÚP trên mặt trên của khối, nên phải tương phản với MẶT KHỐI chứ
+   không phải với nền trang.
+   Một màu chữ tối dùng chung cho cả hai nền: mặt khối nền sáng tuy đậm hơn
+   nhưng vẫn là tông trung, nên chữ tối vẫn hơn chữ sáng ở đó (5.25:1 so với
+   3.00:1). Đo trên cả 6 tổ hợp (2 nền × xanh/đỏ/xám), thấp nhất 5.25:1.
+   Cỡ chữ để ma trận chiếu phóng ra, nên không đặt font-size ở đây. */
+.iso-tick{fill:#0E1A14;font-family:'JetBrains Mono',monospace;font-weight:700;
+  text-anchor:middle}
 
 /* Chỉ dành cho trình đọc màn hình: hình vẽ đã aria-hidden, con số phải đến
    được với người dùng bàn phím/đọc màn hình bằng đường khác. Dùng clip-path

@@ -330,16 +330,33 @@ transform vỡ khi phóng to và không kiểm soát được thứ tự che khu
 sx = (x − y)·CX        sy = (x + y)·CY − z
 ```
 
-Tâm cột thứ i đặt tại `(i·g, −i·g)`. Vì `sy` chỉ phụ thuộc `(x + y)`, mà tổng
-đó bằng nhau ở mọi cột, nên **cả hàng nằm trên cùng một đường ngang** — xếp
-thẳng theo trục x thì hàng tụt dần xuống phải như cầu thang, vì `+x` vừa sang
-phải vừa đi xuống. `(x + y)` bằng nhau cũng có nghĩa mọi cột cách người xem như
-nhau: không cột nào che cột nào, khỏi phải sắp thứ tự vẽ.
+Các cột **quây thành cụm** trên lưới, không phải một hàng: hàng 0 ở sau, hàng
+cuối ở trước, `rows = n≤4 ? 1 : n≤8 ? 2 : 3`. Danh sách quỹ đã sắp giảm dần nên
+**cột cao nằm hàng sau, cột thấp nằm hàng trước** — cột trước chỉ che phần chân
+của cột sau, còn đỉnh (chỗ mang thông tin) vẫn thấy hết. Trong cùng một hàng,
+khoảng cách đúng bằng bề rộng chiếu của một cột nên không cột nào chồng cột nào
+theo chiều ngang.
+
+Vẽ từ sau ra trước (thuật toán hoạ sĩ), sắp theo `(x + y)` tăng dần: tổng đó
+lớn hơn nghĩa là gần người xem hơn, phải vẽ sau để nằm đè lên.
+
+Bệ là hình chữ nhật **thẳng trục trong không gian**, nên chiếu ra đúng hình
+thoi như tấm nền trong ảnh mẫu.
+
+Mã quỹ in **úp trên mặt trên** của cột bằng ma trận `(CX, CY, −CX, CY)` — chính
+là ảnh chiếu của hai trục x và y, nên chữ trông như in lên mặt khối chứ không
+phải dán nổi lên trên. Cỡ chữ tính bằng đơn vị không gian rồi để ma trận phóng
+ra.
 
 Ba mặt ba độ sáng là toàn bộ thứ tạo ra cảm giác khối, nên nền sáng phải đổi cả
 ba (bạc hà nhạt trên nền trắng chỉ đạt 2.12:1, gần như tàng hình) mà vẫn giữ
 đúng thứ tự trên > phải > trái. Mặt trên đạt ≥3:1 so với nền panel ở cả hai nền,
 và mọi mặt có viền mảnh để đường bao của khối luôn đọc được.
+
+Vì mã quỹ nằm **trên** mặt khối, tương phản của nó phải đo với **màu mặt khối**,
+không phải với nền trang. Một màu chữ tối dùng chung cho cả hai nền: mặt khối ở
+nền sáng tuy đậm hơn nhưng vẫn là tông trung, nên chữ tối vẫn hơn chữ sáng ở đó
+(5.25:1 so với 3.00:1). Đo đủ 6 tổ hợp (2 nền × xanh/đỏ/xám), thấp nhất 5.25:1.
 
 Hình vẽ `aria-hidden`; con số đến với trình đọc màn hình qua một danh sách
 `.sr-only` — nhồi 12 con số vào một `aria-label` thì nghe không ra gì.

@@ -117,73 +117,99 @@
    * của một khối, nên KHÔNG khối nào che khối nào — hai hàng thì khối trước
    * che khối sau và không đọc được nữa.
    */
-  const ISO = { CX: 31, CY: 17, BW: 1, GAP: 1.27, MAXH: 185, MINH: 6 };
+  const ISO = { CX: 32, CY: 18, BW: 1, STEP: 2, MAXH: 172, MINH: 7 };
 
   function isoChart(asset, d) {
     const funds = d.funds || [];
     if (!funds.length) return '';
-    const { CX, CY, BW, GAP, MAXH, MINH } = ISO;
+    const { CX, CY, BW, STEP, MAXH, MINH } = ISO;
     const P = (x, y, z) => [(x - y) * CX, (x + y) * CY - z];
     const pts = (a) => a.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
     const max = funds.reduce((m, f) => Math.max(m, Math.abs(f.flow)), 0);
 
     /*
-     * Đặt tâm khối thứ i tại (i·g, −i·g).
+     * XẾP THÀNH CỤM trên lưới isometric, như ảnh mẫu — không phải một hàng.
      *
-     * Vì sy phụ thuộc (x + y), mà (x + y) của mọi khối đều như nhau, nên CẢ HÀNG
-     * NẰM TRÊN CÙNG MỘT ĐƯỜNG NGANG của màn hình. Xếp thẳng theo trục x (cách
-     * làm đầu tiên) khiến hàng tụt dần xuống phải, vì +x vừa sang phải vừa đi
-     * xuống — nhìn như cầu thang chứ không phải như ảnh mẫu.
+     * Hàng 0 ở SAU, hàng cuối ở TRƯỚC. funds đã sắp giảm dần nên khối CAO nằm
+     * hàng sau, khối thấp nằm hàng trước: khối trước chỉ che phần chân của
+     * khối sau, còn đỉnh — chỗ mang thông tin — vẫn nhìn thấy hết.
      *
-     * (x + y) bằng nhau cũng có nghĩa mọi khối cách người xem như nhau: không
-     * khối nào che khối nào, khỏi phải sắp thứ tự vẽ.
+     * Trong cùng một hàng, khoảng cách đúng bằng bề rộng chiếu của một khối
+     * (2·BW·CX = STEP·CX) nên không khối nào chồng khối nào theo chiều ngang.
      */
-    const at = (i) => [i * GAP, -i * GAP];
-    const half = BW;                       // nửa bề rộng chiếu, tính bằng đơn vị a
-    const aOf = (i) => (at(i)[0] - at(i)[1]);
-    const aMin = aOf(0) - half - 0.55, aMax = aOf(funds.length - 1) + half + 0.55;
-    const bTop = -0.5, bBot = 2 * BW + 0.5, slab = 13;
+    const n = funds.length;
+    const rows = n <= 4 ? 1 : n <= 8 ? 2 : 3;
+    const cols = Math.ceil(n / rows);
+    const cell = (i) => ({ c: i % cols, r: Math.floor(i / cols) });
 
-    // Bệ đỡ vẽ thẳng bằng toạ độ màn hình: sx = a·CX, sy = b·CY.
-    const L = aMin * CX, R = aMax * CX, T = bTop * CY, B = bBot * CY;
-    const base = `<polygon class="iso-base top" points="${L.toFixed(1)},${T.toFixed(1)} ${R.toFixed(1)},${T.toFixed(1)} ${R.toFixed(1)},${B.toFixed(1)} ${L.toFixed(1)},${B.toFixed(1)}"/>
-      <polygon class="iso-base front" points="${L.toFixed(1)},${B.toFixed(1)} ${R.toFixed(1)},${B.toFixed(1)} ${R.toFixed(1)},${(B + slab).toFixed(1)} ${L.toFixed(1)},${(B + slab).toFixed(1)}"/>`;
+    // Bệ: hình chữ nhật thẳng trục trong không gian, nên chiếu ra đúng hình
+    // thoi như tấm nền trong ảnh.
+    const m = 0.55, slab = 15;
+    const px0 = -m, px1 = (cols - 1) * STEP + BW + m;
+    const py0 = -m, py1 = (rows - 1) * STEP + BW + m;
+    const bTop = [P(px0, py0, 0), P(px1, py0, 0), P(px1, py1, 0), P(px0, py1, 0)];
+    const bRight = [P(px1, py0, 0), P(px1, py1, 0), P(px1, py1, -slab), P(px1, py0, -slab)];
+    const bLeft = [P(px0, py1, 0), P(px1, py1, 0), P(px1, py1, -slab), P(px0, py1, -slab)];
+
+    const bounds = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+    const note = (p) => {
+      bounds.x0 = Math.min(bounds.x0, p[0]); bounds.x1 = Math.max(bounds.x1, p[0]);
+      bounds.y0 = Math.min(bounds.y0, p[1]); bounds.y1 = Math.max(bounds.y1, p[1]);
+    };
+    [bTop, bRight, bLeft].forEach((f) => f.forEach(note));
+
+    /*
+     * Vẽ từ SAU ra TRƯỚC (thuật toán hoạ sĩ). (x + y) lớn hơn = gần người xem
+     * hơn, nên phải vẽ sau để nằm đè lên.
+     */
+    const order = funds.map((f, i) => i).sort((a, b) => {
+      const A = cell(a), B = cell(b);
+      return (A.c + A.r) - (B.c + B.r);
+    });
 
     let bars = '';
-    let top = Infinity;
-    funds.forEach((f, i) => {
+    order.forEach((i) => {
+      const f = funds[i];
+      const { c, r } = cell(i);
       const h = max > 0 ? Math.max(MINH, (Math.abs(f.flow) / max) * MAXH) : MINH;
       const dir = f.flow === 0 ? 'flat' : f.flow > 0 ? 'up' : 'down';
-      const [cx, cy] = at(i);
-      const x0 = cx, x1 = cx + BW, y0 = cy, y1 = cy + BW;
+      const x0 = c * STEP, x1 = x0 + BW, y0 = r * STEP, y1 = y0 + BW;
       const fTop = [P(x0, y0, h), P(x1, y0, h), P(x1, y1, h), P(x0, y1, h)];
       const fRight = [P(x1, y0, h), P(x1, y1, h), P(x1, y1, 0), P(x1, y0, 0)];
       const fLeft = [P(x0, y1, h), P(x1, y1, h), P(x1, y1, 0), P(x0, y1, 0)];
-      const cap = P(cx + BW / 2, cy + BW / 2, h);
-      top = Math.min(top, cap[1]);
-      // Giá trị ở trên đỉnh, mã quỹ ở dưới bệ — cả hai NẰM NGANG. Viết chữ lên
-      // mặt khối (rộng có 31px, lại nghiêng) thì gần như không đọc được.
+      [fTop, fRight, fLeft].forEach((fc) => fc.forEach(note));
+      const cap = P(x0 + BW / 2, y0 + BW / 2, h);
+      note([cap[0] - 36, cap[1] - 26]); note([cap[0] + 36, cap[1]]);
+      /*
+       * Mã quỹ nằm ÚP TRÊN MẶT TRÊN của khối, nghiêng theo đúng mặt phẳng nền:
+       * ma trận (CX, CY, −CX, CY) chính là phép chiếu của hai trục x và y, nên
+       * chữ trông như được in lên mặt khối chứ không phải dán nổi lên trên.
+       * Cỡ chữ tính bằng đơn vị không gian rồi để ma trận phóng ra.
+       */
+      const mtx = `matrix(${CX} ${CY} ${-CX} ${CY} ${cap[0].toFixed(1)} ${cap[1].toFixed(1)})`;
       bars += `<g class="iso-bar ${dir}">
         <polygon class="iso-face left" points="${pts(fLeft)}"/>
         <polygon class="iso-face right" points="${pts(fRight)}"/>
         <polygon class="iso-face top" points="${pts(fTop)}"/>
-        <text class="iso-val" x="${cap[0].toFixed(1)}" y="${(cap[1] - 11).toFixed(1)}">${fmtFlow(f.flow)}</text>
-        <text class="iso-tick" x="${cap[0].toFixed(1)}" y="${(B + slab + 15).toFixed(1)}">${f.ticker}</text>
+        <text class="iso-tick" transform="${mtx}" font-size="0.30" y="0.10">${f.ticker}</text>
+        <text class="iso-val" x="${cap[0].toFixed(1)}" y="${(cap[1] - 12).toFixed(1)}">${fmtFlow(f.flow)}</text>
       </g>`;
     });
 
-    const padX = 16;
-    const vy = Math.min(top - 24, T) - 6;
-    const vh = (B + slab + 22) - vy;
-    const vb = [L - padX, vy, (R - L) + padX * 2, vh];
+    const pad = 14;
+    const vb = [bounds.x0 - pad, bounds.y0 - pad,
+      bounds.x1 - bounds.x0 + pad * 2, bounds.y1 - bounds.y0 + pad * 2];
     /*
      * Hình vẽ để aria-hidden, kèm danh sách chỉ dành cho trình đọc màn hình.
      * Nhồi 12 con số vào một aria-label thì nghe không ra gì.
      */
     return `<div class="iso-wrap"><svg class="iso" aria-hidden="true" role="presentation"
-        viewBox="${vb.map((n) => n.toFixed(1)).join(' ')}"
+        viewBox="${vb.map((v) => v.toFixed(1)).join(' ')}"
         width="${Math.round(vb[2])}" height="${Math.round(vb[3])}">
-        ${base}${bars}
+        <polygon class="iso-base left" points="${pts(bLeft)}"/>
+        <polygon class="iso-base right" points="${pts(bRight)}"/>
+        <polygon class="iso-base top" points="${pts(bTop)}"/>
+        ${bars}
       </svg></div>
       <ul class="sr-only">${funds.map((f) => `<li>${f.ticker}: ${fmtFlow(f.flow)}</li>`).join('')}</ul>`;
   }
