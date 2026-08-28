@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vdearypto Terminal — Tổng quan thị trường</title>
+  <meta name="description" content="Terminal tổng quan thị trường crypto: mạng tương quan 30 ngày, tín hiệu RSI, funding cực trị, dòng tiền ETF và bảng radar futures — tất cả từ dữ liệu thật.">
+  <meta name="theme-color" content="#0c0e18">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/terminal.css">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+</head>
+<body class="tm-body">
+
+<a class="skip-link" href="#tmMain">Bỏ qua, tới nội dung chính</a>
+
+<header class="tm-head">
+  <button class="nd-burger" id="ndBurger" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="ndPanel">
+    <span></span><span></span><span></span>
+  </button>
+  <a class="tm-brand" href="index.html">
+    <span class="tm-brand-n">VDEARYPTO</span><span class="tm-brand-t">TERMINAL</span>
+  </a>
+  <nav class="tm-nav" aria-label="Khu vực">
+    <a href="index.html">TỔNG QUAN</a>
+    <a href="index.html#futures">RADAR</a>
+    <a href="index.html#etf">ETF</a>
+    <a href="bubbles.html">BÓNG BÓNG</a>
+    <a href="index.html#tradfi">TRADFI</a>
+  </nav>
+  <div class="tm-actions">
+    <button class="tm-search" id="tmSearch" type="button">TÌM KIẾM <span>Ctrl K</span></button>
+    <span class="tm-live"><i></i>LIVE</span>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="Đổi nền sáng/tối">☀</button>
+  </div>
+</header>
+
+<div class="tm-shell">
+  <aside class="tm-side" aria-label="Điều hướng phụ">
+    <div class="tm-sgroup">
+      <div class="tm-sh">THỊ TRƯỜNG</div>
+      <a href="index.html">Tổng quan</a>
+      <a href="index.html#futures">Radar futures</a>
+      <a href="bubbles.html">Bóng bóng</a>
+    </div>
+    <div class="tm-sgroup">
+      <div class="tm-sh">DÒNG TIỀN</div>
+      <a href="index.html#etf">Dòng tiền ETF</a>
+      <a href="index.html#tradfi">TradFi</a>
+    </div>
+    <div class="tm-sgroup">
+      <div class="tm-sh">PHÁI SINH</div>
+      <a href="#tmFundingCard">Funding</a>
+      <a href="#tmLiqCard">Thanh lý</a>
+    </div>
+  </aside>
+
+  <main class="tm-main" id="tmMain">
+
+    <div class="tm-strip">
+      <span class="tm-strip-l">TỔNG QUAN</span>
+      <div class="tm-strip-i" id="tmTicker"><span class="tm-empty">Đang tải…</span></div>
+    </div>
+
+    <div class="tm-hero">
+      <section class="tm-card tm-sphere-card">
+        <div class="tm-sphere-hd">
+          <div>
+            <div class="tm-eyebrow">MẠNG TƯƠNG QUAN · 60 NGÀY</div>
+            <h1 class="tm-title">Cấu trúc thị trường</h1>
+            <p class="tm-sub">Nút = vốn hoá · màu = biến động 24h · cạnh = hệ số tương quan Pearson trên lợi suất ngày</p>
+          </div>
+          <div class="tm-sphere-meta">
+            <span id="tmSphereCount">…</span>
+            <span>|ρ| TRUNG BÌNH <b id="tmSphereRho">…</b></span>
+          </div>
+        </div>
+        <canvas id="tmSphere" aria-label="Mạng tương quan giữa các tài sản, dạng cầu xoay"></canvas>
+        <div class="tm-tip" id="tmTip" hidden></div>
+        <div class="tm-sphere-ft">
+          <span><i class="dot up"></i>TĂNG</span>
+          <span><i class="dot down"></i>GIẢM</span>
+          <span id="tmSphereNote">Đang tính tương quan…</span>
+        </div>
+      </section>
+
+      <div class="tm-quads">
+        <section class="tm-card">
+          <div class="tm-card-hd"><span class="tm-eyebrow">TÍN HIỆU MẠNH NHẤT</span><span class="tm-note">RSI 14 · NẾN NGÀY</span></div>
+          <div id="tmSignals"><p class="tm-empty">Đang tải…</p></div>
+        </section>
+
+        <section class="tm-card" id="tmFundingCard">
+          <div class="tm-card-hd"><span class="tm-eyebrow">FUNDING CỰC TRỊ</span><span class="tm-note">BINANCE</span></div>
+          <div id="tmFunding"><p class="tm-empty">Đang tải…</p></div>
+          <div class="tm-fund-ft"><span>← SHORT TRẢ PHÍ</span><span>LONG TRẢ PHÍ →</span></div>
+        </section>
+
+        <section class="tm-card" id="tmLiqCard">
+          <div class="tm-card-hd"><span class="tm-eyebrow">THANH LÝ 24H</span></div>
+          <div id="tmLiq"></div>
+        </section>
+
+        <section class="tm-card">
+          <div class="tm-card-hd"><span class="tm-eyebrow">DÒNG TIỀN ETF</span><span class="tm-note">SOSOVALUE</span></div>
+          <div id="tmEtf"><p class="tm-empty">Đang tải…</p></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="tm-card tm-whale-card">
+      <div class="tm-card-hd"><span class="tm-eyebrow">GIAO DỊCH CÁ VOI</span></div>
+      <div id="tmWhale"></div>
+    </section>
+
+    <section class="tm-card tm-radar">
+      <div class="tm-card-hd"><span class="tm-eyebrow">BẢNG RADAR FUTURES</span><span class="tm-note">4 SÀN</span></div>
+      <div class="tm-table-wrap">
+        <div class="tm-thead">
+          <span>MÃ</span><span>TÍN HIỆU</span><span class="tm-r">GIÁ</span><span class="tm-r">24H</span>
+          <span class="tm-r tm-c7">7 NGÀY</span><span class="tm-r tm-cf">FUNDING</span><span class="tm-r">RSI</span><span class="tm-r tm-cv">KHỐI LƯỢNG</span>
+        </div>
+        <div id="tmRadar"><p class="tm-empty">Đang tải…</p></div>
+      </div>
+    </section>
+
+    <footer class="tm-foot">
+      <div>
+        <div class="tm-brand-n">VDEARYPTO</div>
+        <p>Terminal tình báo thị trường crypto. Dữ liệu tổng hợp từ Binance, Bybit, OKX, Bitget và CoinGecko. Không phải lời khuyên đầu tư.</p>
+      </div>
+      <div>
+        <div class="tm-sh">SẢN PHẨM</div>
+        <a href="index.html">Tổng quan</a><a href="bubbles.html">Bóng bóng</a><a href="index.html#etf">Dòng tiền ETF</a>
+      </div>
+      <div>
+        <div class="tm-sh">PHÁP LÝ</div>
+        <a href="terms.html">Điều khoản</a><a href="privacy.html">Bảo mật</a><a href="risk.html">Cảnh báo rủi ro</a>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script src="env.js"></script>
+<script src="js/navmenu.js"></script>
+<script src="js/favstore.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/indicators.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/command.js"></script>
+<script src="js/terminal.js"></script>
+</body>
+</html>
