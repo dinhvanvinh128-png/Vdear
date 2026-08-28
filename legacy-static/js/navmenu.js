@@ -149,6 +149,51 @@
       </nav>`;
     document.body.appendChild(wrap);
 
+    /*
+     * Chiều cao thanh đầu, đo THẬT chứ không gán số cố định: header bọc dòng
+     * khi màn hẹp nên cao thấp khác nhau, đoán một con số là dải bên sẽ chui
+     * lên dưới logo hoặc hở một khoảng.
+     */
+    /*
+     * Mép dưới thanh đầu, tính theo khung nhìn — và nó ĐỔI KHI CUỘN.
+     *
+     * Trang có dải giá chạy cao 50px nằm trên, KHÔNG sticky; thanh đầu thì
+     * sticky top:0. Nên ở đầu trang mép dưới header là 117px, cuộn xuống còn
+     * 67px. Lấy chiều CAO của thanh đầu (cách cũ) là sai ngay từ đầu trang:
+     * dải bên chồng lên header đúng 50px.
+     */
+    let topRaf = 0;
+    function syncTop() {
+      const bar = document.querySelector('.topbar, .tm-head');
+      const b = bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) : 0;
+      document.documentElement.style.setProperty('--nd-top', b + 'px');
+    }
+    function queueTop() {
+      if (topRaf) return;
+      topRaf = requestAnimationFrame(() => { topRaf = 0; syncTop(); });
+    }
+    /*
+     * Dải icon chỉ hợp với thiết bị RÊ CHUỘT ĐƯỢC: nhãn của nó hiện ra khi
+     * hover, mà máy cảm ứng thì không hover được — chạm vào icon là đi luôn,
+     * người dùng không kịp đọc nhãn nào cả. Máy như vậy giữ nguyên drawer.
+     *
+     * Đặt bằng class chứ không viết @media (hover:hover) trong CSS, vì như thế
+     * mới kiểm tra được: trình duyệt headless báo hover:none nên nhánh này sẽ
+     * không bao giờ chạy trong bài kiểm.
+     */
+    const mq = window.matchMedia('(hover:hover) and (pointer:fine)');
+    const syncHover = () => document.documentElement.classList.toggle('nd-hoverable', mq.matches);
+    syncHover();
+    if (mq.addEventListener) mq.addEventListener('change', syncHover);
+
+    syncTop();
+    window.addEventListener('resize', queueTop);
+    window.addEventListener('scroll', queueTop, { passive: true });
+    if (window.ResizeObserver) {
+      const bar = document.querySelector('.topbar, .tm-head');
+      if (bar) new ResizeObserver(queueTop).observe(bar);
+    }
+
     const panel = wrap.querySelector('.nd-panel');
     let lastFocus = null;
 

@@ -709,6 +709,67 @@ body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opa
 .nd-root.open .nd-panel{visibility:visible;transform:none;
   transition:transform .26s cubic-bezier(.22,.7,.24,1),visibility 0s linear 0s}
 body.nd-locked{overflow:hidden}
+
+/* ============ DẢI ICON CỐ ĐỊNH (màn rộng) ============
+   Menu thôi làm hộp thoại phải bấm mới mở: nó nằm luôn bên trái dưới dạng dải
+   icon, rê chuột vào thì giãn ra và nhãn hiện dần. Đúng khuôn mẫu quen thuộc —
+   nhãn để opacity:0 + pointer-events:none, không phải display:none, để nó
+   fade được và không nhảy layout khi giãn.
+
+   Toàn bộ bằng CSS, không cần JS: không có trạng thái nào để lệch nhau. */
+@media (min-width:1200px){
+  :root{--nd-rail:64px;--nd-open:300px}
+
+  /* Chừa chỗ cho dải — nếu không nó đè lên nội dung ở mép trái. */
+  .nd-hoverable body{padding-left:var(--nd-rail)}
+  .nd-hoverable .nav-toggle{display:none}
+  .nd-hoverable .nd-scrim{display:none}
+
+  .nd-hoverable .nd-root{pointer-events:none}
+  .nd-hoverable .nd-panel{
+    pointer-events:auto;
+    top:var(--nd-top,64px);height:calc(100% - var(--nd-top,64px));
+    width:var(--nd-rail);padding:10px 0 18px;
+    visibility:visible;transform:none;overflow:hidden;
+    box-shadow:none;border-right:1px solid var(--line);
+    transition:width .28s cubic-bezier(.22,.7,.24,1)}
+  .nd-hoverable .nd-panel:hover,.nd-hoverable .nd-panel:focus-within{
+    width:var(--nd-open);overflow-y:auto;
+    box-shadow:14px 0 44px rgba(0,0,0,.42)}
+
+  /* Đầu menu chỉ có nghĩa khi đã giãn. */
+  .nd-hoverable .nd-head{opacity:0;pointer-events:none;transition:opacity .4s;padding:0 12px}
+  .nd-hoverable .nd-panel:hover .nd-head,.nd-hoverable .nd-panel:focus-within .nd-head{opacity:1;pointer-events:auto}
+  .nd-hoverable .nd-close{display:none}
+
+  /* Đây là phần lấy từ khuôn mẫu: nhãn ẩn bằng opacity, không phải display. */
+  .nd-hoverable .nd-txt,.nd-hoverable .nd-soon,.nd-hoverable .nd-foot{
+    opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .4s}
+  .nd-hoverable .nd-panel:hover .nd-txt,.nd-hoverable .nd-panel:focus-within .nd-txt,
+  .nd-hoverable .nd-panel:hover .nd-soon,.nd-hoverable .nd-panel:focus-within .nd-soon,
+  .nd-hoverable .nd-panel:hover .nd-foot,.nd-hoverable .nd-panel:focus-within .nd-foot{opacity:1;pointer-events:auto}
+
+  /* Tiêu đề nhóm: thu về một vạch mảnh để các nhóm vẫn tách nhau khi thu gọn. */
+  .nd-hoverable .nd-group{margin-top:6px}
+  .nd-hoverable .nd-group h3{opacity:0;max-height:9px;overflow:hidden;margin:0;
+    transition:opacity .4s,max-height .28s}
+  .nd-hoverable .nd-panel:hover .nd-group h3,.nd-hoverable .nd-panel:focus-within .nd-group h3{opacity:1;max-height:30px;margin:0 0 6px}
+
+  /* Icon căn giữa dải khi thu gọn, trượt về trái khi giãn. */
+  .nd-hoverable .nd-item{padding:9px 23px;border-radius:0;transition:padding .28s,background .12s}
+  .nd-hoverable .nd-panel:hover .nd-item,.nd-hoverable .nd-panel:focus-within .nd-item{padding:9px 12px;border-radius:10px;margin:0 8px}
+
+  /* Mục "sắp có" không bấm được và không có nhãn -> ở dải thu gọn nó chỉ là
+     icon vô nghĩa, lại chiếm hơn một phần ba chiều cao. Chỉ hiện khi giãn. */
+  .nd-hoverable .nd-item.soon{display:none}
+  .nd-hoverable .nd-panel:hover .nd-item.soon,.nd-hoverable .nd-panel:focus-within .nd-item.soon{display:flex}
+
+  .nd-hoverable .nd-foot{margin:14px 12px 0}
+
+  /* Trang terminal đã có thanh bên riêng — hai thanh bên cạnh nhau là thừa. */
+  .nd-hoverable .tm-side{display:none}
+  .nd-hoverable .tm-head{padding-left:14px}
+}
 .nd-head{display:flex;align-items:center;justify-content:space-between;
   padding:4px 6px 12px;border-bottom:1px solid var(--line)}
 .nd-brand{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:16px;
