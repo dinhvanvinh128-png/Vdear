@@ -116,6 +116,9 @@
   font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--tm-mute2);text-align:right}
 .tm-sphere-meta b{color:var(--tm-accent2)}
 #tmSphere{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+/* Bảng màu quả cầu cho trang này; js/correlation.js đọc ba biến này. */
+#tmSphere{--corr-up:70,201,139;--corr-down:229,89,95;--corr-edge:145,132,217}
+:root[data-theme="light"] #tmSphere{--corr-up:31,107,69;--corr-down:158,58,51;--corr-edge:90,75,168}
 .tm-sphere-ft{position:absolute;left:15px;bottom:13px;z-index:2;display:flex;gap:14px;flex-wrap:wrap;
   font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tm-faint)}
 .tm-sphere-ft .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
