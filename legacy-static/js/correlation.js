@@ -92,9 +92,21 @@
 
   /* ---------------------------------------------------------------- */
 
+  /*
+   * getComputedStyle ép trình duyệt tính lại style. Gọi nó ba lần MỖI KHUNG
+   * HÌNH (như bản đầu) là ~180 lần/giây cho ba giá trị gần như không bao giờ
+   * đổi. Đọc một lần, và chỉ đọc lại khi đổi nền sáng/tối.
+   */
   function readVar(el, name, fallback) {
     const v = getComputedStyle(el).getPropertyValue(name).trim();
     return v || fallback;
+  }
+  function readPalette(el) {
+    return {
+      up: readVar(el, '--corr-up', '70,201,139'),
+      down: readVar(el, '--corr-down', '229,89,95'),
+      edge: readVar(el, '--corr-edge', '145,132,217'),
+    };
   }
 
   /*
@@ -109,7 +121,28 @@
     let rot = 0.5, raf = 0, paused = false, proj = [];
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    let pal = readPalette(canvas);
+    // Đổi nền sáng/tối là đổi bảng màu -> đọc lại, nhưng chỉ lúc đó.
+    const themeObs = new MutationObserver(() => { pal = readPalette(canvas); });
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    /*
+     * Chỉ vẽ khi canvas ĐANG TRONG TẦM NHÌN và tab đang mở. Trước đây vòng vẽ
+     * chạy mãi mãi: cuộn xuống cuối trang hay chuyển sang tab khác thì nó vẫn
+     * tô lại một vùng 440px, 60 lần mỗi giây, không ai nhìn.
+     */
+    let onScreen = true;
+    const io = new IntersectionObserver((es) => {
+      onScreen = es.some((e) => e.isIntersecting);
+      if (onScreen && !raf) raf = requestAnimationFrame(draw);
+    }, { rootMargin: '120px' });
+    io.observe(canvas);
+    const onVis = () => { if (!document.hidden && onScreen && !raf) raf = requestAnimationFrame(draw); };
+    document.addEventListener('visibilitychange', onVis);
+
     function draw() {
+      raf = 0;
+      if (!onScreen || document.hidden) return;      // ngủ hẳn, không hẹn khung sau
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = canvas.clientWidth, h = canvas.clientHeight;
       if (!w || !h) { raf = requestAnimationFrame(draw); return; }
@@ -117,9 +150,7 @@
       const g = canvas.getContext('2d');
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
       g.clearRect(0, 0, w, h);
-      const up = readVar(canvas, '--corr-up', '70,201,139');
-      const dn = readVar(canvas, '--corr-down', '229,89,95');
-      const ed = readVar(canvas, '--corr-edge', '145,132,217');
+      const up = pal.up, dn = pal.down, ed = pal.edge;
       const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.34;
       const p = nodes.map((n) => {
         const x = n.x * Math.cos(rot) - n.z * Math.sin(rot);
@@ -153,7 +184,7 @@
       if (!reduce && !paused) rot += 0.0016;
       raf = requestAnimationFrame(draw);
     }
-    draw();
+    raf = requestAnimationFrame(draw);
 
     function hit(mx, my) {
       let best = null, bd = 1e9;
@@ -179,7 +210,9 @@
     canvas.addEventListener('mouseleave', onLeave);
 
     return function stop() {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(raf); raf = 0;
+      io.disconnect(); themeObs.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
       canvas.removeEventListener('mousemove', onMove);
       canvas.removeEventListener('mouseleave', onLeave);
     };

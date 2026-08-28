@@ -554,11 +554,12 @@ h1,h2,h3{margin:0;font-weight:700}
   --font-display:'Space Grotesk','Chakra Petch',sans-serif;
   --font-mono:'JetBrains Mono',ui-monospace,monospace;
   --glass:rgba(19,24,34,.55);
+  --glass-solid:rgba(20,25,35,.94);
   --glass-brd:rgba(255,255,255,.09);
   --glow:0 0 0 1px rgba(255,255,255,.04), 0 24px 60px -28px rgba(0,0,0,.75);
   --neon:0 0 24px rgba(216,163,43,.35);
 }
-:root[data-theme="light"]{ --glass:rgba(255,255,255,.6); --glass-brd:rgba(10,15,30,.10);
+:root[data-theme="light"]{ --glass:rgba(255,255,255,.6); --glass-solid:rgba(252,251,247,.96); --glass-brd:rgba(10,15,30,.10);
   --glow:0 0 0 1px rgba(10,15,30,.03), 0 24px 60px -30px rgba(10,15,30,.30); }
 
 /* Aurora + grid nền động (đặt sau nền body cơ bản) */
@@ -568,7 +569,13 @@ body::before{content:'';position:fixed;inset:-20%;z-index:-2;pointer-events:none
     radial-gradient(34vw 34vw at 88% 4%, rgba(216,163,43,.20), transparent 60%),
     radial-gradient(40vw 40vw at 78% 92%, rgba(216,163,43,.18), transparent 62%),
     radial-gradient(30vw 30vw at 20% 96%, rgba(216,163,43,.10), transparent 60%);
-  filter:blur(30px);opacity:.9;animation:aurora 22s ease-in-out infinite alternate}
+  /* KHÔNG dùng filter:blur() ở đây. Lớp này phủ 140% khung nhìn và chạy
+     animation vô hạn; blur khiến trình duyệt phải raster lại toàn bộ lớp mờ
+     mỗi khung hình, suốt thời gian mở trang. Các radial-gradient vốn đã tản
+     rất mềm nên bỏ blur gần như không đổi hình, mà hết hẳn chi phí đó.
+     will-change giữ nó ở lớp ghép riêng, animation chỉ còn là dịch chuyển. */
+  opacity:.75;will-change:transform;
+  animation:aurora 22s ease-in-out infinite alternate}
 body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.5;
   background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
     linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
@@ -592,8 +599,13 @@ body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opa
 /* Glass surfaces */
 .topbar{background:var(--glass) !important;backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);
   border-bottom:1px solid var(--glass-brd)}
+/* Trang chủ có 14 .panel. backdrop-filter bắt trình duyệt chụp lại nền phía
+   sau TỪNG panel rồi làm mờ, và làm lại mỗi khung hình khi cuộn — đó là nguyên
+   nhân chính gây giật trên máy không có GPU rời. Nền đục hơn cho ra gần đúng
+   cùng vẻ ngoài trên nền tối, mà không tốn gì. Chỉ .topbar giữ lại hiệu ứng
+   kính: nó là MỘT phần tử nhỏ, dính trên cùng, và cần thấy nội dung trôi qua. */
 .panel,.hero-inner,.cmd-box,.coin-header{
-  background:var(--glass) !important;backdrop-filter:blur(14px) saturate(135%);-webkit-backdrop-filter:blur(14px) saturate(135%);
+  background:var(--glass-solid) !important;
   border:1px solid var(--glass-brd);box-shadow:var(--glow);position:relative;overflow:hidden}
 .panel:hover{border-color:rgba(216,163,43,.28)}
 
@@ -617,7 +629,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opa
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   filter:drop-shadow(0 2px 24px rgba(216,163,43,.25))}
 .hero p{font-size:clamp(14px,1.4vw,16px)}
-.hb{backdrop-filter:blur(6px);transition:transform .15s,border-color .15s,box-shadow .15s}
+.hb{transition:transform .15s,border-color .15s,box-shadow .15s}
 .hb:hover{transform:translateY(-2px);border-color:var(--accent-2);box-shadow:var(--neon)}
 
 /* Stat strip trong hero */
@@ -640,7 +652,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opa
 .sector-chip:hover{box-shadow:var(--neon)}
 
 /* Scan card — glass + viền theo LONG/SHORT + hover nổi */
-.scan-card{background:var(--glass) !important;backdrop-filter:blur(10px);border:1px solid var(--glass-brd);
+.scan-card{background:var(--glass-solid) !important;border:1px solid var(--glass-brd);
   position:relative;overflow:hidden;transition:transform .16s,box-shadow .16s,border-color .16s}
 .scan-card:hover{transform:translateY(-4px) scale(1.012);box-shadow:0 18px 40px -18px rgba(0,0,0,.7),var(--neon)}
 .scan-card.valid{box-shadow:inset 3px 0 0 var(--accent-2),0 0 0 1px rgba(216,163,43,.3),0 0 26px rgba(216,163,43,.14)}
