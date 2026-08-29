@@ -857,42 +857,6 @@ body.nd-locked{overflow:hidden}
 :root[data-theme="light"] .bs-chip.active,
 :root[data-theme="light"] .seg-btn.active{color:#F6F4EC}
 
-/* -------------------- Bản đồ thị trường 3D -------------------- */
-/* Màu khối và lưới đọc từ đây, không gán cứng trong JS — đổi nền sáng/tối là
-   đổi theo. */
-#m3Canvas{--m3-up:79,180,119;--m3-down:224,87,79;
-  --m3-grid:rgba(216,163,43,.16);--m3-ink:#EDE7D6}
-:root[data-theme="light"] #m3Canvas{--m3-up:31,107,69;--m3-down:158,58,51;
-  --m3-grid:rgba(122,92,20,.22);--m3-ink:#171309}
-
-.m3-ctrl{display:flex;gap:6px}
-.m3-wrap{position:relative;height:460px;margin-top:10px;border:1px solid var(--line);
-  border-radius:12px;overflow:hidden;background:var(--panel-2);
-  /* touch-action: điện thoại vẫn phải cuộn trang được khi vuốt dọc qua khung. */
-  touch-action:pan-y}
-#m3Canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
-.m3-empty{position:absolute;inset:0;display:grid;place-items:center;margin:0;
-  color:var(--muted-2);font-size:12.5px}
-.m3-tip{position:absolute;z-index:4;pointer-events:none;width:206px;padding:10px 12px;
-  background:var(--panel);border:1px solid var(--line-2);border-radius:10px;
-  box-shadow:0 16px 38px rgba(0,0,0,.45)}
-.m3-tip-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.m3-tip-h b{font-family:'Chakra Petch',sans-serif;font-size:14px}
-.m3-tip-h span{font-family:'JetBrains Mono',monospace;font-size:12px}
-.m3-tip-p{font-family:'JetBrains Mono',monospace;font-size:16px;margin:4px 0 7px;
-  font-variant-numeric:tabular-nums}
-.m3-tip-d{display:grid;grid-template-columns:1fr auto;gap:3px 10px;margin:0;
-  font-family:'JetBrains Mono',monospace;font-size:10.5px}
-.m3-tip-d dt{color:var(--muted-2)} .m3-tip-d dd{margin:0;color:var(--text);text-align:right}
-
-.m3-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:9px;font-size:11.5px;
-  color:var(--muted-2)}
-.m3-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
-.m3-dot.up{background:var(--up)} .m3-dot.down{background:var(--down)}
-@media (max-width:640px){
-  .m3-wrap{height:330px}
-}
-
 /* -------------------- ETF giao ngay -------------------- */
 .etf-group{margin-top:10px}
 .etf-group h3{margin:0 0 8px;font-size:12px;font-weight:700;text-transform:uppercase;
