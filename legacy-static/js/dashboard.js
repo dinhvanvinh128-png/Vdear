@@ -348,10 +348,6 @@
       // Vào thẳng tab Yêu thích thì lúc render lần đầu `market` còn rỗng; vẽ lại
       // ngay khi có dữ liệu thay vì để trống tới nhịp làm mới 30s kế tiếp.
       if (!$('view-fav').hidden) renderFavorites();
-      // Mạng tương quan cần `market` -> phải gọi SAU khi đã có dữ liệu, không
-      // phải cạnh chỗ nạp ETF. Không await: nó lấy nến riêng, để nó chạy nền
-      // chứ đừng bắt phần quét tín hiệu đợi.
-      if (window.VdearCorr) initMarketStructure();
       await runScan();
     } catch (e) {
       $('scanStatus').textContent = 'Không tải được dữ liệu thị trường. Kiểm tra kết nối mạng và thử lại.';
@@ -362,72 +358,6 @@
       try { market = await API.getMarket(true); renderMovers(); if (!$('view-fav').hidden) renderFavorites(); } catch (e) {}
     }, 30000);
     setInterval(runScan, 5 * 60000);
-  }
-
-  /*
-   * MẠNG TƯƠNG QUAN trên trang chủ.
-   *
-   * Dùng chung js/correlation.js với trang terminal — một bản cài đặt, hai chỗ
-   * gắn. Vốn hoá lấy từ CoinGecko để quyết định kích thước nút và thứ tự ưu
-   * tiên; thiếu vốn hoá thì xếp theo khối lượng thật, không bịa.
-   */
-  async function initMarketStructure() {
-    const canvas = $('msCanvas'), tip = $('msTip'), note = $('msNote');
-    if (!canvas) return;
-    const usd = (n) => {
-      if (n == null || !Number.isFinite(n)) return '—';
-      const a = Math.abs(n);
-      if (a >= 1e12) return '$' + (a / 1e12).toFixed(2) + 'T';
-      if (a >= 1e9) return '$' + (a / 1e9).toFixed(2) + 'B';
-      if (a >= 1e6) return '$' + (a / 1e6).toFixed(2) + 'M';
-      return '$' + a.toFixed(2);
-    };
-    const pc = (v, d) => (v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(d == null ? 2 : d) + '%');
-    const kls = (v) => (v == null ? '' : v > 0 ? 'up' : v < 0 ? 'down' : '');
-
-    try {
-      const list = (market || []).slice();
-      if (!list.length) { note.textContent = 'Chưa có dữ liệu thị trường.'; return; }
-      await API.loadCoinGecko().catch(() => null);
-      list.forEach((c) => {
-        const info = API.cgInfo(c.base);
-        c.marketCap = info ? info.marketCap : null;
-      });
-      list.sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0)
-        || (b.quoteVolume || 0) - (a.quoteVolume || 0));
-
-      const g = await API.getGlobal().catch(() => null);
-      const vol24 = list.reduce((s, c) => s + (c.quoteVolume || 0), 0);
-
-      const res = await window.VdearCorr.compute(list, { limit: 24, days: 60 });
-      if (!res.assets.length) {
-        note.textContent = 'Không đủ nến để tính tương quan.';
-        return;
-      }
-      const stats = [
-        g && g.marketCap != null && ['Vốn hoá toàn thị trường', usd(g.marketCap), pc(g.change24h), kls(g.change24h)],
-        g && g.btcDominance != null && ['Tỉ trọng BTC', g.btcDominance.toFixed(2) + '%', '', ''],
-        ['Khối lượng 24h · 4 sàn', usd(vol24), '', ''],
-        ['Tài sản trong mạng', String(res.assets.length), '', ''],
-        ['|ρ| trung bình', res.meanAbs == null ? '—' : res.meanAbs.toFixed(2), '', ''],
-      ].filter(Boolean);
-      $('msStats').innerHTML = stats.map((x) =>
-        `<div class="ms-stat"><span>${x[0]}</span><b>${x[1]}</b>${x[2] ? `<i class="${x[3]}">${x[2]}</i>` : ''}</div>`).join('');
-
-      note.textContent = '';
-      window.VdearCorr.render(canvas, tip, res.assets, res.edges, (c) => `
-        <div class="ms-tip-h"><b>${c.base}</b><span class="${kls(c.change)}">${pc(c.change)}</span></div>
-        <div class="ms-tip-p">${c.price == null ? '—' : '$' + c.price.toLocaleString('en-US',
-          { minimumFractionDigits: c.price < 1 ? 6 : 2, maximumFractionDigits: c.price < 1 ? 6 : 2 })}</div>
-        <dl class="ms-tip-d">
-          <dt>Vốn hoá</dt><dd>${usd(c.marketCap)}</dd>
-          <dt>Khối lượng 24h</dt><dd>${usd(c.quoteVolume)}</dd>
-          <dt>RSI 14 · ngày</dt><dd>${c.rsi == null ? '—' : Math.round(c.rsi)}</dd>
-          <dt>ρ với BTC</dt><dd>${c.rhoBtc == null ? '—' : c.rhoBtc.toFixed(2)}</dd>
-        </dl>`);
-    } catch (e) {
-      note.textContent = 'Không tính được tương quan lần này.';
-    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

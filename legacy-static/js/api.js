@@ -400,34 +400,6 @@
   // Tra cứu CoinGecko theo base của sàn. Dùng chung logoKey để 1000PEPE tìm ra
   // PEPE: đó là cùng một tài sản nhân 1000, nên % biến động và vốn hoá của nó
   // chính là của PEPE, không phải một con số khác.
-  /*
-   * Số liệu toàn thị trường: vốn hoá tổng và tỉ trọng BTC.
-   *
-   * Không suy ra được từ bảng coins/markets đang có — bảng đó chỉ có 250 coin
-   * đầu, cộng lại vẫn thiếu phần đuôi. CoinGecko có endpoint riêng cho số này,
-   * miễn phí và không cần key.
-   *
-   * Hỏng thì trả null; nơi gọi để trống chứ không cộng tay ra một con số gần
-   * đúng rồi ghi là "vốn hoá thị trường".
-   */
-  let _global = null, _globalAt = 0;
-  async function getGlobal(force) {
-    const now = Date.now();
-    if (!force && _global && now - _globalAt < 120000) return _global;
-    try {
-      const j = await getJSON('https://api.coingecko.com/api/v3/global');
-      const d = j && j.data;
-      if (!d) return null;
-      const mc = d.total_market_cap && fin(d.total_market_cap.usd);
-      const vol = d.total_volume && fin(d.total_volume.usd);
-      const dom = d.market_cap_percentage && fin(d.market_cap_percentage.btc);
-      const chg = fin(d.market_cap_change_percentage_24h_usd);
-      _global = { marketCap: mc, volume: vol, btcDominance: dom, change24h: chg };
-      _globalAt = now;
-      return _global;
-    } catch (e) { return null; }
-  }
-
   function cgInfo(base) {
     if (!_cg) return null;
     return _cg[logoKey(base).toUpperCase()] || _cg[String(base).toUpperCase()] || null;
@@ -436,6 +408,6 @@
   window.VdearAPI = {
     getMarket, getCoin, binanceKlines, klinesMulti,
     logoUrl, logoSources, letterAvatar, applyLogo, baseFromSymbol, pool, num,
-    loadCoinGecko, cgInfo, getGlobal,
+    loadCoinGecko, cgInfo,
   };
 })();

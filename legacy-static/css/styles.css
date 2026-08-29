@@ -762,9 +762,6 @@ body.nd-locked{overflow:hidden}
 
   .nd-hoverable .nd-foot{margin:14px 12px 0}
 
-  /* Trang terminal đã có thanh bên riêng — hai thanh bên cạnh nhau là thừa. */
-  .nd-hoverable .tm-side{display:none}
-  .nd-hoverable .tm-head{padding-left:14px}
 }
 .nd-head{display:flex;align-items:center;justify-content:space-between;
   padding:4px 6px 12px;border-bottom:1px solid var(--line)}
@@ -859,44 +856,6 @@ body.nd-locked{overflow:hidden}
    chip: 5.66:1 và 6.48:1. */
 :root[data-theme="light"] .bs-chip.active,
 :root[data-theme="light"] .seg-btn.active{color:#F6F4EC}
-
-/* -------------------- Mạng tương quan -------------------- */
-/* Màu nút/cạnh của canvas đọc từ mấy biến này, nên bảng màu nằm ở CSS chứ
-   không gán cứng trong JS — đổi nền sáng/tối là đổi theo. */
-#msCanvas{--corr-up:79,180,119;--corr-down:224,87,79;--corr-edge:216,163,43}
-:root[data-theme="light"] #msCanvas{--corr-up:31,107,69;--corr-down:158,58,51;--corr-edge:122,92,20}
-
-.ms-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:8px;margin:2px 0 12px}
-.ms-stat{padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--panel-2);
-  display:flex;flex-direction:column;gap:2px;min-width:0}
-.ms-stat span{font-size:11px;color:var(--muted-2);letter-spacing:.2px}
-.ms-stat b{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;
-  font-variant-numeric:tabular-nums}
-.ms-stat i{font-family:'JetBrains Mono',monospace;font-size:11px;font-style:normal}
-
-.ms-wrap{position:relative;height:440px;border:1px solid var(--line);border-radius:12px;
-  background:radial-gradient(70% 60% at 50% 45%,rgba(216,163,43,.07),transparent 70%),var(--panel-2);
-  overflow:hidden}
-#msCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
-.ms-tip{position:absolute;z-index:4;pointer-events:none;width:214px;padding:11px 12px;
-  background:var(--panel);border:1px solid var(--line-2);border-radius:10px;
-  box-shadow:0 16px 38px rgba(0,0,0,.45)}
-.ms-tip-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
-  font-family:'JetBrains Mono',monospace;font-size:12.5px}
-.ms-tip-h b{font-family:'Chakra Petch',sans-serif;font-size:14px}
-.ms-tip-p{font-family:'JetBrains Mono',monospace;font-size:17px;margin:5px 0 7px;
-  font-variant-numeric:tabular-nums}
-.ms-tip-d{display:grid;grid-template-columns:1fr auto;gap:3px 12px;margin:0;
-  font-family:'JetBrains Mono',monospace;font-size:10.5px}
-.ms-tip-d dt{color:var(--muted-2)} .ms-tip-d dd{margin:0;color:var(--text);text-align:right}
-
-.ms-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:9px;font-size:11.5px;color:var(--muted-2)}
-.ms-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
-.ms-dot.up{background:var(--up)} .ms-dot.down{background:var(--down)}
-@media (max-width:640px){
-  .ms-wrap{height:340px}
-  .ms-stats{grid-template-columns:1fr 1fr}
-}
 
 /* -------------------- ETF giao ngay -------------------- */
 .etf-group{margin-top:10px}

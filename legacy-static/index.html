@@ -84,29 +84,6 @@
         </div>
       </section>
 
-      <!-- Mạng tương quan: cấu trúc thị trường, tính thật từ nến ngày -->
-      <section class="panel" id="market-structure">
-        <div class="panel-head">
-          <h2>🕸️ Cấu trúc thị trường · Mạng tương quan</h2>
-          <span class="muted small" id="msRange">60 ngày · nến ngày</span>
-        </div>
-        <div class="ms-stats" id="msStats"></div>
-        <div class="ms-wrap">
-          <canvas id="msCanvas" aria-label="Mạng tương quan giữa các tài sản, dạng cầu xoay"></canvas>
-          <div class="ms-tip" id="msTip" hidden></div>
-        </div>
-        <div class="ms-legend">
-          <span><i class="ms-dot up"></i>Tăng 24h</span>
-          <span><i class="ms-dot down"></i>Giảm 24h</span>
-          <span>Nút to = vốn hoá lớn · cạnh đậm = tương quan chặt</span>
-          <span id="msNote" class="muted">Đang tính…</span>
-        </div>
-        <p class="hint"><b>Hệ số tương quan</b> tính bằng Pearson trên <b>lợi suất log theo ngày</b>, không phải
-          so hai con số %24h với nhau. Cặp nào có dưới 10 ngày chung, hoặc một bên giá đứng im, thì bị loại
-          chứ không ép ra số. Tương quan cao nghĩa là hai tài sản đi cùng nhau — <b>không</b> có nghĩa cái này
-          làm cái kia chạy.</p>
-      </section>
-
       <!-- Gợi ý Long/Short (quét 4h) — chỉ hiện 4, còn lại "Xem thêm" -->
       <section class="panel" id="futures-radar">
         <div class="panel-head">
@@ -210,7 +187,6 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/indicators.js"></script>
-  <script src="js/correlation.js"></script>
   <script src="js/ticker.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/etf.js"></script>

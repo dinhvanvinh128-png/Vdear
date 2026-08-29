@@ -28,7 +28,6 @@
     chain:  '<path d="M8.4 11.6a3 3 0 0 1 0-4.2l2-2a3 3 0 0 1 4.2 4.2l-1 1"/><path d="M11.6 8.4a3 3 0 0 1 0 4.2l-2 2a3 3 0 0 1-4.2-4.2l1-1"/>',
     drop:   '<path d="M10 3.2S5.4 8 5.4 11.2a4.6 4.6 0 0 0 9.2 0C14.6 8 10 3.2 10 3.2z"/>',
     breadth:'<path d="M3 16V9M7 16V5M11 16v-4M15 16V7"/>',
-    terminal: '<rect x="2.4" y="4" width="15.2" height="12" rx="1.8"/><path d="M5.6 8.6l2.2 1.9-2.2 1.9M10 13.2h4"/>',
   etf:    '<rect x="2.6" y="4.4" width="14.8" height="11.2" rx="1.8"/><path d="M6.2 12.6V9.4M10 12.6V7.2M13.8 12.6v-2.2"/>',
     layers: '<path d="M10 3l7 3.6-7 3.6-7-3.6z"/><path d="M3 11l7 3.6 7-3.6"/>',
     percent:'<circle cx="6.6" cy="6.6" r="2.1"/><circle cx="13.4" cy="13.4" r="2.1"/><path d="M15 5L5 15"/>',
@@ -47,7 +46,6 @@
       items: [
         { href: '/', label: 'Tổng quan thị trường', icon: 'market', desc: 'Tâm lý · tín hiệu 4H · biến động 24h' },
         { href: '/#movers', label: 'Biến động 24h', icon: 'table', desc: 'Toàn bộ coin, lọc theo nhóm' },
-        { href: '/terminal.html', label: 'Terminal', icon: 'terminal', desc: 'Một màn hình nhìn hết · mạng tương quan 60 ngày' },
         { href: '/#etf', label: 'Dòng tiền ETF', icon: 'etf', desc: 'BTC · ETH · SOL — tiền vào/ra quỹ mỗi ngày' },
         { href: 'bubbles.html', label: 'Bong bóng thị trường', icon: 'bubble', desc: 'Cả thị trường trong một khung' },
         { href: '/#futures-radar', label: 'Futures Radar', icon: 'radar', desc: 'RSI · S&R · Price Action · Entry/TP/SL' },
@@ -163,7 +161,7 @@
      */
     let topRaf = 0;
     function syncTop() {
-      const bar = document.querySelector('.topbar, .tm-head');
+      const bar = document.querySelector('.topbar');
       const b = bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) : 0;
       document.documentElement.style.setProperty('--nd-top', b + 'px');
     }
@@ -189,7 +187,7 @@
     window.addEventListener('resize', queueTop);
     window.addEventListener('scroll', queueTop, { passive: true });
     if (window.ResizeObserver) {
-      const bar = document.querySelector('.topbar, .tm-head');
+      const bar = document.querySelector('.topbar');
       if (bar) new ResizeObserver(queueTop).observe(bar);
     }
 
