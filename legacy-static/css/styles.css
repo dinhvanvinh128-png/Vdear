@@ -915,6 +915,16 @@ body.nd-locked{overflow:hidden}
 /* Bảng tìm coin. position:absolute trong thẻ radar (thẻ đã có position tương đối
    nhờ ::after của hiệu ứng spotlight nên đặt lại rõ ràng ở .hx-radar). */
 .hx-radar{position:relative}
+
+/* Mưa logo + mũi tên xu hướng ở nền thẻ (js/radarrain.js).
+   Bo góc đặt trên chính canvas: KHÔNG dùng overflow:hidden ở .hx-radar vì
+   bảng chọn coin cũng nằm trong thẻ và sẽ bị cắt mất. */
+.hx-rain{position:absolute;inset:0;z-index:0;width:100%;height:100%;
+  border-radius:inherit;pointer-events:none}
+/* Nội dung phải nổi lên trên canvas. Liệt kê rõ từng phần tử thay vì
+   `.hx-radar > *` để không đụng vào .hx-pop (đã absolute, z-index riêng). */
+.hx-radar > header,.hx-radar > .hx-tfs,.hx-radar > .hx-gauge,
+.hx-radar > .hx-rows,.hx-radar > .hx-spark,.hx-radar > footer{position:relative;z-index:1}
 .hx-pop{position:absolute;z-index:30;top:46px;right:14px;width:min(300px,calc(100% - 28px));
   background:var(--hx-surf);border:1px solid var(--hx-line2);border-radius:12px;
   box-shadow:0 24px 60px -24px rgba(0,0,0,.85);overflow:hidden}

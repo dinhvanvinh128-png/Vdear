@@ -56,6 +56,8 @@ Bản đang chạy là **trang tĩnh**, không có bước build:
       js/etf.js             dòng tiền ETF + biểu đồ khối 3D theo quỹ
       js/chart.js           chart nến tự vẽ trên canvas
       js/navmenu.js         menu 3 gạch / dải icon bên trái
+      js/hero.js            thẻ Signal Radar + Trading plan, bộ chọn coin/khung
+      js/radarrain.js       mưa logo + mũi tên xu hướng ở nền thẻ radar
     api/etf-flow.js         serverless function, giữ API key
 
 Thư mục `app/`, `lib/`, `components/` là app Next.js **không được deploy**.

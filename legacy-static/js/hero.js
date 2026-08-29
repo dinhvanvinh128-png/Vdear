@@ -91,6 +91,13 @@
     const sc = $('hxScore'); if (sc) sc.textContent = '—';
     const arc = $('hxArc'); if (arc) { arc.classList.remove('up', 'down'); arc.style.strokeDashoffset = String(CIRC); }
     sparkline($('hxSpark'), null);
+    rain('setTrend', '');
+  }
+
+  /* Mưa nền là trang trí: thiếu module hay lỗi thì thẻ vẫn chạy như thường. */
+  function rain(fn, arg) {
+    const r = window.VdearRadarRain;
+    if (r && typeof r[fn] === 'function') { try { r[fn](arg); } catch (e) { /* bỏ qua */ } }
   }
 
   function fail(msg) {
@@ -105,6 +112,7 @@
   function paint(sig, candles) {
     const dir = sig.side === 'LONG' ? 'up' : sig.side === 'SHORT' ? 'down' : '';
     const label = sig.side === 'LONG' ? 'Bullish' : sig.side === 'SHORT' ? 'Bearish' : 'Trung tính';
+    rain('setTrend', dir);
     const score = Math.max(0, Math.min(100, Math.round(sig.score || 0)));
 
     countTo($('hxScore'), score, (v) => String(Math.round(v)));
@@ -237,6 +245,7 @@
     $('hxSymTxt').textContent = state.symbol;
     save();
     clearAll();
+    rain('setCoin', state.base);
     load();
   }
 
@@ -397,6 +406,7 @@
     buildTfs();
     syncStats();
     wirePicker();
+    rain('setCoin', state.base);
     load();
     ensureMarket();
     schedule();
