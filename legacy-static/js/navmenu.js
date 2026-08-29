@@ -44,24 +44,24 @@
     {
       title: 'Thị trường',
       items: [
-        { href: '/', label: 'Tổng quan thị trường', icon: 'market', desc: 'Tâm lý · tín hiệu 4H · biến động 24h' },
-        { href: '/#movers', label: 'Biến động 24h', icon: 'table', desc: 'Toàn bộ coin, lọc theo nhóm' },
-        { href: '/#etf', label: 'Dòng tiền ETF', icon: 'etf', desc: 'BTC · ETH · SOL — tiền vào/ra quỹ mỗi ngày' },
-        { href: 'bubbles.html', label: 'Bong bóng thị trường', icon: 'bubble', desc: 'Cả thị trường trong một khung' },
-        { href: '/#futures-radar', label: 'Futures Radar', icon: 'radar', desc: 'RSI · S&R · Price Action · Entry/TP/SL' },
-        { label: 'Spot Radar', icon: 'spot', desc: 'CVD · buy/sell · order book', soon: true },
-        { label: 'Sector Rotation', icon: 'sector', desc: 'Tiền đang xoay sang mảng nào', soon: true },
+        { href: '/', label: 'Tổng quan thị trường', icon: 'market' },
+        { href: '/#movers', label: 'Biến động 24h', icon: 'table' },
+        { href: '/#etf', label: 'Dòng tiền ETF', icon: 'etf' },
+        { href: 'bubbles.html', label: 'Bong bóng thị trường', icon: 'bubble' },
+        { href: '/#futures-radar', label: 'Futures Radar', icon: 'radar' },
+        { label: 'Spot Radar', icon: 'spot', soon: true },
+        { label: 'Sector Rotation', icon: 'sector', soon: true },
       ],
     },
     {
       title: 'Phân tích',
       items: [
-        { href: 'coin.html?c=BTC', label: 'Phân tích coin', icon: 'coin', desc: 'Chart · RSI · S&R · kế hoạch lệnh' },
-        { label: 'Dòng tiền', icon: 'flow', desc: 'Spot · CEX · DEX · stablecoin', soon: true },
-        { label: 'Whale & Exchange Flow', icon: 'whale', desc: 'Nạp/rút sàn, ví lớn', soon: true },
-        { label: 'On-chain', icon: 'chain', desc: 'Địa chỉ hoạt động · phí · tăng trưởng mạng', soon: true },
-        { label: 'Thanh khoản', icon: 'drop', desc: 'Stablecoin · độ sâu sổ lệnh', soon: true },
-        { label: 'Độ rộng thị trường', icon: 'breadth', desc: '% coin trên EMA, tăng/giảm', soon: true },
+        { href: 'coin.html?c=BTC', label: 'Phân tích coin', icon: 'coin' },
+        { label: 'Dòng tiền', icon: 'flow', soon: true },
+        { label: 'Whale & Exchange Flow', icon: 'whale', soon: true },
+        { label: 'On-chain', icon: 'chain', soon: true },
+        { label: 'Thanh khoản', icon: 'drop', soon: true },
+        { label: 'Độ rộng thị trường', icon: 'breadth', soon: true },
       ],
     },
     {
@@ -76,14 +76,14 @@
     {
       title: 'Của bạn',
       items: [
-        { href: '/?view=fav', label: 'Coin yêu thích', icon: 'star', desc: 'Danh mục bạn đang theo dõi' },
+        { href: '/?view=fav', label: 'Coin yêu thích', icon: 'star' },
       ],
     },
     {
       title: 'Thông tin',
       items: [
-        { href: 'about.html', label: 'Giới thiệu', icon: 'info', desc: 'Vdearypto làm gì và không làm gì' },
-        { href: 'contact.html', label: 'Liên hệ', icon: 'mail', desc: 'Góp ý, báo lỗi dữ liệu' },
+        { href: 'about.html', label: 'Giới thiệu', icon: 'info' },
+        { href: 'contact.html', label: 'Liên hệ', icon: 'mail' },
       ],
     },
     {
@@ -123,7 +123,7 @@
         <h3>${g.title}</h3>
         ${g.items.map((it) => {
           const ico = `<svg class="nd-ico" viewBox="0 0 20 20" aria-hidden="true">${I[it.icon] || ''}</svg>`;
-          const txt = `<span class="nd-txt"><b>${it.label}</b>${it.desc ? `<small>${it.desc}</small>` : ''}</span>`;
+          const txt = `<span class="nd-txt"><b>${it.label}</b></span>`;
           if (it.soon || !it.href) {
             return `<div class="nd-item soon" aria-disabled="true">${ico}${txt}<span class="nd-soon">sắp có</span></div>`;
           }
