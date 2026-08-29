@@ -44,18 +44,25 @@
   }
   function coinLink(base) { return 'coin.html?c=' + encodeURIComponent(base); }
 
-  /* -------------------------- Top tabs (views) ------------------------- */
-  function setView(view) {
-    document.querySelectorAll('.mtab').forEach((b) => {
-      const on = b.dataset.view === view;
-      b.classList.toggle('active', on);
-      if (b.hasAttribute('aria-pressed')) b.setAttribute('aria-pressed', String(on));
-    });
-    $('view-crypto').hidden = view !== 'crypto';
-    $('view-fav').hidden = view !== 'fav';
-    if (view === 'fav') renderFavorites();
+  /* ------------------------- Lọc theo Yêu thích ------------------------ */
+  /*
+   * Trước đây Yêu thích là một "view" riêng, thay chỗ cả bảng thị trường. Nay
+   * nó là một BỘ LỌC của chính bảng Biến động 24h — nút nằm ngay trên bảng nên
+   * lúc nào cũng bấm lại được, và người dùng giữ nguyên sắp xếp, phân trang,
+   * ô tìm kiếm đang có thay vì rơi sang một bảng khác.
+   */
+  let favOnly = false;
+
+  function setFavOnly(on) {
+    favOnly = !!on;
+    const btn = $('favFilter');
+    if (btn) {
+      btn.setAttribute('aria-pressed', String(favOnly));
+      btn.classList.toggle('on', favOnly);
+    }
+    moversPage = 1;
+    renderMovers();
   }
-  function currentView() { return $('view-fav').hidden ? 'crypto' : 'fav'; }
 
   /* -------------------- Gợi ý Long/Short (quét 4h) --------------------- */
   let scanning = false;
@@ -199,6 +206,7 @@
     let list = market;
     if (sector && sector.coins) list = market.filter((c) => sector.coins.includes(c.base));
     if (searchQuery) list = list.filter((c) => c.base.toLowerCase().includes(searchQuery));
+    if (favOnly) list = list.filter((c) => favHas(c.base));
     list = list.slice();
     const { key, dir } = sortState;
     const sgn = dir === 'asc' ? 1 : -1;
@@ -235,7 +243,9 @@
     const body = $('moversBody');
     body.innerHTML = page.length
       ? page.map((c) => moverRow(c)).join('')
-      : '<tr><td colspan="4" class="muted">Không có coin trong nhóm này.</td></tr>';
+      : `<tr><td colspan="4" class="muted">${favOnly
+          ? 'Chưa có coin yêu thích nào khớp. Bấm ⭐ ở cột đầu để thêm.'
+          : 'Không có coin trong nhóm này.'}</td></tr>`;
     body.querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
     bindRowActions(body);
     renderPager(totalPages, list.length);
@@ -282,16 +292,6 @@
   }
 
   /* ------------------------------ Favorites ---------------------------- */
-  function renderFavorites() {
-    computeVolRank();
-    const list = market.filter((c) => favHas(c.base));
-    const body = $('favBody');
-    body.innerHTML = list.length ? list.map((c) => moverRow(c)).join('') : '';
-    $('favEmpty').style.display = list.length ? 'none' : 'block';
-    body.querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
-    bindRowActions(body);
-  }
-
 
   /* --------------------- Thang tâm lý thị trường ----------------------- */
   function renderSentiment() {
@@ -317,17 +317,14 @@
     // khi Yêu thích đổi (kể cả do đồng bộ cloud lúc đăng nhập) -> cập nhật UI
     Fav.onChange(() => {
       updateFavCount();
+      // Bỏ sao khi đang lọc Yêu thích thì dòng đó phải biến khỏi bảng ngay.
       if (market.length) renderMovers();
-      if (!$('view-fav').hidden) renderFavorites();
     });
 
-    // Bấm lần nữa vào nút đang bật thì quay về danh sách thị trường.
-    document.querySelectorAll('.mtab').forEach((b) => b.addEventListener('click', () => {
-      setView(currentView() === b.dataset.view ? 'crypto' : b.dataset.view);
-    }));
-    // Menu 3 gạch trỏ thẳng vào một tab: index.html?view=fav.
-    const wanted = new URLSearchParams(location.search).get('view');
-    if (wanted === 'fav') setView(wanted);
+    const favBtn = $('favFilter');
+    if (favBtn) favBtn.addEventListener('click', () => setFavOnly(!favOnly));
+    // Menu 3 gạch trỏ thẳng vào Yêu thích: index.html?view=fav.
+    if (new URLSearchParams(location.search).get('view') === 'fav') setFavOnly(true);
     renderSectorBar();
     $('scanMore').addEventListener('click', () => { scanExpanded = !scanExpanded; renderScan(); });
     $('scanRescan').addEventListener('click', async () => {
@@ -353,9 +350,6 @@
     try {
       market = await API.getMarket();
       renderMovers();
-      // Vào thẳng tab Yêu thích thì lúc render lần đầu `market` còn rỗng; vẽ lại
-      // ngay khi có dữ liệu thay vì để trống tới nhịp làm mới 30s kế tiếp.
-      if (!$('view-fav').hidden) renderFavorites();
       await runScan();
     } catch (e) {
       $('scanStatus').textContent = 'Không tải được dữ liệu thị trường. Kiểm tra kết nối mạng và thử lại.';
@@ -363,7 +357,7 @@
     }
 
     setInterval(async () => {
-      try { market = await API.getMarket(true); renderMovers(); if (!$('view-fav').hidden) renderFavorites(); } catch (e) {}
+      try { market = await API.getMarket(true); renderMovers(); } catch (e) {}
     }, 30000);
     setInterval(runScan, 5 * 60000);
   }

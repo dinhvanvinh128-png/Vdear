@@ -110,16 +110,19 @@ h1,h2,h3{margin:0;font-weight:700}
 .search-clear{background:none;border:none;color:var(--muted-2);cursor:pointer;font-size:13px;padding:0 2px}
 .search-clear:hover{color:var(--text)}
 
-/* -------------------------- Market tabs -------------------------- */
-.market-tabs{max-width:1200px;margin:14px auto 0;padding:0 18px;display:flex;gap:6px;
-  border-bottom:1px solid var(--line)}
-.mtab{background:none;border:none;color:var(--muted);font-size:16px;font-weight:700;
-  padding:12px 14px;cursor:pointer;position:relative;font-family:'Chakra Petch',sans-serif;
-  display:inline-flex;align-items:center;gap:7px}
-.mtab:hover{color:var(--text)}
-.mtab.active{color:var(--text)}
-.mtab.active::after{content:'';position:absolute;left:14px;right:14px;bottom:-1px;height:3px;
-  border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+/* ---------------------- Lọc theo Yêu thích ----------------------- */
+/* Nút nằm ngay trên bảng Biến động 24h, cạnh ô tìm kiếm. Thanh tab đứng riêng
+   trước đây đã bỏ vì không còn markup nào dùng tới nó. */
+.fav-filter{display:inline-flex;align-items:center;gap:7px;flex:none;
+  padding:7px 12px;border-radius:10px;cursor:pointer;
+  font-family:'Chakra Petch',sans-serif;font-size:13.5px;font-weight:700;
+  color:var(--muted);background:var(--panel-2);border:1px solid var(--line-2);
+  transition:color .16s,border-color .16s,background .16s}
+.fav-filter:hover{color:var(--text);border-color:var(--accent-2)}
+.fav-filter:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fav-filter[aria-pressed="true"]{color:var(--text);border-color:var(--accent);
+  background:rgba(216,163,43,.12)}
+.fav-filter[aria-pressed="true"] .fav-count{border-color:var(--accent);color:var(--accent)}
 .fav-count{font-size:11px;background:var(--panel-2);border:1px solid var(--line-2);
   color:var(--muted);border-radius:20px;padding:1px 7px;font-family:'Inter'}
 
@@ -568,7 +571,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opa
 @media (prefers-reduced-motion:reduce){body::before{animation:none}}
 
 /* Fonts hiển thị hiện đại */
-.brand-name,.panel-head h2,.mtab,.coin-id h1,.doc h1{font-family:var(--font-display);letter-spacing:.2px}
+.brand-name,.panel-head h2,.coin-id h1,.doc h1{font-family:var(--font-display);letter-spacing:.2px}
 .big-price,.gauge-val,.mv-price,.mv-klgd,.tk-price,.sc-id b,.plan-cell b{font-family:var(--font-mono)}
 
 /* Scrollbar + selection */
@@ -613,7 +616,7 @@ body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opa
 .btn-primary::after{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;
   background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);animation:shine 3.2s ease-in-out infinite}
 @keyframes shine{0%,60%{left:-120%}100%{left:130%}}
-.rescan-btn,.pg-btn,.tf-btn,.sector-chip,.mtab,.icon-btn,.kbd-hint,.more-btn{transition:all .16s ease}
+.rescan-btn,.pg-btn,.tf-btn,.sector-chip,.icon-btn,.kbd-hint,.more-btn{transition:all .16s ease}
 .sector-chip:hover{box-shadow:var(--neon)}
 
 /* Scan card — glass + viền theo LONG/SHORT + hover nổi */
@@ -637,7 +640,6 @@ body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opa
 .mv-row:hover{background:linear-gradient(90deg,rgba(216,163,43,.06),transparent)}
 
 /* Market tabs underline glow */
-.mtab.active::after{box-shadow:0 0 14px rgba(216,163,43,.6)}
 
 /* Reveal khi cuộn (chỉ bật qua JS bằng class .reveal) */
 .reveal{opacity:0;transform:translateY(18px)}

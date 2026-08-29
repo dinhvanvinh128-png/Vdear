@@ -154,16 +154,8 @@
   </section>
 
   <!-- Tab cấp cao: Yêu thích / Crypto -->
-  <!-- Chỉ còn một nút: "Crypto" là chính trang này nên không cần nhãn riêng.
-       Nút Yêu thích thành nút BẬT/TẮT — nếu chỉ xoá nút Crypto thì vào xem
-       Yêu thích xong không còn đường quay lại. -->
-  <div class="market-tabs">
-    <button class="mtab" data-view="fav" aria-pressed="false">⭐ Yêu thích <span class="fav-count" id="favCount">0</span></button>
-  </div>
-
   <main class="container">
-    <!-- ============ VIEW: CRYPTO ============ -->
-    <div id="view-crypto">
+    <div>
       <!-- Thang tâm lý thị trường 0-100 -->
       <section class="panel sentiment">
         <div class="panel-head">
@@ -196,6 +188,13 @@
       <section class="panel" id="movers">
         <div class="panel-head">
           <h2>📊 Biến động 24h · Volume &amp; Giá</h2>
+          <!-- Yêu thích là BỘ LỌC của chính bảng này, không phải một trang
+               riêng: đặt nút vào một panel rồi ẩn panel đó đi khi bật thì mất
+               luôn đường tắt lại. -->
+          <button type="button" class="fav-filter" id="favFilter" aria-pressed="false"
+                  title="Chỉ hiện coin đã đánh dấu sao">
+            ⭐ Yêu thích <span class="fav-count" id="favCount">0</span>
+          </button>
           <div class="search-box">
             <span class="search-ico">🔍</span>
             <input id="moverSearch" type="text" autocomplete="off" placeholder="Tìm coin (VD: BTC, SOL…)">
@@ -228,20 +227,6 @@
         <div id="etfBody"></div>
       </section>
 
-    <!-- ============ VIEW: TRADFI ============ -->
-    <!-- ============ VIEW: YÊU THÍCH ============ -->
-    <div id="view-fav" hidden>
-      <section class="panel">
-        <div class="panel-head"><h2>⭐ Coin yêu thích</h2></div>
-        <div class="table-wrap">
-          <table class="movers">
-            <thead><tr><th>Tên</th><th>Giá mở vị thế</th><th>24H %</th><th>KLGD</th></tr></thead>
-            <tbody id="favBody"></tbody>
-          </table>
-        </div>
-        <p class="hint" id="favEmpty">Chưa có coin yêu thích. Vào tab Crypto, bấm ⭐ ở cột đầu để thêm.</p>
-      </section>
-    </div>
   </main>
 
   <!-- Khu nghịch coin: coin rơi, kéo chuột để hất văng nhau -->
