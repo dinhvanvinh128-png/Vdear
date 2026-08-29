@@ -6,7 +6,7 @@
   function reveal() {
     if (!('IntersectionObserver' in window)) return;
     var els = Array.prototype.slice.call(
-      document.querySelectorAll('.panel, .hero-inner, .coinrain-section, .foot-wrap'));
+      document.querySelectorAll('.panel, .coinrain-section, .foot-wrap'));
     if (!els.length) return;
     els.forEach(function (el) { el.classList.add('reveal'); });
     var io = new IntersectionObserver(function (es) {
@@ -18,7 +18,7 @@
   }
 
   function spotlight() {
-    var SEL = '.panel,.scan-card,.plan-cell,.hero-inner,.combat-panel';
+    var SEL = '.panel,.scan-card,.plan-cell,.combat-panel';
     window.addEventListener('pointermove', function (e) {
       var c = e.target.closest ? e.target.closest(SEL) : null;
       if (!c) return;
