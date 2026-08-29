@@ -1169,6 +1169,12 @@ tr.etf-main.open{background:var(--panel-2)}
    hai dòng với nhau. */
 /* ---- Biểu đồ khối 3D (isometric) ---- */
 .iso-wrap{overflow-x:auto;overflow-y:hidden;margin:2px 0 4px;padding-bottom:4px}
+/* SVG có width cố định (bằng đúng khổ hình vẽ) nên trong khối này nó nằm sát
+   trái, chừa một mảng trống bên phải. Dùng margin ngang auto trên phần tử
+   BLOCK: vừa khung thì canh giữa, mà rộng hơn khung thì lề auto tự thành 0 và
+   nó tràn về phía phải — cuộn ngang vẫn tới được, không bị cắt mất mép trái
+   như cách dùng text-align:center hay justify-content:center. */
+.iso-wrap > .iso{display:block;margin-left:auto;margin-right:auto}
 .iso{display:block;max-width:none}
 
 /* Ba mặt, ba độ sáng — đó là toàn bộ thứ tạo ra cảm giác khối. Mặt trên sáng
