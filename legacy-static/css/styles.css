@@ -857,6 +857,92 @@ body.nd-locked{overflow:hidden}
 :root[data-theme="light"] .bs-chip.active,
 :root[data-theme="light"] .seg-btn.active{color:#F6F4EC}
 
+/* ============ HERO — bố cục lưới + node + thẻ vát góc ============
+   Mang từ bản thiết kế LŪMEN sang, nhưng dùng BẢNG MÀU VÀNG CỦA WEB NÀY chứ
+   không bê màu xanh băng của bản gốc: trộn hai bảng màu trên một trang chính
+   là thứ đã bị phàn nàn trước đây. Đổi accent chỉ là sửa --lx-line/--lx-ink.
+
+   Cũng KHÔNG mang sang dải ví (0x71...f4e2 · [ CONNECTED ] · PRIME_MEMBER) —
+   đó là địa chỉ ví và trạng thái kết nối bịa, không được phép có trên trang
+   tài chính này. */
+.hero-inner.lx{--lx-line:rgba(216,163,43,.55);--lx-ink:var(--accent);
+  position:relative;overflow:hidden}
+@media (min-width:900px){ .hero-inner.lx{min-height:520px} }
+:root[data-theme="light"] .hero-inner.lx{--lx-line:rgba(122,92,20,.6)}
+
+@keyframes lxUp   {from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none}}
+@keyframes lxLeft {from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+@keyframes lxRight{from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none}}
+@keyframes lxScale{from{opacity:0;transform:scale(.85)}       to{opacity:1;transform:scale(1)}}
+@keyframes lxFade {from{opacity:0}                            to{opacity:1}}
+@keyframes lxGridV{from{opacity:0;transform:scaleY(0)}        to{opacity:1;transform:scaleY(1)}}
+@keyframes lxGridH{from{opacity:0;transform:scaleX(0)}        to{opacity:1;transform:scaleX(1)}}
+/* Một đường cong duy nhất cho mọi hiệu ứng vào — expo-out. */
+.lx-anim-up{opacity:0;animation:lxUp .9s cubic-bezier(.16,1,.3,1) forwards}
+.lx-in-left{opacity:0;animation:lxLeft .8s cubic-bezier(.16,1,.3,1) forwards}
+.lx-in-right{opacity:0;animation:lxRight .8s cubic-bezier(.16,1,.3,1) forwards}
+/* Máy đặt giảm chuyển động: hiện thẳng, không trượt. */
+@media (prefers-reduced-motion:reduce){
+  .lx-anim-up,.lx-in-left,.lx-in-right,.lx-grid i,.lx-conn,.lx-sq{animation:none!important;opacity:1!important;transform:none!important}
+}
+
+.lx-grid{position:absolute;inset:0;pointer-events:none}
+.lx-grid i{position:absolute;display:block}
+.lx-v{top:0;height:100%;width:1px;background:var(--line);opacity:0;transform-origin:top;
+  animation:lxGridV 1.2s cubic-bezier(.16,1,.3,1) forwards}
+.lx-h{left:0;width:100%;height:1px;background:var(--line);opacity:0;transform-origin:left;
+  animation:lxGridH 1.2s cubic-bezier(.16,1,.3,1) forwards}
+/* Dấu cộng 10×10: hai thanh đều phải translate -50% mới nằm ĐÚNG giao điểm;
+   thiếu nó dấu cộng lệch xuống phải. */
+.lx-plus{width:0;height:0;opacity:0;animation:lxScale .7s cubic-bezier(.16,1,.3,1) forwards}
+.lx-plus::before,.lx-plus::after{content:'';position:absolute;background:var(--line-2);
+  transform:translate(-50%,-50%)}
+.lx-plus::before{width:10px;height:1px}
+.lx-plus::after{width:1px;height:10px}
+
+/* Sơ đồ node ẩn dưới 900px — chỗ đó không đủ rộng để đọc. */
+/* Sơ đồ chiếm VÙNG PHẢI, phía trên thẻ vát góc — cột trái đã kín chữ nên bê
+   nguyên toạ độ toàn màn của bản gốc sang là nhãn đè lên tiêu đề và hàng số. */
+.lx-nodes{position:absolute;top:14px;right:14px;bottom:200px;left:56%;
+  pointer-events:none;display:none}
+@media (min-width:900px){ .lx-nodes{display:block} }
+@media (min-width:1200px){ .lx-nodes{bottom:214px} }
+.lx-conn{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  opacity:0;animation:lxFade .8s cubic-bezier(.16,1,.3,1) forwards}
+.lx-conn line{stroke:var(--lx-line);stroke-width:1}
+/* Toạ độ đánh dấu GÓC TRÊN TRÁI của ô vuông — không transform căn giữa, nhờ
+   vậy đầu đường nối rơi đúng vào góc. */
+.lx-sq{position:absolute;width:78px;height:78px;border:1px solid var(--lx-line);
+  opacity:0;animation:lxScale .7s cubic-bezier(.16,1,.3,1) forwards}
+@media (min-width:1200px){ .lx-sq{width:96px;height:96px} }
+.lx-label{position:absolute;max-width:190px}
+.lx-label span{display:block;font-family:'JetBrains Mono',monospace;font-size:12px;
+  line-height:15.6px;color:var(--text);white-space:nowrap}
+.lx-label p{margin:4px 0 0;font-size:11px;line-height:14px;color:var(--muted-2)}
+
+/* Thẻ vát góc dưới trái 30×30. */
+.lx-card{position:relative;max-width:280px;margin-top:22px}
+@media (min-width:900px){
+  .lx-card{position:absolute;right:26px;bottom:26px;margin:0;z-index:2}
+}
+@media (max-width:520px){ .lx-card{display:none} }
+.lx-badge{display:inline-block;margin-bottom:10px;padding:2px 6px;
+  background:var(--accent);color:#0A0906;font-family:'JetBrains Mono',monospace;
+  font-size:11.5px;line-height:15.6px;font-weight:700}
+.lx-card-body{position:relative;padding:20px}
+/* 0.5 giữ nét 1px đúng lưới điểm ảnh; non-scaling-stroke giữ nét 1px dù bị
+   kéo méo bởi preserveAspectRatio="none". */
+.lx-card-body svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.lx-card-body polygon{fill:none;stroke:var(--lx-ink);stroke-width:1}
+/* relative BẮT BUỘC: không có thì chữ nằm dưới lớp SVG tuyệt đối ở trên. */
+.lx-card-body p{position:relative;margin:0 0 18px;font-size:12.5px;line-height:18px;color:var(--text)}
+.lx-card-body a{position:relative;font-family:'JetBrains Mono',monospace;font-size:12px;
+  line-height:15.6px;color:var(--lx-ink);text-decoration:none}
+.lx-card-body a:hover{text-decoration:underline}
+
+.lx-main{position:relative;z-index:1}
+@media (min-width:900px){ .lx-main{max-width:56%} }
+
 /* -------------------- ETF giao ngay -------------------- */
 .etf-group{margin-top:10px}
 .etf-group h3{margin:0 0 8px;font-size:12px;font-weight:700;text-transform:uppercase;
