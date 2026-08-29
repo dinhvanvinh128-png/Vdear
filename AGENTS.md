@@ -58,6 +58,7 @@ Bản đang chạy là **trang tĩnh**, không có bước build:
       js/navmenu.js         menu 3 gạch / dải icon bên trái
       js/hero.js            thẻ Signal Radar + Trading plan, bộ chọn coin/khung
       js/radarrain.js       mưa logo + mũi tên xu hướng ở nền thẻ radar
+      js/protect.js         chống copy, dò DevTools, watermark (xem SECURITY.md)
     api/etf-flow.js         serverless function, giữ API key
 
 Thư mục `app/`, `lib/`, `components/` là app Next.js **không được deploy**.

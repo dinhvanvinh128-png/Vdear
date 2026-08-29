@@ -1,3 +1,4 @@
+import { rateLimitResponse } from '@/lib/api/guard';
 import { NextRequest, NextResponse } from 'next/server';
 import { binance } from '@/lib/exchanges/binance';
 import { cached, TTL } from '@/lib/cache';
@@ -13,6 +14,9 @@ export const dynamic = 'force-dynamic';
  * single-source and labelled as such.
  */
 export async function GET(req: NextRequest) {
+  const limited = rateLimitResponse(req);
+  if (limited) return limited;
+
   const sp = req.nextUrl.searchParams;
   const raw = (sp.get('symbol') || 'BTC').toUpperCase();
   const symbol = splitSymbol(raw).quote ? raw : toCanonical(raw);

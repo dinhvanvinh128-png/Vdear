@@ -1,3 +1,4 @@
+import { rateLimitResponse } from '@/lib/api/guard';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAggregatedTicker } from '@/lib/services/market';
 import { parseMarket, parseIndexMethod } from '@/lib/aggregate';
@@ -14,6 +15,9 @@ function normalize(raw: string): string {
 }
 
 export async function GET(req: NextRequest, { params }: { params: { symbol: string } }) {
+  const limited = rateLimitResponse(req);
+  if (limited) return limited;
+
   const sp = req.nextUrl.searchParams;
   const symbol = normalize(params.symbol);
   const market = parseMarket(sp.get('market'));

@@ -101,8 +101,17 @@ function typeMap() {
 
 function json(res, status, body) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  // Dữ liệu công bố theo ngày -> cache ở CDN 5 phút là quá đủ.
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=900');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  // KHÔNG đặt Access-Control-Allow-Origin: mặc định trình duyệt chỉ cho gọi
+  // cùng gốc, đúng nhu cầu — trang khác không nhúng được endpoint này.
+  if (status >= 400) {
+    // Lỗi thì đừng để CDN giữ lại.
+    res.setHeader('Cache-Control', 'no-store');
+  } else {
+    // Dữ liệu công bố theo ngày -> cache ở CDN 5 phút là quá đủ.
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=900');
+  }
   res.status(status).send(JSON.stringify(body));
 }
 
@@ -428,11 +437,50 @@ async function pool(items, worker, size) {
   return out;
 }
 
+/*
+ * Giới hạn nhịp gọi theo IP. Serverless nên bộ nhớ này chỉ sống trong một
+ * instance đang ấm — KHÔNG phải rate limit toàn cục. Nó chặn được kiểu quét
+ * dồn dập từ một máy, còn chống lạm dụng ở quy mô lớn thì phải dùng WAF của
+ * Vercel hoặc một bộ đếm dùng chung (Upstash/Redis).
+ */
+const RL = { max: 60, windowMs: 60_000 };
+const hits = new Map();
+function rateLimited(req) {
+  const ip = String(
+    (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+    (req.socket && req.socket.remoteAddress) || 'unknown');
+  const now = Date.now();
+  const b = hits.get(ip);
+  if (!b || now > b.reset) { hits.set(ip, { n: 1, reset: now + RL.windowMs }); }
+  else if (++b.n > RL.max) { return Math.max(1, Math.ceil((b.reset - now) / 1000)); }
+  // Dọn rác định kỳ để Map không phình mãi trên instance sống lâu.
+  if (hits.size > 5000) for (const [k, v] of hits) if (now > v.reset) hits.delete(k);
+  return 0;
+}
+
 module.exports = async function handler(req, res) {
+  // Chỉ đọc. Method khác trả 405 thay vì âm thầm xử lý như GET.
+  const method = String(req.method || 'GET').toUpperCase();
+  if (method !== 'GET' && method !== 'HEAD') {
+    res.setHeader('Allow', 'GET, HEAD');
+    return json(res, 405, { error: 'method_not_allowed' });
+  }
+  // Chuỗi truy vấn dài bất thường = dò tìm. Cắt sớm, không phân tích tiếp.
+  const qs = (req.url || '').split('?')[1] || '';
+  if (qs.length > 256) return json(res, 414, { error: 'query_too_long' });
+
+  const retry = rateLimited(req);
+  if (retry) {
+    res.setHeader('Retry-After', String(retry));
+    return json(res, 429, { error: 'rate_limited', retryAfterSeconds: retry });
+  }
+
   const key = (process.env.SOSOVALUE_API_KEY || '').trim();
   // ?diag=1 -> kèm mô tả dạng dữ liệu thật của nhà cung cấp. Chỉ tên trường và
-  // các số đọc được, không bao giờ kèm key.
-  const wantDiag = !!(req && req.query && String(req.query.diag || '') === '1');
+  // các số đọc được, không bao giờ kèm key. Dù vậy nó vẫn phơi cấu trúc phía
+  // nhà cung cấp, nên PHẢI bật rõ ràng bằng biến môi trường; mặc định là tắt.
+  const diagOn = process.env.ETF_DIAG === '1';
+  const wantDiag = diagOn && !!(req && req.query && String(req.query.diag || '') === '1');
   if (!key) {
     return json(res, 200, {
       configured: false,

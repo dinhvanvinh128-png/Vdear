@@ -55,10 +55,10 @@
     <div class="rsi-note neutral" id="rsiNote"></div>
 
     <!-- Chiến lược thực chiến (confluence + kế hoạch DCA) -->
-    <section class="panel combat-panel" id="combatPanel"></section>
+    <section class="panel combat-panel" id="combatPanel" data-sensitive data-watermark></section>
 
     <!-- Thang đo 0-100 -->
-    <section class="panel gauge-panel">
+    <section class="panel gauge-panel" data-sensitive data-watermark>
       <div class="panel-head"><h2>Đánh giá tín hiệu (khung đang chọn)</h2>
         <span class="gauge-side neutral" id="gaugeSide">—</span></div>
       <div class="gauge">
@@ -109,7 +109,7 @@
       <div class="panel-head"><h2>🧱 Vùng hỗ trợ &amp; kháng cự</h2>
         <span class="muted small">Bấm 1 vùng để chart chỉ hiện vùng đó</span>
         <button type="button" class="sr-showall" id="srShowAll" hidden>Hiện tất cả vùng</button></div>
-      <div class="sr-list" id="srList"></div>
+      <div class="sr-list" id="srList" data-sensitive data-watermark></div>
       <p class="hint">★ càng nhiều = vùng càng an toàn để vào lệnh. <span class="sr-tag long">LONG</span> tại hỗ trợ · <span class="sr-tag short">SHORT</span> tại kháng cự. Dải giá là vùng có thể đảo chiều mạnh.</p>
     </section>
   </main>
@@ -154,5 +154,6 @@
   <script src="js/integrations.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/fx.js"></script>
+  <script src="js/protect.js"></script>
 </body>
 </html>

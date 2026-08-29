@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { rateLimitResponse } from '@/lib/api/guard';
+import { NextResponse, type NextRequest } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -9,7 +10,10 @@ export const dynamic = 'force-dynamic';
  * provider key is configured we return an explicit "not configured" payload
  * rather than fabricated headlines.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const limited = rateLimitResponse(req);
+  if (limited) return limited;
+
   const configured = !!process.env.NEWS_API_KEY;
   return NextResponse.json({
     data: { items: [] as unknown[] },
