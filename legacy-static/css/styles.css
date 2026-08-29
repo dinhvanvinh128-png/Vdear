@@ -692,6 +692,14 @@ body.nd-locked{overflow:hidden}
 
   /* Chừa chỗ cho dải — nếu không nó đè lên nội dung ở mép trái. */
   .nd-hoverable body{padding-left:var(--nd-rail)}
+
+  /* Dải bắt đầu từ mép dưới thanh đầu, nên phần đệm trái ở TRÊN nó không che
+     gì cả: còn lại một ô trống 64×117 ở góc trên-trái. Kéo dải giá chạy và
+     thanh đầu trải hết bề ngang thì góc đó là nền của chính thanh đầu, và
+     logo về đúng mép trái như bố cục dashboard thường thấy. */
+  .nd-hoverable .ticker-bar,
+  .nd-hoverable .topbar{margin-left:calc(-1 * var(--nd-rail));
+    width:calc(100% + var(--nd-rail))}
   .nd-hoverable .nav-toggle{display:none}
   .nd-hoverable .nd-scrim{display:none}
 
@@ -699,7 +707,7 @@ body.nd-locked{overflow:hidden}
   .nd-hoverable .nd-panel{
     pointer-events:auto;
     top:var(--nd-top,64px);height:calc(100% - var(--nd-top,64px));
-    width:var(--nd-rail);padding:10px 0 18px;
+    width:var(--nd-rail);padding:6px 0 18px;
     visibility:visible;transform:none;overflow:hidden;
     box-shadow:none;border-right:1px solid var(--line);
     transition:width .28s cubic-bezier(.22,.7,.24,1)}
@@ -707,20 +715,43 @@ body.nd-locked{overflow:hidden}
     width:var(--nd-open);overflow-y:auto;
     box-shadow:14px 0 44px rgba(0,0,0,.42)}
 
-  /* Đầu menu chỉ có nghĩa khi đã giãn. */
-  .nd-hoverable .nd-head{opacity:0;pointer-events:none;transition:opacity .4s;padding:0 12px}
-  .nd-hoverable .nd-panel:hover .nd-head,.nd-hoverable .nd-panel:focus-within .nd-head{opacity:1;pointer-events:auto}
+  /* Đầu menu chỉ có nghĩa khi đã giãn — và khi thu gọn nó phải KHÔNG CHIẾM CHỖ.
+     Chỉ đặt opacity:0 thì nó vẫn cao 25px, cộng đệm trên của dải thành 50px ô
+     trống ngay đỉnh dải (đo được), trông như dải bị hụt mất phần đầu. */
+  .nd-hoverable .nd-head{opacity:0;pointer-events:none;
+    max-height:0;padding:0;border-bottom:0;overflow:hidden;
+    transition:opacity .4s,max-height .28s,padding .28s}
+  .nd-hoverable .nd-panel:hover .nd-head,.nd-hoverable .nd-panel:focus-within .nd-head{
+    opacity:1;pointer-events:auto;max-height:60px;padding:4px 12px 12px;
+    border-bottom:1px solid var(--line)}
   .nd-hoverable .nd-close{display:none}
 
-  /* Đây là phần lấy từ khuôn mẫu: nhãn ẩn bằng opacity, không phải display. */
+  /* Nhãn ẩn bằng opacity (không phải display) để còn chuyển động được — NHƯNG
+     opacity:0 vẫn giữ nguyên chiều cao. Nhãn có hai dòng nên mỗi hàng cao 57px
+     trong khi icon chỉ 18px: đó chính là lý do dải nhìn thưa thếch. Kẹp chiều
+     cao về 0 khi thu gọn thì hàng còn 36px, icon xếp sát nhau. */
   .nd-hoverable .nd-txt,.nd-hoverable .nd-soon,.nd-hoverable .nd-foot{
-    opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .4s}
+    opacity:0;pointer-events:none;white-space:nowrap;
+    max-height:0;overflow:hidden;transition:opacity .4s,max-height .28s}
+  .nd-hoverable .nd-panel:hover .nd-txt,.nd-hoverable .nd-panel:focus-within .nd-txt,
+  .nd-hoverable .nd-panel:hover .nd-soon,.nd-hoverable .nd-panel:focus-within .nd-soon,
+  .nd-hoverable .nd-panel:hover .nd-foot,.nd-hoverable .nd-panel:focus-within .nd-foot{
+    max-height:64px}
   .nd-hoverable .nd-panel:hover .nd-txt,.nd-hoverable .nd-panel:focus-within .nd-txt,
   .nd-hoverable .nd-panel:hover .nd-soon,.nd-hoverable .nd-panel:focus-within .nd-soon,
   .nd-hoverable .nd-panel:hover .nd-foot,.nd-hoverable .nd-panel:focus-within .nd-foot{opacity:1;pointer-events:auto}
 
-  /* Tiêu đề nhóm: thu về một vạch mảnh để các nhóm vẫn tách nhau khi thu gọn. */
+  /* Tiêu đề nhóm: thu về một vạch mảnh để các nhóm vẫn tách nhau khi thu gọn.
+     Riêng nhóm ĐẦU thì không cần vạch tách — nó chỉ đẩy icon đầu tiên tụt
+     xuống, để lại ô trống ở đỉnh dải. */
   .nd-hoverable .nd-group{margin-top:6px}
+  /* Dùng "kề sau đầu menu" chứ KHÔNG dùng :first-of-type — .nd-head cũng là
+     <div>, nên :first-of-type trỏ vào chính nó và quy tắc này không ăn (đo ra
+     vẫn hụt 21px ở đỉnh dải). */
+  .nd-hoverable .nd-head + .nd-group{margin-top:0}
+  .nd-hoverable .nd-head + .nd-group > h3{max-height:0}
+  .nd-hoverable .nd-panel:hover .nd-head + .nd-group > h3,
+  .nd-hoverable .nd-panel:focus-within .nd-head + .nd-group > h3{max-height:30px}
   .nd-hoverable .nd-group h3{opacity:0;max-height:9px;overflow:hidden;margin:0;
     transition:opacity .4s,max-height .28s}
   .nd-hoverable .nd-panel:hover .nd-group h3,.nd-hoverable .nd-panel:focus-within .nd-group h3{opacity:1;max-height:30px;margin:0 0 6px}
