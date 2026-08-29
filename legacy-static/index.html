@@ -154,9 +154,11 @@
   </section>
 
   <!-- Tab cấp cao: Yêu thích / Crypto -->
+  <!-- Chỉ còn một nút: "Crypto" là chính trang này nên không cần nhãn riêng.
+       Nút Yêu thích thành nút BẬT/TẮT — nếu chỉ xoá nút Crypto thì vào xem
+       Yêu thích xong không còn đường quay lại. -->
   <div class="market-tabs">
-    <button class="mtab" data-view="fav">⭐ Yêu thích <span class="fav-count" id="favCount">0</span></button>
-    <button class="mtab active" data-view="crypto">Crypto</button>
+    <button class="mtab" data-view="fav" aria-pressed="false">⭐ Yêu thích <span class="fav-count" id="favCount">0</span></button>
   </div>
 
   <main class="container">

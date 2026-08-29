@@ -46,11 +46,16 @@
 
   /* -------------------------- Top tabs (views) ------------------------- */
   function setView(view) {
-    document.querySelectorAll('.mtab').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
+    document.querySelectorAll('.mtab').forEach((b) => {
+      const on = b.dataset.view === view;
+      b.classList.toggle('active', on);
+      if (b.hasAttribute('aria-pressed')) b.setAttribute('aria-pressed', String(on));
+    });
     $('view-crypto').hidden = view !== 'crypto';
     $('view-fav').hidden = view !== 'fav';
     if (view === 'fav') renderFavorites();
   }
+  function currentView() { return $('view-fav').hidden ? 'crypto' : 'fav'; }
 
   /* -------------------- Gợi ý Long/Short (quét 4h) --------------------- */
   let scanning = false;
@@ -316,7 +321,10 @@
       if (!$('view-fav').hidden) renderFavorites();
     });
 
-    document.querySelectorAll('.mtab').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+    // Bấm lần nữa vào nút đang bật thì quay về danh sách thị trường.
+    document.querySelectorAll('.mtab').forEach((b) => b.addEventListener('click', () => {
+      setView(currentView() === b.dataset.view ? 'crypto' : b.dataset.view);
+    }));
     // Menu 3 gạch trỏ thẳng vào một tab: index.html?view=fav.
     const wanted = new URLSearchParams(location.search).get('view');
     if (wanted === 'fav') setView(wanted);
