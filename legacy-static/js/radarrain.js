@@ -30,8 +30,11 @@
   // Trần alpha tách riêng theo màu: vàng của logo sáng hơn xanh/đỏ nên phải
   // dè hơn. Con số này được kiểm bằng cách đo pixel thật dưới từng đoạn chữ,
   // không phải ước lượng bằng mắt (xem test tương phản).
-  const A_LOGO = 0.10, A_ARROW = 0.13;
-  const N_LOGO = 34, N_ARROW = 12;
+  // Gấp đôi số hạt thì hạt chồng nhau nhiều hơn và alpha cộng dồn: đo được các
+  // đoạn chữ mờ tụt còn 4.54:1, sát ngưỡng. Hạ alpha từng hạt xuống — mật độ
+  // giờ đã đủ để tạo hiệu ứng, không cần từng hạt phải đậm.
+  const A_LOGO = 0.078, A_ARROW = 0.115;
+  const N_LOGO = 68, N_ARROW = 14;
 
   function make(card) {
     const canvas = document.createElement('canvas');
@@ -84,9 +87,10 @@
     }
 
     function resize() {
-      // Lớp nền trang trí vẽ ở alpha ≤ 0.13; hạ độ phân giải xuống 1.5 lần thì
-      // mắt không thấy khác mà số pixel phải tô mỗi khung giảm gần một nửa.
-      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      // Lớp nền trang trí vẽ ở alpha ≤ 0.115 nên không cần độ nét cao. Với 82
+      // hạt, hạ độ phân giải là cách rẻ nhất để bớt số pixel phải tô mỗi khung
+      // (1.25× so với 2× là ít hơn 2.6 lần).
+      const dpr = Math.min(1.25, window.devicePixelRatio || 1);
       W = canvas.clientWidth; H = canvas.clientHeight;
       if (!W || !H) return;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
@@ -102,17 +106,23 @@
     // rơi xuống — hướng chuyển động chính là nội dung, không phải trang trí.
     function dirOf(kind) { return kind === 'arrow' && trend === 'up' ? -1 : 1; }
 
+    // Đường bay UỐN LƯỢN: hoành độ là hàm sin của tung độ, nên hạt vẽ ra một
+    // đường rắn lượn chứ không rơi thẳng. Vì x phụ thuộc y (không phải phụ
+    // thuộc thời gian), quỹ đạo là một hình cố định trong không gian — hạt
+    // trượt dọc theo nó, đúng kiểu "uốn lượn" chứ không phải rung ngang.
     function spawn(kind) {
       return {
         kind, size: 18 + Math.random() * 16, dir: dirOf(kind),
-        x: Math.random() * Math.max(1, W),
-        y: Math.random() * Math.max(1, H),
+        x0: Math.random() * Math.max(1, W),          // trục của đường lượn
+        x: 0, y: Math.random() * Math.max(1, H),
         vy: (kind === 'logo' ? 16 : 26) + Math.random() * 22,   // px/giây
-        drift: (Math.random() - 0.5) * 12,
+        amp: 10 + Math.random() * 16,                // biên độ lượn
+        wav: 90 + Math.random() * 90,                // bước sóng
         rot: Math.random() * Math.PI * 2,
         vrot: kind === 'logo' ? (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 1.1) : 0,
         alpha: (0.55 + Math.random() * 0.45) * (kind === 'logo' ? A_LOGO : A_ARROW),
         phase: Math.random() * Math.PI * 2,
+        tilt: 0,
       };
     }
     function build() {
@@ -124,51 +134,77 @@
     // Ra khỏi khung thì vào lại từ mép ĐỐI DIỆN với chiều đang đi.
     function recycle(p) {
       const n = spawn(p.kind);
-      n.x = Math.random() * W;
+      n.x0 = Math.random() * W;
       n.y = n.dir > 0 ? -n.size : H + n.size;
       Object.assign(p, n);
+      place(p);
     }
 
-    function step(dt, t) {
+    // Đặt x theo y trên đường lượn, và tính luôn độ nghiêng theo tiếp tuyến để
+    // mũi tên ngả theo đường bay thay vì cắm cứng một góc.
+    function place(p) {
+      const k = (Math.PI * 2) / p.wav;
+      const a = p.y * k + p.phase;
+      p.x = p.x0 + p.amp * Math.sin(a);
+      const slope = p.amp * k * Math.cos(a);          // dx/dy
+      p.tilt = Math.max(-0.5, Math.min(0.5, Math.atan(slope) * p.dir));
+    }
+
+    function step(dt) {
       for (const p of parts) {
         p.y += p.vy * p.dir * dt;
-        p.x += (p.drift + Math.sin(t / 1400 + p.phase) * 5) * dt;
         p.rot += p.vrot * dt;
-        if (p.dir > 0 ? p.y - p.size > H : p.y + p.size < 0) recycle(p);
-        if (p.x < -p.size) p.x = W + p.size;
-        else if (p.x > W + p.size) p.x = -p.size;
+        if (p.dir > 0 ? p.y - p.size > H : p.y + p.size < 0) { recycle(p); continue; }
+        place(p);
+        if (p.x0 < -p.size) p.x0 = W + p.size;
+        else if (p.x0 > W + p.size) p.x0 = -p.size;
       }
     }
 
-    // Mũi tên xu hướng dạng gấp khúc như biểu đồ giá: đuôi dưới-trái, vọt lên,
-    // hụt một nhịp, rồi vọt tiếp tới đầu nhọn trên-phải. Bản "giảm" là chính
-    // hình này xoay 180°, đúng như cặp icon xanh/đỏ quen thuộc.
-    const ZIG = [[-0.50, 0.45], [-0.18, -0.02], [-0.02, 0.16], [0.34, -0.34]];
-    const TIP = [0.50, -0.50];
+    // Mũi tên xu hướng: KHỐI ĐẶC thuôn đuôi, đúng kiểu cặp icon tham chiếu —
+    // đuôi nhọn ở dưới-trái, vọt lên, hụt một nhịp, rồi vọt tiếp tới đầu nhọn
+    // to bản ở trên-phải. Trước đây tôi vẽ bằng nét kẻ đều bề rộng nên nhìn ra
+    // "đường gấp khúc", không ra "mũi tên".
+    //
+    // Dựng bằng cách lấy đường tâm rồi đẩy sang hai bên một nửa bề rộng thay
+    // đổi (0 ở chót đuôi, đầy ở thân), khép lại bằng tam giác đầu nhọn.
+    const ZIG = [[-0.50, 0.44], [-0.20, -0.01], [-0.04, 0.15], [0.26, -0.25]];
+    const TIP = [0.50, -0.49];
+    const WID = [0, 0.115, 0.115, 0.105];        // nửa bề rộng tại từng đốt
+
+    function unit(ax, ay, bx, by) {
+      const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1;
+      return [dx / L, dy / L];
+    }
 
     function drawArrow(s, up) {
       ctx.save();
       if (!up) ctx.rotate(Math.PI);
-      ctx.lineWidth = Math.max(2, s * 0.21);
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      const P = ZIG.map((q) => [q[0] * s, q[1] * s]);
+      const T = [TIP[0] * s, TIP[1] * s];
+      const W2 = WID.map((v) => v * s);
+      // pháp tuyến tại mỗi đốt = trung bình pháp tuyến hai cạnh kề
+      const nrm = P.map((_, i) => {
+        const a = i > 0 ? unit(P[i - 1][0], P[i - 1][1], P[i][0], P[i][1]) : null;
+        const b = i < P.length - 1 ? unit(P[i][0], P[i][1], P[i + 1][0], P[i + 1][1])
+                                   : unit(P[i][0], P[i][1], T[0], T[1]);
+        const dx = a ? (a[0] + b[0]) / 2 : b[0];
+        const dy = a ? (a[1] + b[1]) / 2 : b[1];
+        const L = Math.hypot(dx, dy) || 1;
+        return [-dy / L, dx / L];
+      });
+      // đầu nhọn: tam giác vuông góc với đoạn cuối
+      const u = unit(P[3][0], P[3][1], T[0], T[1]);
+      const pn = [-u[1], u[0]];
+      const hl = s * 0.34, hw = s * 0.23;
+      const bx = T[0] - u[0] * hl, by = T[1] - u[1] * hl;
+
       ctx.beginPath();
-      for (let i = 0; i < ZIG.length; i++) {
-        const x = ZIG[i][0] * s, y = ZIG[i][1] * s;
-        if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
-      }
-      ctx.stroke();
-      // Đầu nhọn: tam giác hướng đúng theo đoạn cuối (45° lên-phải).
-      const last = ZIG[ZIG.length - 1];
-      const dx = TIP[0] - last[0], dy = TIP[1] - last[1];
-      const len = Math.hypot(dx, dy) || 1;
-      const ux = dx / len, uy = dy / len;          // véc-tơ dọc trục
-      const px = -uy, py = ux;                     // véc-tơ vuông góc
-      const hl = s * 0.38, hw = s * 0.23;          // dài / nửa rộng đầu nhọn
-      const bx = TIP[0] * s - ux * hl, by = TIP[1] * s - uy * hl;
-      ctx.beginPath();
-      ctx.moveTo(TIP[0] * s, TIP[1] * s);
-      ctx.lineTo(bx + px * hw, by + py * hw);
-      ctx.lineTo(bx - px * hw, by - py * hw);
+      for (let i = 0; i < P.length; i++) ctx[i ? 'lineTo' : 'moveTo'](P[i][0] + nrm[i][0] * W2[i], P[i][1] + nrm[i][1] * W2[i]);
+      ctx.lineTo(bx + pn[0] * hw, by + pn[1] * hw);      // cánh trái đầu nhọn
+      ctx.lineTo(T[0], T[1]);                            // chóp
+      ctx.lineTo(bx - pn[0] * hw, by - pn[1] * hw);      // cánh phải
+      for (let i = P.length - 1; i >= 0; i--) ctx.lineTo(P[i][0] - nrm[i][0] * W2[i], P[i][1] - nrm[i][1] * W2[i]);
       ctx.closePath();
       ctx.fill();
       ctx.restore();
@@ -194,7 +230,8 @@
             ctx.drawImage(sprite, -p.size / 2, -p.size / 2, p.size, p.size);
           }
         } else {
-          ctx.strokeStyle = col; ctx.fillStyle = col;
+          ctx.fillStyle = col;
+          if (p.tilt) ctx.rotate(p.tilt);   // ngả theo tiếp tuyến đường lượn
           drawArrow(p.size, up);
         }
         ctx.restore();
@@ -209,7 +246,7 @@
       const dt = (t - last) / 1000;
       if (dt >= MIN_DT) {
         last = t;
-        step(Math.min(0.05, dt), t);
+        step(Math.min(0.05, dt));
         draw();
       }
       if (running()) raf = requestAnimationFrame(frame);
