@@ -389,6 +389,13 @@ h1,h2,h3{margin:0;font-weight:700}
 .sr-band{color:var(--muted);font-size:12.5px}
 .sr-dist{color:var(--muted-2)}
 .sr-stars{color:var(--gold);letter-spacing:1px;font-size:13px}
+/* Chỉ hiện khi đang khoá vào một vùng — đường thoát để quay lại xem đủ. */
+.sr-showall{margin-left:auto;padding:4px 10px;border-radius:8px;cursor:pointer;
+  font:inherit;font-size:11.5px;font-weight:600;color:var(--accent);
+  background:var(--panel-2);border:1px solid var(--line-2);transition:all .14s}
+.sr-showall:hover{color:var(--text);border-color:var(--accent-2)}
+.sr-showall:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
 .sr-current{padding:10px 12px;text-align:center;color:var(--muted);font-size:12.5px;
   border-top:1px dashed var(--line-2);border-bottom:1px dashed var(--line-2);margin:4px 0}
 .sr-current b{color:var(--text)}

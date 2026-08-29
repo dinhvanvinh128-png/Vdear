@@ -76,7 +76,14 @@
     }
 
     setZones(sr) { this.sr = sr; this.render(); }
-    setHighlight(zone) { this.highlightZone = zone; this.render(); }
+    setHighlight(zone) {
+      this.highlightZone = zone;
+      // Chọn một vùng là yêu cầu "cho tôi xem chỗ này": trả khung giá về tự
+      // vừa khung để vùng đó chắc chắn lọt vào, kể cả khi trước đó người dùng
+      // đã tự kéo trục giá đi chỗ khác.
+      if (zone) { this.priceView = null; this._scaleChanged(); }
+      this.render();
+    }
     setPlan(plan) { this.plan = plan; this.render(); }
     resetView() {
       const d = this._defaultView();
@@ -325,6 +332,14 @@
           if (Math.abs(z.price - price) / price < 0.06) { lo = Math.min(lo, z.low); hi = Math.max(hi, z.high); }
         });
       }
+      // Vùng đang được chọn thì LUÔN phải nằm trong khung giá, kể cả khi nó xa
+      // giá hiện tại hơn 6% và bị lọc ra ở trên. Không có dòng này thì bấm vào
+      // một vùng ở xa xong biểu đồ trống trơn — mà giờ các vùng khác cũng đã
+      // ẩn đi nên không còn gì để nhìn cả.
+      if (this.highlightZone) {
+        lo = Math.min(lo, this.highlightZone.low);
+        hi = Math.max(hi, this.highlightZone.high);
+      }
       if (this.plan) {
         [this.plan.tp, this.plan.sl, this.plan.entry].forEach((p) => {
           if (p != null && Math.abs(p - this.plan.entry) / this.plan.entry < 0.1) {
@@ -421,8 +436,17 @@
         ctx.fillText(tag, this.padL + 7, ly + 3);
       };
       if (this.sr) {
-        (this.sr.supports || []).forEach(drawZone);
-        (this.sr.resistances || []).forEach(drawZone);
+        // Chọn một vùng thì CHỈ vẽ vùng đó, các vùng còn lại ẩn hẳn — nhìn một
+        // mức giá giữa chín đường kẻ khác thì không đọc được gì.
+        const all = (this.sr.supports || []).concat(this.sr.resistances || []);
+        const z = this.highlightZone;
+        let list = all;
+        if (z) {
+          list = all.filter((q) => q === z);
+          // Phòng khi nơi gọi dựng một object mới thay vì truyền chính vùng đó.
+          if (!list.length) list = all.filter((q) => q.price === z.price && q.low === z.low && q.high === z.high);
+        }
+        list.forEach(drawZone);
       }
       if (this.highlightZone) {
         const z = this.highlightZone;

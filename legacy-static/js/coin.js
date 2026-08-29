@@ -200,15 +200,35 @@
       `<div class="sr-current">◈ Giá hiện tại: <b>$${fmt(coin ? coin.price : cacheCandles[tf][cacheCandles[tf].length-1].close)}</b></div>` +
       sup;
 
-    // click vào 1 vùng → highlight lên chart
-    box.querySelectorAll('.sr-row').forEach((row) => {
+    // Bấm vào một vùng -> chart CHỈ hiện vùng đó. Bấm lại vùng đang chọn (hoặc
+    // nút "Hiện tất cả") thì quay về hiện đủ — không để người dùng kẹt ở một
+    // vùng mà không biết đường ra.
+    //
+    // Gắn thẳng object vùng vào từng dòng thay vì đọc lại số từ data-*: chart
+    // so sánh bằng chính object đó nên không phụ thuộc vào việc số thực có
+    // đi qua chuỗi mà còn nguyên hay không. Thứ tự DOM = kháng cự đảo ngược
+    // rồi tới hỗ trợ, đúng thứ tự đã dựng ở trên.
+    const order = (sr.resistances || []).slice().reverse().concat(sr.supports || []);
+    const rows = box.querySelectorAll('.sr-row');
+    const showAll = $('srShowAll');
+
+    function focus(zone, row) {
+      rows.forEach((r) => r.classList.toggle('sel', r === row));
+      chart.setHighlight(zone);
+      if (showAll) showAll.hidden = !zone;
+    }
+    if (showAll) {
+      showAll.hidden = true;
+      showAll.onclick = () => focus(null, null);
+    }
+
+    rows.forEach((row, i) => {
+      const zone = order[i];
+      row.title = 'Bấm để chỉ hiện vùng này trên chart; bấm lại để hiện tất cả';
       row.addEventListener('click', () => {
-        box.querySelectorAll('.sr-row').forEach((r) => r.classList.remove('sel'));
-        row.classList.add('sel');
-        chart.setHighlight({
-          price: +row.dataset.price, low: +row.dataset.low, high: +row.dataset.high,
-        });
-        document.querySelector('.chart-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const dangChon = row.classList.contains('sel');
+        focus(dangChon ? null : zone, dangChon ? null : row);
+        if (!dangChon) document.querySelector('.chart-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     });
   }
