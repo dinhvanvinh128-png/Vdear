@@ -113,33 +113,6 @@ export function checkRateLimit(req: NextRequest): void {
   }
 }
 
-/**
- * Non-throwing variant for routes that do not wrap their body in `handle()`.
- *
- * `checkRateLimit` throws an ApiError, which only becomes a 429 when `handle()`
- * catches it; dropped into a bare route it would surface as a 500 instead. This
- * returns the 429 response to hand straight back, so a route can be rate
- * limited without first being restructured.
- *
- *   const limited = rateLimitResponse(req);
- *   if (limited) return limited;
- */
-export function rateLimitResponse(req: NextRequest): NextResponse | null {
-  try {
-    checkRateLimit(req);
-    return null;
-  } catch (err) {
-    const status = err instanceof ApiError ? err.status : 429;
-    const res = NextResponse.json(
-      { error: 'rate_limited', message: 'Too many requests — slow down and try again in a moment.' },
-      { status },
-    );
-    res.headers.set('Retry-After', String(Math.ceil(RATE_LIMIT.windowMs / 1000)));
-    res.headers.set('Cache-Control', 'no-store');
-    return res;
-  }
-}
-
 /** Cron routes are guarded by a shared secret so they cannot be triggered publicly. */
 export function assertCronAuthorized(req: NextRequest): void {
   const secret = process.env.CRON_SECRET;

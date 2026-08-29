@@ -1,5 +1,4 @@
-import { rateLimitResponse } from '@/lib/api/guard';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getAllAggregated } from '@/lib/services/market';
 import { coinglassConfigured, getLiquidationHistory, DEFAULT_EXCHANGE } from '@/lib/providers/coinglass';
 import { envelope } from '@/lib/aggregate';
@@ -16,10 +15,7 @@ export const dynamic = 'force-dynamic';
  * coin's OPEN-INTEREST exposure (a proxy for liquidation risk), clearly flagged,
  * and leave time-bucketed totals null rather than inventing numbers.
  */
-export async function GET(req: NextRequest) {
-  const limited = rateLimitResponse(req);
-  if (limited) return limited;
-
+export async function GET() {
   const env = await getAllAggregated('futures');
   const byOi = [...env.data]
     .filter((c) => (c.openInterest || 0) > 0)

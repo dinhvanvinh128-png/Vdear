@@ -1,4 +1,3 @@
-import { rateLimitResponse } from '@/lib/api/guard';
 import { NextRequest, NextResponse } from 'next/server';
 import { getKlines } from '@/lib/services/chart';
 import { parseMarket } from '@/lib/aggregate';
@@ -11,9 +10,6 @@ export const dynamic = 'force-dynamic';
 const VALID_TF = new Set(['1m', '3m', '5m', '15m', '30m', '1h', '4h', '1d', '1w']);
 
 export async function GET(req: NextRequest, { params }: { params: { symbol: string } }) {
-  const limited = rateLimitResponse(req);
-  if (limited) return limited;
-
   const sp = req.nextUrl.searchParams;
   const raw = params.symbol.toUpperCase();
   const symbol = splitSymbol(raw).quote ? raw : toCanonical(raw);

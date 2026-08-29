@@ -1,4 +1,3 @@
-import { rateLimitResponse } from '@/lib/api/guard';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllAggregated } from '@/lib/services/market';
 import { parseIndexMethod } from '@/lib/aggregate';
@@ -8,9 +7,6 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const limited = rateLimitResponse(req);
-  if (limited) return limited;
-
   const sp = req.nextUrl.searchParams;
   const adapters = resolveAdapters(sp.get('exchange'));
   const method = parseIndexMethod(sp.get('index'));

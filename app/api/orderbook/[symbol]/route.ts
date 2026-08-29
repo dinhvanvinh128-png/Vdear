@@ -1,4 +1,3 @@
-import { rateLimitResponse } from '@/lib/api/guard';
 import { NextRequest, NextResponse } from 'next/server';
 import { parseMarket, fanOut, envelope } from '@/lib/aggregate';
 import { resolveAdapters } from '@/lib/exchanges/registry';
@@ -9,9 +8,6 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest, { params }: { params: { symbol: string } }) {
-  const limited = rateLimitResponse(req);
-  if (limited) return limited;
-
   const sp = req.nextUrl.searchParams;
   const raw = params.symbol.toUpperCase();
   const symbol = splitSymbol(raw).quote ? raw : toCanonical(raw);
