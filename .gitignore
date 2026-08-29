@@ -25,3 +25,7 @@ next-env.d.ts
 
 # sinh ra lúc build từ legacy-static/ (xem scripts/copy-static.mjs)
 /public/
+
+# LŪMEN — phụ thuộc và bản dựng
+lumen-index/node_modules/
+lumen-index/dist/
