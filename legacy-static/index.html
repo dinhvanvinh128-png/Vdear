@@ -57,9 +57,9 @@
         </ul>
 
         <dl class="hx-stats">
-          <div><dt data-countup="600" data-suffix="+">600+</dt><dd>Coins</dd></div>
-          <div><dt data-countup="4">4</dt><dd>Exchanges</dd></div>
-          <div><dt data-countup="11">11</dt><dd>Timeframes</dd></div>
+          <div><dt id="hxStCoins">600+</dt><dd>Coins</dd></div>
+          <div><dt id="hxStEx">4</dt><dd>Exchanges</dd></div>
+          <div><dt id="hxStTf">10</dt><dd>Timeframes</dd></div>
           <div><dt class="hx-stat-word">Realtime</dt><dd>Data</dd></div>
         </dl>
       </div>
@@ -70,8 +70,33 @@
         <article class="hx-card hx-radar" id="hxRadar" aria-busy="true">
           <header>
             <span class="hx-kicker">Signal Radar</span>
-            <span class="hx-pair" id="hxPair">BTCUSDT · 4H</span>
+            <div class="hx-pair">
+              <button type="button" class="hx-sym" id="hxSymBtn" aria-haspopup="dialog"
+                      aria-expanded="false" aria-controls="hxPop" title="Đổi coin — bấm để tìm">
+                <span id="hxSymTxt">BTCUSDT</span>
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <circle cx="6.8" cy="6.8" r="4.3"/><path d="M10 10 L14 14"/>
+                </svg>
+              </button>
+              <b id="hxPrice">—</b>
+            </div>
           </header>
+
+          <!-- Bảng chọn coin: danh sách lấy từ VdearAPI.getMarket() (4 sàn),
+               không có danh sách coin nào gõ cứng trong HTML. -->
+          <div class="hx-pop" id="hxPop" role="dialog" aria-label="Chọn coin" hidden>
+            <div class="hx-pop-search">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <circle cx="6.8" cy="6.8" r="4.3"/><path d="M10 10 L14 14"/>
+              </svg>
+              <input type="search" id="hxQ" placeholder="Tìm coin…" autocomplete="off"
+                     spellcheck="false" aria-label="Tìm coin">
+            </div>
+            <ul class="hx-pop-list" id="hxList" role="listbox" aria-label="Kết quả"></ul>
+            <p class="hx-pop-empty" id="hxEmpty" hidden>Không có coin nào khớp.</p>
+          </div>
+
+          <div class="hx-tfs" id="hxTfs" role="group" aria-label="Khung thời gian"></div>
 
           <div class="hx-gauge">
             <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -97,7 +122,7 @@
           <svg class="hx-spark" id="hxSpark" viewBox="0 0 280 44" preserveAspectRatio="none" aria-hidden="true"></svg>
 
           <footer>
-            <span>Confluence score</span>
+            <span title="Số điều kiện cùng xác nhận: RSI đảo chiều, gần hỗ trợ/kháng cự, price action cùng hướng, breakout, volume">Confluence</span>
             <b id="hxConf">—</b>
           </footer>
         </article>
