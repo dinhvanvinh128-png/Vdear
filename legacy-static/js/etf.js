@@ -1,9 +1,6 @@
 /*
  * Vdear — ETF giao ngay BTC/ETH
  *
- * Module này cố ý tách bạch hai thứ mà người ta hay gộp:
- *
- *   GIÁ        lấy được từ nguồn báo giá miễn phí (Stooq, CSV, không cần key).
  *   DÒNG TIỀN  (net creations/redemptions) là tiền thực chảy vào/ra quỹ. Nó
  *              tính từ số chứng chỉ quỹ phát hành thêm hoặc mua lại trong ngày,
  *              KHÔNG suy ra được từ giá hay khối lượng khớp lệnh. Không nguồn
@@ -31,38 +28,6 @@
     return '$' + n.toFixed(2);
   }
 
-  // Stooq trả CSV: Symbol,Date,Time,Open,High,Low,Close,Volume
-  function parseCsv(text) {
-    const lines = String(text).trim().split(/\r?\n/);
-    if (lines.length < 2) return null;
-    const head = lines[0].toLowerCase().split(',');
-    const row = lines[1].split(',');
-    const get = (k) => { const i = head.indexOf(k); return i < 0 ? null : row[i]; };
-    const close = parseFloat(get('close'));
-    const open = parseFloat(get('open'));
-    const vol = parseFloat(get('volume'));
-    if (!Number.isFinite(close) || close <= 0) return null;   // "N/D" -> bỏ
-    return {
-      price: close,
-      // % trong phiên, tính từ mở cửa. KHÔNG phải % so với phiên trước — nói
-      // đúng tên để không ai đọc nhầm thành biến động 24h.
-      changeIntraday: Number.isFinite(open) && open > 0 ? ((close - open) / open) * 100 : null,
-      volume: Number.isFinite(vol) ? vol : null,
-      date: get('date'), time: get('time'),
-    };
-  }
-
-  async function fetchQuote(ticker) {
-    const url = CFG.etf.quoteBase + encodeURIComponent(ticker.toLowerCase() + '.us');
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
-    try {
-      const res = await fetch(url, { signal: ctrl.signal });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return parseCsv(await res.text());
-    } finally { clearTimeout(t); }
-  }
-
   /*
    * Dòng tiền ròng đi qua hàm server /api/etf-flow, nơi API key được giữ lại.
    * Trình duyệt không bao giờ thấy key. Hàm chưa được triển khai (404) hoặc
@@ -84,15 +49,7 @@
   }
 
   async function load() {
-    const funds = CFG.etf.funds;
-    const [rows, flow] = await Promise.all([
-      Promise.all(funds.map(async (f) => {
-        try { return { ...f, quote: await fetchQuote(f.ticker) }; }
-        catch (e) { return { ...f, quote: null }; }
-      })),
-      fetchFlow(),
-    ]);
-    return { rows, flow };
+    return { flow: await fetchFlow() };
   }
 
   function fmtFlow(v) {
@@ -311,59 +268,15 @@
         không dùng tham số phân biệt tài sản, nên trả cùng một bản ghi cho mọi lần gọi. <b>Đừng tin
         bảng này</b> cho tới khi sửa xong — gọi <code>/api/etf-flow?diag=1</code> để xem nguồn thực sự trả gì.` : ''}
         ${flow.mixedDates ? '<b>⚠ Có dòng lệch ngày</b> — nguồn chưa chốt xong ngày này cho tài sản đó; dòng lệch được đánh dấu ⚠ ở cột ngày. Đừng cộng cả bảng lại thành một con số.' : ''}
-        Nguồn: <b>SoSoValue</b>.
         ${outside.length ? `<b>Nguồn không công bố</b> ETF của ${outside.join(', ')} — đó là giới hạn của
         nguồn, không phải đang chờ dữ liệu.` : ''}</p>`;
   }
 
-  /* BẢNG PHỤ: giá cổ phiếu quỹ, chỉ những quỹ đã biết chắc mã niêm yết. */
-  function quoteTable(rows) {
-    const ok = rows.filter((r) => r.quote);
-    if (!ok.length) {
-      return `<p class="hint">Không lấy được báo giá cổ phiếu quỹ (nguồn miễn phí có thể bị chặn
-        từ trình duyệt). Không có số liệu thì để trống.</p>`;
-    }
-    const group = (asset, label) => {
-      const list = rows.filter((r) => r.asset === asset);
-      if (!list.length) return '';
-      return `<h4>${label}</h4><div class="table-wrap"><table class="movers etf-table">
-        <thead><tr><th>Quỹ</th><th>Giá</th><th>Trong phiên</th><th>KL khớp lệnh</th></tr></thead>
-        <tbody>${list.map((r) => {
-          const q = r.quote;
-          if (!q) return `<tr><td class="etf-name"><b>${r.ticker}</b><small>${r.issuer}</small></td>
-            <td colspan="3" class="muted small">Chưa lấy được</td></tr>`;
-          const c = q.changeIntraday;
-          const cls = c == null ? '' : c >= 0 ? 'up' : 'down';
-          const ctxt = c == null ? '—' : (c >= 0 ? '+' : '') + c.toFixed(2) + '%';
-          return `<tr>
-            <td class="etf-name"><b>${r.ticker}</b><small>${r.name}</small></td>
-            <td class="mv-price">$${q.price.toFixed(2)}</td>
-            <td><span class="mv-pill ${cls}">${ctxt}</span></td>
-            <td class="mv-klgd">${q.volume == null ? '—' : q.volume.toLocaleString('en-US')}</td>
-          </tr>`;
-        }).join('')}</tbody></table></div>`;
-    };
-    const stamp = ok[0].quote.date ? `${ok[0].quote.date} ${ok[0].quote.time || ''}`.trim() : '';
-    return group('BTC', 'Quỹ Bitcoin') + group('ETH', 'Quỹ Ethereum')
-      + (stamp ? `<p class="hint">Báo giá tính đến <b>${stamp}</b> (giờ nguồn).</p>` : '');
-  }
-
-  function stamp(at) {
-    const t = new Date(at);
-    const two = (n) => String(n).padStart(2, '0');
-    return `${two(t.getHours())}:${two(t.getMinutes())}`;
-  }
 
   function render(mountId, payload) {
     const el = document.getElementById(mountId);
     if (!el) return;
-    // Nói rõ số này lấy lúc mấy giờ. Dữ liệu ngày mà không ghi giờ lấy thì
-    // người xem không biết đang nhìn hôm nay hay hôm qua.
-    const foot = `<p class="hint etf-stamp">Lấy lúc <b>${stamp(payload.at)}</b> ·
-      nguồn công bố mỗi ngày một lần sau khi phiên Mỹ đóng cửa · trang tự lấy lại mỗi
-      ${Math.round(REFRESH_MS / 60000)} phút và mỗi khi bạn quay lại tab.</p>`;
-    el.innerHTML = `<div class="etf-group"><h3>Dòng tiền ròng theo tài sản</h3>${flowTable(payload.flow)}</div>
-      <div class="etf-group"><h3>Giá cổ phiếu quỹ</h3>${quoteTable(payload.rows)}</div>${foot}`;
+    el.innerHTML = flowTable(payload.flow);
     wireToggles(el);
   }
 

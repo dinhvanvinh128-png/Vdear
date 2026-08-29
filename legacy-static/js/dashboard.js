@@ -1,11 +1,10 @@
 /*
  * Vdear — Dashboard
- * - Tab cấp cao: Yêu thích / Crypto / TradFi
+ * - Tab cấp cao: Yêu thích / Crypto
  * - Ticker 50px
  * - Tín hiệu thực chiến (quét toàn bộ futures, khung 4h) — hiện 4, "Xem thêm"
  * - Thanh phân loại mảng coin (kéo ngang) nằm trên bảng biến động
  * - Bảng biến động 24h TẤT CẢ coin (phân trang), sort ±%, icon volume, ⭐ yêu thích
- * - Mảng TradFi (XAU/XAG/CL/BZ)
  * - Thang tâm lý thị trường 0-100
  */
 (function () {
@@ -49,10 +48,8 @@
   function setView(view) {
     document.querySelectorAll('.mtab').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
     $('view-crypto').hidden = view !== 'crypto';
-    $('view-tradfi').hidden = view !== 'tradfi';
     $('view-fav').hidden = view !== 'fav';
     if (view === 'fav') renderFavorites();
-    if (view === 'tradfi') renderTradFi();
   }
 
   /* -------------------- Gợi ý Long/Short (quét 4h) --------------------- */
@@ -290,37 +287,6 @@
     bindRowActions(body);
   }
 
-  /* ------------------------------ TradFi ------------------------------- */
-  async function renderTradFi() {
-    let data;
-    try { data = await API.getTradFi(); } catch (e) { data = []; }
-    $('tradfiRow').innerHTML = data.map((t) => {
-      const up = (t.change || 0) >= 0;
-      // logo TradingView, lỗi -> emoji dự phòng
-      const ico = t.logo
-        ? `<img class="tf-logo" src="${t.logo}" alt="${t.symbol}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="tf-ico" style="display:none">${t.icon}</span>`
-        : `<span class="tf-ico">${t.icon}</span>`;
-      // Không có giá thì nói là không có, không vẽ ra một con số nào.
-      if (t.price == null) {
-        return `<div class="tf-card tf-off">
-          ${ico}
-          <div class="tf-body">
-            <div class="tf-sym">${t.symbol} <small>${t.label}</small></div>
-            <div class="tf-price muted">Chưa lấy được giá</div>
-          </div>
-        </div>`;
-      }
-      return `<a class="tf-card" href="coin.html?c=${t.symbol}&type=tradfi">
-        ${ico}
-        <div class="tf-body">
-          <div class="tf-sym">${t.symbol} <small>${t.label}</small></div>
-          <div class="tf-price">$${fmt(t.price)} <span class="tf-unit">${t.unit}</span></div>
-        </div>
-        <div class="tf-chg ${up ? 'up' : 'down'}">${up ? '+' : ''}${t.change.toFixed(2)}%
-          <span class="live-dot" title="realtime"></span></div>
-      </a>`;
-    }).join('');
-  }
 
   /* --------------------- Thang tâm lý thị trường ----------------------- */
   function renderSentiment() {
@@ -351,9 +317,9 @@
     });
 
     document.querySelectorAll('.mtab').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
-    // Menu 3 gạch trỏ thẳng vào một tab: index.html?view=fav | ?view=tradfi.
+    // Menu 3 gạch trỏ thẳng vào một tab: index.html?view=fav.
     const wanted = new URLSearchParams(location.search).get('view');
-    if (wanted === 'fav' || wanted === 'tradfi') setView(wanted);
+    if (wanted === 'fav') setView(wanted);
     renderSectorBar();
     $('scanMore').addEventListener('click', () => { scanExpanded = !scanExpanded; renderScan(); });
     $('scanRescan').addEventListener('click', async () => {
@@ -379,7 +345,6 @@
     try {
       market = await API.getMarket();
       renderMovers();
-      renderTradFi();
       // Vào thẳng tab Yêu thích thì lúc render lần đầu `market` còn rỗng; vẽ lại
       // ngay khi có dữ liệu thay vì để trống tới nhịp làm mới 30s kế tiếp.
       if (!$('view-fav').hidden) renderFavorites();

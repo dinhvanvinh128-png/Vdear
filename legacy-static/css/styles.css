@@ -249,22 +249,6 @@ h1,h2,h3{margin:0;font-weight:700}
 .vico.high{font-size:13px;opacity:.92}
 .vico.hot{font-size:15px;opacity:1}
 
-/* -------------------------- TradFi -------------------------- */
-.tradfi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
-.tf-card{display:flex;align-items:center;gap:12px;background:var(--panel-2);
-  border:1px solid var(--line);border-radius:12px;padding:14px;transition:transform .12s,border-color .12s}
-.tf-card:hover{transform:translateY(-2px);border-color:var(--line-2)}
-.tf-ico{font-size:26px;width:34px;height:34px;place-items:center}
-.tf-logo{width:34px;height:34px;border-radius:50%;object-fit:contain;background:#fff;padding:3px}
-.tf-body{flex:1}
-.tf-sym{font-weight:700;font-family:'Chakra Petch',sans-serif;font-size:15px}
-.tf-sym small{color:var(--muted);font-weight:400;font-family:'Inter';font-size:12px}
-.tf-price{font-variant-numeric:tabular-nums;font-weight:600;margin-top:2px}
-.tf-unit{color:var(--muted-2);font-size:11px;font-weight:400}
-.tf-chg{font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:5px}
-.tf-chg.up{color:var(--up)} .tf-chg.down{color:var(--down)}
-.tf-chg .sim{color:var(--muted-2)}
-
 /* ============================================================
    Coin detail page
    ============================================================ */
@@ -617,10 +601,10 @@ body::after{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;opa
   -webkit-mask-composite:xor;mask-composite:exclude;opacity:.55}
 
 /* Spotlight theo chuột (glow nhẹ, không che chữ) */
-.panel::after,.scan-card::after,.tf-card::after,.plan-cell::after,.hero-inner::after,.combat-panel::after{
+.panel::after,.scan-card::after,.plan-cell::after,.hero-inner::after,.combat-panel::after{
   content:'';position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity .25s;mix-blend-mode:screen;
   background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),rgba(216,163,43,.16),transparent 46%)}
-.panel:hover::after,.scan-card:hover::after,.tf-card:hover::after,.plan-cell:hover::after,.hero-inner:hover::after{opacity:1}
+.panel:hover::after,.scan-card:hover::after,.plan-cell:hover::after,.hero-inner:hover::after{opacity:1}
 
 /* Hero — tiêu đề gradient phát sáng + nền quét */
 .hero-inner{padding:34px 30px}
@@ -926,9 +910,6 @@ body.nd-locked{overflow:hidden}
 .etf-count{display:inline-block;margin-top:3px;padding:1px 6px;border-radius:6px;
   border:1px solid var(--line);background:var(--panel-2);color:var(--muted-2);
   font-family:'JetBrains Mono',monospace;font-size:10.5px}
-/* Thẻ TradFi khi chưa có giá: không phải link, không mời bấm vào chỗ trống. */
-.tf-card.tf-off{cursor:default;opacity:.72}
-.tf-card.tf-off:hover{transform:none;box-shadow:none}
 .etf-group + .etf-group{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
 .etf-group h4{margin:14px 0 7px;font-size:12px;font-weight:700;color:var(--muted)}
 .etf-table code{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent)}

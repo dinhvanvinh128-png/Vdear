@@ -51,7 +51,6 @@
         <span class="hb">🎯 Tín hiệu hội tụ</span>
         <span class="hb">📉 RSI &amp; S/R đa khung</span>
         <span class="hb">🧮 Backtest ngay trên chart</span>
-        <span class="hb">🏦 TradFi: Vàng · Bạc · Dầu</span>
       </div>
       <div class="hero-stats">
         <div class="hero-stat"><b data-countup="600" data-suffix="+">0</b><span>Coin futures</span></div>
@@ -62,11 +61,10 @@
     </div>
   </section>
 
-  <!-- Tab cấp cao: Yêu thích / Crypto / TradFi -->
+  <!-- Tab cấp cao: Yêu thích / Crypto -->
   <div class="market-tabs">
     <button class="mtab" data-view="fav">⭐ Yêu thích <span class="fav-count" id="favCount">0</span></button>
     <button class="mtab active" data-view="crypto">Crypto</button>
-    <button class="mtab" data-view="tradfi">TradFi</button>
   </div>
 
   <main class="container">
@@ -155,22 +153,11 @@
       <section class="panel" id="etf">
         <div class="panel-head">
           <h2>🏛️ ETF giao ngay · Dòng tiền</h2>
-          <span class="muted small">BTC · ETH · SOL · nguồn SoSoValue</span>
         </div>
         <div id="etfBody"></div>
-        <p class="hint"><b>Dòng tiền ròng</b> là tiền thực vào/ra quỹ mỗi ngày, tính từ số chứng chỉ quỹ được phát hành thêm hay mua lại. Nó <b>không suy ra được từ giá hay khối lượng khớp lệnh</b> — khối lượng là nhà đầu tư sang tay nhau, tiền không hề chạm tới quỹ. Số này lấy từ <b>SoSoValue</b> qua hàm server để API key không xuống trình duyệt; chưa cấu hình key thì để trống chứ không ước lượng. Cả bảng chốt cùng một ngày; dòng nào nguồn chưa chốt xong ngày đó bị đánh dấu ⚠ ở cột ngày.</p>
-        <p class="hint">Bảng <b>giá cổ phiếu quỹ</b> chỉ liệt kê những quỹ đã biết chắc mã niêm yết (BTC, ETH). Các tài sản mới hơn không có mặt ở đó vì tôi không tự chế mã chứng khoán — <b>dòng tiền của chúng vẫn hiện đủ ở bảng trên</b>. Cột <b>Trong phiên</b> là % so với giá mở cửa của chính phiên đó, không phải biến động 24h.</p>
       </section>
 
     <!-- ============ VIEW: TRADFI ============ -->
-    <div id="view-tradfi" hidden>
-      <section class="panel">
-        <div class="panel-head"><h2>🏦 TradFi — Vàng · Bạc · Dầu</h2></div>
-        <div class="tradfi-row" id="tradfiRow"></div>
-        <p class="hint">XAU/XAG lấy giá realtime khi khả dụng; CL (WTI) &amp; BZ (Brent) hiển thị chỉ báo tham khảo khi nguồn realtime bị giới hạn.</p>
-      </section>
-    </div>
-
     <!-- ============ VIEW: YÊU THÍCH ============ -->
     <div id="view-fav" hidden>
       <section class="panel">

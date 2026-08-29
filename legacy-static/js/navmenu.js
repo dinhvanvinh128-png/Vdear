@@ -79,7 +79,6 @@
       title: 'Của bạn',
       items: [
         { href: '/?view=fav', label: 'Coin yêu thích', icon: 'star', desc: 'Danh mục bạn đang theo dõi' },
-        { href: '/?view=tradfi', label: 'TradFi', icon: 'bank', desc: 'Vàng · Bạc · Dầu' },
       ],
     },
     {

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Hyperliquid">
+  <circle cx="32" cy="32" r="32" fill="#0B0B0C"/>
+  <!--
+    Dấu Hyperliquid: hai khối bo tròn hai bên, nối nhau bằng một eo ở giữa.
+    Cạnh ngoài gần như nửa đường tròn; mép trên võng xuống và mép dưới cong lên
+    tới cùng một cao độ, nên eo là một dải NGANG chứ không phải điểm nhọn.
+  -->
+  <path fill="#97FCE4" d="M12 26a10 10 0 0 1 10-10c5.4 0 8.4 5.2 10 10.6.3 1 1.3 1.4 2 1.4s1.7-.4 2-1.4C37.6 21.2 40.6 16 46 16a10 10 0 0 1 10 10v12a10 10 0 0 1-10 10c-5.4 0-8.4-5.2-10-10.6-.3-1-1.3-1.4-2-1.4s-1.7.4-2 1.4C30.4 42.8 27.4 48 22 48A10 10 0 0 1 12 38z"/>
+</svg>

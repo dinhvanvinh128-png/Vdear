@@ -11,7 +11,6 @@
     { type: 'nav', label: 'Thị trường', sub: 'Trang chủ', href: 'index.html' },
     { type: 'nav', label: 'BTC · Bitcoin', sub: 'Phân tích', href: 'coin.html?c=BTC' },
     { type: 'nav', label: 'ETH · Ethereum', sub: 'Phân tích', href: 'coin.html?c=ETH' },
-    { type: 'nav', label: 'TradFi (Vàng/Bạc/Dầu)', sub: 'Trang chủ', href: 'index.html' },
   ];
 
   function build() {

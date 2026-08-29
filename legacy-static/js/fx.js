@@ -18,7 +18,7 @@
   }
 
   function spotlight() {
-    var SEL = '.panel,.scan-card,.tf-card,.plan-cell,.hero-inner,.combat-panel';
+    var SEL = '.panel,.scan-card,.plan-cell,.hero-inner,.combat-panel';
     window.addEventListener('pointermove', function (e) {
       var c = e.target.closest ? e.target.closest(SEL) : null;
       if (!c) return;

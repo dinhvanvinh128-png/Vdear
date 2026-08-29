@@ -1,6 +1,6 @@
 /*
  * Vdear — Global configuration
- * Danh sách sàn, danh mục coin (sector), tradfi và các tham số hiển thị.
+ * Danh sách sàn, danh mục coin (sector) và các tham số hiển thị.
  */
 window.VDEAR_CONFIG = {
   brand: {
@@ -69,20 +69,8 @@ window.VDEAR_CONFIG = {
     { id: 'privacy', label: 'Privacy', icon: '🕶️', coins: ['XMR','ZEC','DASH','SCRT'] },
   ],
 
-  // TradFi — vàng, bạc, dầu WTI, dầu Brent. Không niêm yết trên sàn crypto nên
-  // lấy từ nguồn miễn phí (best-effort). Không lấy được thì để trống, KHÔNG mô
   // phỏng: giá bịa nằm cạnh giá thật là thứ nguy hiểm nhất trên một trang tài
   // chính. Trường `base` cũ đã bỏ vì nó chính là hạt giống của phần mô phỏng đó.
-  tradfi: [
-    { symbol: 'XAU', label: 'Vàng (Gold)', unit: 'USD/oz', icon: '🥇',
-      logo: 'https://s3-symbol-logo.tradingview.com/metal/gold.svg' },
-    { symbol: 'XAG', label: 'Bạc (Silver)', unit: 'USD/oz', icon: '🥈',
-      logo: 'https://s3-symbol-logo.tradingview.com/metal/silver.svg' },
-    { symbol: 'CL', label: 'Dầu WTI', unit: 'USD/bbl', icon: '🛢️',
-      logo: 'https://s3-symbol-logo.tradingview.com/crude-oil.svg' },
-    { symbol: 'BZ', label: 'Dầu Brent', unit: 'USD/bbl', icon: '🛢️',
-      logo: 'https://s3-symbol-logo.tradingview.com/crude-oil.svg' },
-  ],
 
   // ETF giao ngay niêm yết tại Mỹ.
   //
@@ -102,20 +90,6 @@ window.VDEAR_CONFIG = {
       { symbol: 'SOL', label: 'Solana' },
     ],
 
-    // Bảng giá cổ phiếu quỹ. CHỈ liệt kê những quỹ mà mã niêm yết đã biết chắc.
-    // Các tài sản mới hơn chưa có mặt ở đây vì tôi không tự chế mã chứng khoán —
-    // dòng tiền của chúng vẫn hiện đủ ở bảng trên, lấy từ API.
-    quoteBase: 'https://stooq.com/q/l/?f=sd2t2ohlcv&h&e=csv&s=',
-    funds: [
-      { ticker: 'IBIT', name: 'iShares Bitcoin Trust', issuer: 'BlackRock', asset: 'BTC' },
-      { ticker: 'FBTC', name: 'Fidelity Wise Origin Bitcoin', issuer: 'Fidelity', asset: 'BTC' },
-      { ticker: 'GBTC', name: 'Grayscale Bitcoin Trust', issuer: 'Grayscale', asset: 'BTC' },
-      { ticker: 'ARKB', name: 'ARK 21Shares Bitcoin', issuer: 'ARK/21Shares', asset: 'BTC' },
-      { ticker: 'BITB', name: 'Bitwise Bitcoin', issuer: 'Bitwise', asset: 'BTC' },
-      { ticker: 'ETHA', name: 'iShares Ethereum Trust', issuer: 'BlackRock', asset: 'ETH' },
-      { ticker: 'FETH', name: 'Fidelity Ethereum Fund', issuer: 'Fidelity', asset: 'ETH' },
-      { ticker: 'ETHE', name: 'Grayscale Ethereum Trust', issuer: 'Grayscale', asset: 'ETH' },
-    ],
   },
 
   // Số coin quét & hiển thị

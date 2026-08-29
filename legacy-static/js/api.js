@@ -1,7 +1,7 @@
 /*
  * Vdear — API layer
  * Gom dữ liệu ticker từ 4 sàn (Binance, Bybit, OKX, Bitget), klines từ Binance,
- * logo coin, và dữ liệu TradFi (best-effort).
+ * và logo coin.
  */
 (function () {
   const CFG = window.VDEAR_CONFIG;
@@ -335,10 +335,18 @@
   function logoKey(base) {
     return String(base).toLowerCase().replace(/^(1000000|100000|10000|1000)/, '');
   }
+  /*
+   * Logo tự chứa cho những coin mà cả ba nguồn ngoài đều không có, hoặc trả về
+   * sai dấu. Đặt TRƯỚC mọi nguồn ngoài: file nằm sẵn trong repo nên không phụ
+   * thuộc CDN, không chớp lúc tải, và không đổi sau lưng mình.
+   */
+  const LOCAL_LOGOS = { HYPE: 'img/coin-hype.svg' };
+
   function logoSources(base) {
     const l = logoKey(base);
     const U = l.toUpperCase();
     const arr = [];
+    if (LOCAL_LOGOS[U]) arr.push(LOCAL_LOGOS[U]);
     // 1) CoinGecko: logo đúng coin, phủ rộng nhất (nếu bản đồ đã nạp)
     if (_cg && _cg[U] && _cg[U].logo) arr.push(_cg[U].logo);
     // 2) TradingView (crypto): XTVC<SYMBOL>.svg
@@ -388,24 +396,6 @@
 
   /* ----------------------------- TRADFI --------------------------------- */
   // Best-effort: thử nguồn miễn phí; nếu chặn CORS/policy thì mô phỏng có nhãn.
-  async function getTradFi() {
-    const out = [];
-    for (const item of CFG.tradfi) {
-      let price = null, change = 0, live = false;
-      try {
-        if (item.symbol === 'XAU' || item.symbol === 'XAG') {
-          const j = await getJSON('https://api.gold-api.com/price/' + item.symbol, { timeout: 6000 });
-          if (j && j.price) { price = num(j.price); live = true; }
-        }
-      } catch (e) { /* fallback */ }
-      // Không lấy được giá thì trả về NULL. Trước đây chỗ này sinh một hình sin
-      // quanh `base` rồi hiển thị như giá thị trường — có gắn nhãn "~" nhưng vẫn
-      // là con số bịa nằm cạnh dữ liệu thật, đúng thứ mà quy tắc "không fake
-      // data" cấm. Thà để trống còn hơn cho người dùng một con số họ tưởng thật.
-      out.push({ ...item, price: live ? price : null, change: live ? change : null, live });
-    }
-    return out;
-  }
 
   // Tra cứu CoinGecko theo base của sàn. Dùng chung logoKey để 1000PEPE tìm ra
   // PEPE: đó là cùng một tài sản nhân 1000, nên % biến động và vốn hoá của nó
@@ -444,7 +434,7 @@
   }
 
   window.VdearAPI = {
-    getMarket, getCoin, binanceKlines, klinesMulti, getTradFi,
+    getMarket, getCoin, binanceKlines, klinesMulti,
     logoUrl, logoSources, letterAvatar, applyLogo, baseFromSymbol, pool, num,
     loadCoinGecko, cgInfo, getGlobal,
   };
