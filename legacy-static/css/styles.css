@@ -741,18 +741,15 @@ body.nd-locked{overflow:hidden}
   .nd-hoverable .nd-panel:hover .nd-soon,.nd-hoverable .nd-panel:focus-within .nd-soon,
   .nd-hoverable .nd-panel:hover .nd-foot,.nd-hoverable .nd-panel:focus-within .nd-foot{opacity:1;pointer-events:auto}
 
-  /* Tiêu đề nhóm: thu về một vạch mảnh để các nhóm vẫn tách nhau khi thu gọn.
-     Riêng nhóm ĐẦU thì không cần vạch tách — nó chỉ đẩy icon đầu tiên tụt
-     xuống, để lại ô trống ở đỉnh dải. */
-  .nd-hoverable .nd-group{margin-top:6px}
-  /* Dùng "kề sau đầu menu" chứ KHÔNG dùng :first-of-type — .nd-head cũng là
-     <div>, nên :first-of-type trỏ vào chính nó và quy tắc này không ăn (đo ra
-     vẫn hụt 21px ở đỉnh dải). */
-  .nd-hoverable .nd-head + .nd-group{margin-top:0}
-  .nd-hoverable .nd-head + .nd-group > h3{max-height:0}
-  .nd-hoverable .nd-panel:hover .nd-head + .nd-group > h3,
-  .nd-hoverable .nd-panel:focus-within .nd-head + .nd-group > h3{max-height:30px}
-  .nd-hoverable .nd-group h3{opacity:0;max-height:9px;overflow:hidden;margin:0;
+  /* Thu gọn thì BỎ HẲN vạch tách nhóm và tiêu đề nhóm. Chúng chỉ là khoảng hở
+     15px giữa những icon vốn đã không có nhãn; nhóm nào bị ẩn hết mục ("sắp
+     có") còn góp hai lần liền nhau thành khoảng hở 30px — đo được các hở
+     15/30/15/15. Gộp thành MỘT cột icon liền mạch, đều 39px.
+     Giãn ra thì nhóm và tiêu đề trở lại đúng như ngăn kéo. */
+  .nd-hoverable .nd-group{margin-top:0}
+  .nd-hoverable .nd-panel:hover .nd-group,
+  .nd-hoverable .nd-panel:focus-within .nd-group{margin-top:15px}
+  .nd-hoverable .nd-group h3{opacity:0;max-height:0;overflow:hidden;margin:0;
     transition:opacity .4s,max-height .28s}
   .nd-hoverable .nd-panel:hover .nd-group h3,.nd-hoverable .nd-panel:focus-within .nd-group h3{opacity:1;max-height:30px;margin:0 0 6px}
 
