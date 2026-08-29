@@ -114,6 +114,10 @@ h1,h2,h3{margin:0;font-weight:700}
 /* Nút nằm ngay trên bảng Biến động 24h, cạnh ô tìm kiếm. Thanh tab đứng riêng
    trước đây đã bỏ vì không còn markup nào dùng tới nó. */
 .fav-filter{display:inline-flex;align-items:center;gap:7px;flex:none;
+  /* .panel-head là flex space-between; với ba phần tử (tiêu đề, nút này, ô
+     tìm kiếm) thì nút rơi vào giữa. margin-right:auto gom hết khoảng trống về
+     bên phải nút, nên nút bám ngay cạnh tiêu đề còn ô tìm kiếm vẫn ở mép phải. */
+  margin-right:auto;
   padding:7px 12px;border-radius:10px;cursor:pointer;
   font-family:'Chakra Petch',sans-serif;font-size:13.5px;font-weight:700;
   color:var(--muted);background:var(--panel-2);border:1px solid var(--line-2);
