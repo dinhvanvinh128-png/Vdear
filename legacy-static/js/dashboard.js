@@ -348,6 +348,9 @@
       // Vào thẳng tab Yêu thích thì lúc render lần đầu `market` còn rỗng; vẽ lại
       // ngay khi có dữ liệu thay vì để trống tới nhịp làm mới 30s kế tiếp.
       if (!$('view-fav').hidden) renderFavorites();
+      // Bản đồ 3D cần `market` -> gọi sau khi đã có dữ liệu. Không await: nó
+      // chỉ dựng cảnh từ dữ liệu sẵn có, đừng bắt phần quét tín hiệu đợi.
+      initMarket3D();
       await runScan();
     } catch (e) {
       $('scanStatus').textContent = 'Không tải được dữ liệu thị trường. Kiểm tra kết nối mạng và thử lại.';
@@ -355,9 +358,59 @@
     }
 
     setInterval(async () => {
-      try { market = await API.getMarket(true); renderMovers(); if (!$('view-fav').hidden) renderFavorites(); } catch (e) {}
+      try { market = await API.getMarket(true); renderMovers(); if (!$('view-fav').hidden) renderFavorites(); initMarket3D(); } catch (e) {}
     }, 30000);
     setInterval(runScan, 5 * 60000);
+  }
+
+  /*
+   * BẢN ĐỒ THỊ TRƯỜNG 3D. Engine ở js/market3d.js (tự viết, không thư viện).
+   * Ở đây chỉ lo: chọn coin nào, định dạng thẻ thông tin, nối hai nút bấm.
+   */
+  let m3 = null;
+  function initMarket3D() {
+    const canvas = $('m3Canvas');
+    if (!canvas || !window.VdearMarket3D) return;
+    const list = (market || []).filter((c) => c.price > 0 && c.quoteVolume > 0);
+    if (!list.length) return;
+    // Khối lượng lớn nhất trước: cột to đứng gần tâm, dễ đọc.
+    list.sort((a, b) => (b.quoteVolume || 0) - (a.quoteVolume || 0));
+
+    const usd = (n) => {
+      if (n == null || !Number.isFinite(n)) return '—';
+      const a = Math.abs(n);
+      if (a >= 1e9) return '$' + (a / 1e9).toFixed(2) + 'B';
+      if (a >= 1e6) return '$' + (a / 1e6).toFixed(2) + 'M';
+      if (a >= 1e3) return '$' + (a / 1e3).toFixed(1) + 'K';
+      return '$' + a.toFixed(2);
+    };
+    const fmt = (c) => {
+      const cls = c.change > 0 ? 'up' : c.change < 0 ? 'down' : '';
+      const pc = (c.change == null ? '—' : (c.change > 0 ? '+' : '') + c.change.toFixed(2) + '%');
+      return `<div class="m3-tip-h"><b>${c.base}</b><span class="${cls}">${pc}</span></div>
+        <div class="m3-tip-p">$${(c.price || 0).toLocaleString('en-US',
+          { minimumFractionDigits: c.price < 1 ? 6 : 2, maximumFractionDigits: c.price < 1 ? 6 : 2 })}</div>
+        <dl class="m3-tip-d">
+          <dt>Khối lượng 24h</dt><dd>${usd(c.quoteVolume)}</dd>
+          <dt>Số sàn niêm yết</dt><dd>${c.exchangeCount || '—'}</dd>
+          <dt>Funding</dt><dd>${c.funding == null ? '—'
+            : (c.funding > 0 ? '+' : '') + (c.funding * 100).toFixed(4) + '%'}</dd>
+        </dl>`;
+    };
+
+    if (m3) { m3.setData(list); }
+    else {
+      m3 = window.VdearMarket3D.mount(canvas, $('m3Tip'), list, fmt, { count: 36 });
+      const spin = $('m3Spin');
+      spin.addEventListener('click', () => {
+        const on = m3.toggleSpin();
+        spin.setAttribute('aria-pressed', on ? 'true' : 'false');
+        spin.textContent = on ? 'Tự xoay' : 'Đã dừng';
+      });
+      $('m3Reset').addEventListener('click', () => m3.reset());
+    }
+    const empty = $('m3Empty');
+    if (empty) empty.hidden = true;
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

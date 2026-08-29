@@ -84,6 +84,28 @@
         </div>
       </section>
 
+      <!-- Bản đồ thị trường 3D: cột dựng theo biến động, xoay/phóng được -->
+      <section class="panel" id="market3d">
+        <div class="panel-head">
+          <h2>🧊 Bản đồ thị trường 3D</h2>
+          <div class="m3-ctrl">
+            <button type="button" class="seg-btn" id="m3Spin" aria-pressed="true">Tự xoay</button>
+            <button type="button" class="seg-btn" id="m3Reset">Về góc gốc</button>
+          </div>
+        </div>
+        <div class="m3-wrap">
+          <canvas id="m3Canvas" aria-label="Bản đồ thị trường dạng khối 3D, kéo để xoay"></canvas>
+          <div class="m3-tip" id="m3Tip" hidden></div>
+          <p class="m3-empty" id="m3Empty">Đang tải dữ liệu thị trường…</p>
+        </div>
+        <div class="m3-legend">
+          <span><i class="m3-dot up"></i>Tăng 24h — cột dựng lên</span>
+          <span><i class="m3-dot down"></i>Giảm 24h — cột đổ xuống</span>
+          <span>Cao = biên độ · chân rộng = khối lượng lớn</span>
+          <span class="muted">Kéo để xoay · lăn chuột để phóng</span>
+        </div>
+      </section>
+
       <!-- Gợi ý Long/Short (quét 4h) — chỉ hiện 4, còn lại "Xem thêm" -->
       <section class="panel" id="futures-radar">
         <div class="panel-head">
@@ -187,6 +209,7 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/indicators.js"></script>
+  <script src="js/market3d.js"></script>
   <script src="js/ticker.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/etf.js"></script>
