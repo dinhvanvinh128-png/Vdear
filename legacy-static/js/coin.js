@@ -265,20 +265,74 @@
 
 
   /* ------------------------------- init -------------------------------- */
+  /* ----------------------- Tải lại khung xem chart --------------------- */
+  /*
+   * Cụm nút zoom nổi trên biểu đồ đã bỏ. Thay bằng:
+   *  - máy để bàn: bấm chuột phải trong biểu đồ -> menu riêng, hoặc Alt + R;
+   *  - máy cảm ứng: nút ↺ cạnh tiêu đề (CSS chỉ hiện ở màn hẹp / trỏ thô),
+   *    vì màn cảm ứng không có chuột phải.
+   * Phóng to / thu nhỏ / trượt vẫn dùng lăn chuột, kéo và chụm hai ngón như cũ.
+   */
+  function wireChartMenu() {
+    const wrap = document.querySelector('.chart-wrap');
+    const menu = $('chartMenu');
+    const btn = $('chartReset');
+    if (!wrap || !menu) return;
+
+    const ACT = {
+      reset: () => chart.resetView(),
+      fit: () => chart.fitAll(),
+      autoPrice: () => chart.autoPrice(),
+    };
+
+    function close() {
+      if (menu.hidden) return;
+      menu.hidden = true;
+      document.removeEventListener('pointerdown', onAway, true);
+    }
+    function onAway(e) { if (!menu.contains(e.target)) close(); }
+
+    function open(x, y) {
+      menu.hidden = false;
+      // Đặt trong lòng .chart-wrap, kẹp lại để menu không thò ra ngoài khung.
+      const w = wrap.getBoundingClientRect(), m = menu.getBoundingClientRect();
+      const left = Math.max(4, Math.min(x, w.width - m.width - 4));
+      const top = Math.max(4, Math.min(y, w.height - m.height - 4));
+      menu.style.left = left + 'px';
+      menu.style.top = top + 'px';
+      document.addEventListener('pointerdown', onAway, true);
+    }
+
+    wrap.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const r = wrap.getBoundingClientRect();
+      open(e.clientX - r.left, e.clientY - r.top);
+    });
+    menu.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-act]');
+      if (!b) return;
+      const fn = ACT[b.dataset.act];
+      if (fn) fn();
+      close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { close(); return; }
+      // Alt+R: phím tắt ghi ngay trong menu. Bỏ qua khi đang gõ vào ô nhập.
+      if (e.altKey && (e.key === 'r' || e.key === 'R')) {
+        if (e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable]')) return;
+        e.preventDefault();
+        chart.resetView();
+        close();
+      }
+    });
+    window.addEventListener('scroll', close, { passive: true });
+    if (btn) btn.addEventListener('click', () => { chart.resetView(); close(); });
+  }
+
   async function init() {
     document.title = base + '/USDT — Vdear';
     chart = new window.VdearChart($('priceCanvas'), $('rsiCanvas'));
-    // nút zoom (cho cảm ứng / mobile)
-    $('zoomIn').addEventListener('click', () => chart.zoomBy(0.7));
-    $('zoomOut').addEventListener('click', () => chart.zoomBy(1.4));
-    $('zoomReset').addEventListener('click', () => chart.resetView());
-    $('fitAll').addEventListener('click', () => chart.fitAll());
-    // Nới khung giá: mỗi lần bấm nhân đôi khoảng giá hiển thị -> nến co lại,
-    // nhìn được toàn cảnh thay vì lúc nào cũng bị kéo giãn vừa khít.
-    $('priceOut').addEventListener('click', () => chart.zoomPrice(1.6, 0.5));
-    $('priceAuto').addEventListener('click', () => chart.autoPrice());
-    // Nút AUTO chỉ hiện khi khung giá đang do người dùng đặt.
-    chart.onScaleChange = (manual) => { $('priceAuto').hidden = !manual; };
+    wireChartMenu();
     // Cảm ứng (chụm để zoom, kéo ngang để di chuyển) do chart.js tự lo — để ở
     // đây nữa thì mỗi cú chụm bị nhân đôi hệ số zoom.
     renderTfTabs();
