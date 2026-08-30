@@ -15,7 +15,7 @@
     ema20: '#D8A32B', ema50: '#9C7A22',
     support: 'rgba(79,180,119,0.12)', supportLine: '#4FB477',
     resistance: 'rgba(224,87,79,0.12)', resistanceLine: '#E0574F',
-    rsiLine: '#F0C55A', ob: 'rgba(224,87,79,0.12)', os: 'rgba(79,180,119,0.12)',
+    rsiLine: '#8B6BF0', ob: 'rgba(224,87,79,0.12)', os: 'rgba(79,180,119,0.12)',
     highlight: 'rgba(216,163,43,0.20)', crosshair: 'rgba(237,231,214,0.28)',
     gold: '#D8A32B',
   };
@@ -405,14 +405,17 @@
       const yFor = (p) => plotB - ((p - lo) / (hi - lo)) * plotH;
       const usedRight = [], usedLeft = [];
 
-      // grid + trục giá (8 mốc để "đầy đủ giá")
+      /*
+       * Trục giá: 8 mốc, CHỈ CÒN NHÃN — bỏ hẳn nét kẻ ngang chạy suốt khung.
+       * Những đường có ý nghĩa trên biểu đồ này đều là đường ngang (hỗ trợ,
+       * kháng cự, entry/TP/SL, giá hiện tại); thêm một lưới ngang mờ nữa thì
+       * mắt phải lọc xem đường nào là dữ liệu, đường nào chỉ là lưới.
+       */
       ctx.font = '11px Inter, Arial';
       const GN = 8;
       for (let g = 0; g <= GN; g++) {
         const p = lo + ((hi - lo) * g) / GN;
         const y = yFor(p);
-        ctx.strokeStyle = COLORS.grid; ctx.beginPath();
-        ctx.moveTo(this.padL, y); ctx.lineTo(w - this.padR, y); ctx.stroke();
         ctx.fillStyle = COLORS.text; ctx.textAlign = 'left';
         ctx.fillText(fmt(p), w - this.padR + 6, y + 3);
       }
@@ -606,6 +609,20 @@
       const zone = TA.rsiZone(lastRsi);
       ctx.fillStyle = zone.color; ctx.font = 'bold 10px Inter, Arial'; ctx.textAlign = 'left';
       ctx.fillText('RSI ' + lastRsi.toFixed(1), this.padL + 4, padT + 10);
+
+      /*
+       * Giá trị RSI hiện tại đặt ngay trên trục phải, cùng kiểu với nhãn giá ở
+       * khung trên: đọc mức RSI mà không phải dóng mắt từ đường cong sang thang
+       * số. Nhãn tô đúng màu đường RSI để biết nó thuộc đường nào.
+       */
+      const yr = Math.max(padT, Math.min(h - padB, yFor(lastRsi)));
+      ctx.strokeStyle = COLORS.rsiLine; ctx.globalAlpha = 0.5; ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(this.padL, yr); ctx.lineTo(w - this.padR, yr); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+      ctx.fillStyle = COLORS.rsiLine;
+      ctx.fillRect(w - this.padR, yr - 8, this.padR, 16);
+      ctx.fillStyle = '#0B0713'; ctx.font = 'bold 10px Inter, Arial'; ctx.textAlign = 'left';
+      ctx.fillText(lastRsi.toFixed(2), w - this.padR + 4, yr + 3);
     }
   }
 
