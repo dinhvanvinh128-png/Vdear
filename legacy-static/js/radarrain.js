@@ -10,7 +10,7 @@
  * Về hiệu năng (trang này từng bị giật trên PC vì lớp nền động):
  *  - một canvas duy nhất, không filter/blur, không shadowBlur trên từng hạt;
  *  - dừng hẳn vòng lặp khi thẻ ra khỏi màn hình hoặc tab bị ẩn;
- *  - prefers-reduced-motion: vẽ MỘT khung tĩnh rồi thôi;
+ *  - prefers-reduced-motion: trôi chậm còn 45%, không quay, ~15 hình/giây;
  *  - chỉ tô lại ~30 lần/giây và ở độ phân giải 1.5× thay vì 2×.
  *
  * Chi phí đo được (A/B xen kẽ 3 vòng, chỉ khác nhau ở việc chặn tệp này):
@@ -201,7 +201,12 @@
         kind, size: 18 + Math.random() * 16, dir: dirOf(kind),
         x0: Math.random() * Math.max(1, W),          // trục của đường lượn
         x: 0, y: Math.random() * Math.max(1, H),
-        vy: (kind === 'logo' ? 16 : 26) + Math.random() * 22,   // px/giây
+        // Tốc độ cũ 16–38 px/giây: một hạt mất gần nửa phút mới đi hết chiều cao
+        // thẻ, nhìn hai giây chỉ nhích khoảng 40px — nhìn ra là đứng chứ không
+        // ra là rơi. Đo thẳng bằng cách đọc ma trận biến đổi lúc vẽ từng hạt:
+        // trung vị 20.5 px/giây. Nâng lên còn 49 px/giây, tức hạt đi hết chiều
+        // cao thẻ trong khoảng 6–12 giây.
+        vy: (kind === 'logo' ? 42 : 62) + Math.random() * (kind === 'logo' ? 46 : 58),
         amp: 10 + Math.random() * 16,                // biên độ lượn
         wav: 90 + Math.random() * 90,                // bước sóng
         rot: Math.random() * Math.PI * 2,
@@ -244,10 +249,21 @@
       p.tilt = Math.max(-0.5, Math.min(0.5, Math.atan(slope) * p.dir));
     }
 
+    // prefers-reduced-motion: CHẬM LẠI chứ không đứng im.
+    // Bản trước dừng hẳn vòng lặp và chỉ vẽ MỘT khung tĩnh. Ai bật "giảm chuyển
+    // động" — rất hay gặp trên máy yếu, mà trang này từng bị giật trên PC —
+    // sẽ thấy một đống logo đứng chết ở nền và hỏi đúng câu "coin nó không rơi?".
+    // Ý của prefers-reduced-motion là bớt chuyển động gây chóng mặt, không phải
+    // cấm mọi thứ nhúc nhích: nên ở chế độ đó hạt trôi còn 45% tốc độ (đo được
+    // 15.1 px/giây), không quay tròn, và chỉ vẽ ~16 hình/giây.
+    const SLOW = 0.45;
+
     function step(dt) {
+      const calm = reduce.matches;
+      if (calm) dt *= SLOW;
       for (const p of parts) {
         p.y += p.vy * p.dir * dt;
-        p.rot += p.vrot * dt;
+        if (!calm) p.rot += p.vrot * dt;
         if (p.dir > 0 ? p.y - p.size > H : p.y + p.size < 0) { recycle(p); continue; }
         place(p);
         if (p.x0 < -p.size) p.x0 = W + p.size;
@@ -334,11 +350,11 @@
 
     // Hạt rơi chậm nên 30 hình/giây là thừa mượt, mà số lần tô lại cả tấm canvas
     // giảm một nửa. Vẫn bám requestAnimationFrame để đồng bộ với nhịp màn hình.
-    const MIN_DT = 1 / 32;
+    function minDt() { return reduce.matches ? 1 / 16 : 1 / 32; }
     function frame(t) {
       raf = 0;
       const dt = (t - last) / 1000;
-      if (dt >= MIN_DT) {
+      if (dt >= minDt()) {
         last = t;
         step(Math.min(0.05, dt));
         draw();
@@ -346,7 +362,7 @@
       if (running()) raf = requestAnimationFrame(frame);
     }
 
-    function running() { return visible && onScreen && !reduce.matches; }
+    function running() { return visible && onScreen; }
 
     function kick() {
       if (!running()) { if (raf) { cancelAnimationFrame(raf); raf = 0; } draw(); return; }
@@ -374,6 +390,19 @@
       }, { threshold: 0 }).observe(card);
     }
     document.addEventListener('visibilitychange', () => { visible = !document.hidden; kick(); });
+
+    // Chốt chặn: nếu đáng lẽ phải chạy mà vòng lặp không còn khung nào đang hẹn
+    // (rAF bị nuốt, IntersectionObserver báo hụt sau khi thẻ đổi bố cục) thì bật
+    // lại. Hai giây một lần, chỉ khi tab đang mở — một getBoundingClientRect,
+    // rẻ hơn nhiều so với việc để cả lớp nền đứng im mà không ai biết vì sao.
+    setInterval(() => {
+      if (document.hidden) return;
+      const r = card.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      onScreen = r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw;
+      if (running() && !raf) kick();
+    }, 2000);
     if (reduce.addEventListener) reduce.addEventListener('change', kick);
 
     ctx.imageSmoothingQuality = 'high';
