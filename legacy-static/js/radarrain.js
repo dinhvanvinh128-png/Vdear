@@ -1,11 +1,13 @@
 /*
  * Vdear — mưa nền cho thẻ Signal Radar.
  *
- * Logo của ĐÚNG coin đang chọn rơi liên tục ở nền thẻ. Kèm theo là mũi tên xu
- * hướng dạng gấp khúc như biểu đồ giá: dự đoán TĂNG thì mũi tên xanh BAY LÊN,
- * dự đoán GIẢM thì mũi tên đỏ RƠI XUỐNG — chiều chuyển động chính là nội dung
- * chứ không phải trang trí. Trung tính thì không có mũi tên: vẽ mũi tên khi
- * chưa biết hướng là bịa ra một phát biểu về thị trường.
+ * Logo của ĐÚNG coin đang chọn trôi liên tục ở nền thẻ, đi theo DỰ ĐOÁN: tín
+ * hiệu TĂNG thì cả logo lẫn mũi tên xanh BAY LÊN, tín hiệu GIẢM thì cả hai RƠI
+ * XUỐNG. Chiều chuyển động chính là nội dung chứ không phải trang trí.
+ *
+ * Trung tính thì logo rơi xuống theo mặc định nhưng KHÔNG vẽ mũi tên: logo rơi
+ * là nền, còn mũi tên là một phát biểu về hướng thị trường — vẽ nó khi chưa
+ * biết hướng là bịa.
  *
  * Về hiệu năng (trang này từng bị giật trên PC vì lớp nền động):
  *  - một canvas duy nhất, không filter/blur, không shadowBlur trên từng hạt;
@@ -188,9 +190,10 @@
 
     const parts = [];
 
-    // Logo luôn RƠI XUỐNG. Mũi tên đi theo dự đoán: tăng thì BAY LÊN, giảm thì
-    // rơi xuống — hướng chuyển động chính là nội dung, không phải trang trí.
-    function dirOf(kind) { return kind === 'arrow' && trend === 'up' ? -1 : 1; }
+    // Cả đàn đi theo dự đoán: tăng thì BAY LÊN, giảm thì rơi xuống. Trước đây
+    // chỉ mũi tên quay đầu còn logo thì lúc nào cũng rơi xuống, nên nửa số hạt
+    // trên thẻ nói ngược lại với tín hiệu đang hiện.
+    function dirOf() { return trend === 'up' ? -1 : 1; }
 
     // Đường bay UỐN LƯỢN: hoành độ là hàm sin của tung độ, nên hạt vẽ ra một
     // đường rắn lượn chứ không rơi thẳng. Vì x phụ thuộc y (không phải phụ
@@ -198,7 +201,7 @@
     // trượt dọc theo nó, đúng kiểu "uốn lượn" chứ không phải rung ngang.
     function spawn(kind) {
       return {
-        kind, size: 18 + Math.random() * 16, dir: dirOf(kind),
+        kind, size: 18 + Math.random() * 16, dir: dirOf(),
         x0: Math.random() * Math.max(1, W),          // trục của đường lượn
         x: 0, y: Math.random() * Math.max(1, H),
         // Tốc độ cũ 16–38 px/giây: một hạt mất gần nửa phút mới đi hết chiều cao
@@ -439,12 +442,12 @@
       const next = (t === 'up' || t === 'down') ? t : '';
       if (next === trend) return;
       trend = next;
-      // Quay đầu đàn mũi tên ngay. Con nào đang ở sát mép sai chiều thì thả lại
-      // từ mép đối diện, không thì nó bay ra ngoài rồi kẹt luôn ở đó.
+      // Quay đầu cả đàn ngay, không đợi hạt đi hết vòng. Con nào đang ở sát mép
+      // sai chiều thì thả lại từ mép đối diện, không thì nó bay ra ngoài rồi kẹt
+      // luôn ở đó — với 82 hạt thì chỗ kẹt đó thấy rõ là một mảng trống.
       for (const p of parts) {
-        if (p.kind !== 'arrow') continue;
-        p.dir = dirOf('arrow');
-        if (p.dir > 0 ? p.y > H : p.y < 0) { p.y = p.dir > 0 ? -p.size : H + p.size; p.x = Math.random() * W; }
+        p.dir = dirOf();
+        if (p.dir > 0 ? p.y > H : p.y < 0) { p.y = p.dir > 0 ? -p.size : H + p.size; p.x0 = Math.random() * W; place(p); }
       }
       draw();
     }
