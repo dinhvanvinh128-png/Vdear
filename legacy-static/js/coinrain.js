@@ -168,11 +168,57 @@
     } else { begin(); }
   }
 
+  // Đúng 30 coin, và CHỈ crypto.
+  //
+  // Bản cũ lấy 16 mã đầu bảng theo volume trong union futures của 4 sàn. Union
+  // đó không thuần crypto: các sàn giờ niêm yết cả hợp đồng cổ phiếu token hoá
+  // (AAPL, TSLA, NVDA…), nên chúng rơi vào khu nghịch coin cùng logo hãng.
+  //
+  // Không đi đoán ký hiệu nào là cổ phiếu — đoán thì sẽ vừa lọt vừa loại nhầm.
+  // Đổi nguồn thứ tự: bảng xếp hạng vốn hoá của CoinGecko là danh sách TOÀN
+  // crypto và có sẵn thứ hạng, nên lấy 30 coin hạng cao nhất mà 4 sàn có niêm
+  // yết. Cổ phiếu token hoá vốn hoá nhỏ, không chen được vào top 30.
+  const N = 30;
+
+  // Chỉ dùng khi CoinGecko không nạp được. Đây là danh sách TÊN để vẽ logo cho
+  // một hiệu ứng trang trí, không phải số liệu thị trường — không có giá, không
+  // có khối lượng, không có xếp hạng nào gõ tay ở đây.
+  const FALLBACK = [
+    'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'ADA', 'AVAX', 'LINK', 'TON',
+    'TRX', 'DOT', 'LTC', 'UNI', 'ATOM', 'NEAR', 'SUI', 'APT', 'ARB', 'OP',
+    'FIL', 'INJ', 'SEI', 'TIA', 'HBAR', 'ICP', 'IMX', 'RENDER', 'AAVE', 'ETC',
+  ];
+
   async function init(id) {
     const canvas = document.getElementById(id);
     if (!canvas) return;
-    let bases = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'ADA', 'AVAX', 'LINK', 'TON', 'TRX', 'DOT', 'LTC', 'UNI', 'ATOM', 'NEAR'];
-    try { const m = await API.getMarket(); if (m && m.length) bases = m.slice(0, 16).map((c) => c.base); } catch (e) { /* dùng mặc định */ }
+    let bases = FALLBACK.slice(0, N);
+    try {
+      const [market] = await Promise.all([API.getMarket(), API.loadCoinGecko()]);
+      const ranked = (market || [])
+        .map((c) => ({ base: c.base, info: API.cgInfo ? API.cgInfo(c.base) : null }))
+        .filter((x) => x.info && x.info.rank > 0)
+        .sort((a, b) => a.info.rank - b.info.rank);
+      // Một coin có thể xuất hiện dưới nhiều mã ở các sàn (PEPE và 1000PEPE).
+      // cgInfo() trả về CHÍNH mục trong bản đồ CoinGecko, nên hai mã cùng trỏ
+      // về một coin sẽ nhận về cùng một đối tượng — lấy đối tượng đó làm khoá
+      // gộp là chính xác, không cần bảng quy đổi mã nào cả. (Gộp theo thứ hạng
+      // thì hai coin khác nhau lỡ trùng hạng sẽ nuốt mất nhau.)
+      const seen = new Set(); const pick = [];
+      for (const x of ranked) {
+        if (seen.has(x.info)) continue;
+        seen.add(x.info); pick.push(x.base);
+        if (pick.length >= N) break;
+      }
+      // Thiếu thì bù bằng danh sách dự phòng, chứ không thả ra ít coin hơn.
+      if (pick.length) {
+        for (const b of FALLBACK) {
+          if (pick.length >= N) break;
+          if (!pick.some((v) => String(v).toUpperCase() === b)) pick.push(b);
+        }
+        bases = pick.slice(0, N);
+      }
+    } catch (e) { /* dùng mặc định */ }
     startRain(canvas, bases);
   }
 
