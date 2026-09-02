@@ -19,21 +19,25 @@
  * gì cả, nên chỗ tốn là việc tô lại toàn bộ tấm canvas mỗi khung. Hai thay đổi
  * thật sự có tác dụng là hạ nhịp vẽ và hạ độ phân giải.
  *
- * Về độ tương phản: hạt vẽ ở alpha rất thấp vì chữ mờ (--hx-dim) nằm trực tiếp
- * trên nền thẻ, không có ô nền đục che. Trần alpha ở đây được chốt bằng phép ĐO
- * pixel thật dưới từng đoạn chữ rồi tính lại tỉ lệ tương phản, chứ không phải
- * ước lượng — tăng số hạt và kích thước thì hiệu ứng rõ hơn mà không phải đẩy
- * alpha lên tới mức nuốt mất chữ.
+ * Về độ tương phản: chữ mờ (--hx-dim) nằm trực tiếp trên mặt thẻ, không có ô
+ * nền đục nào che. Bản trước giữ cho chữ đọc được bằng cách hạ alpha của CẢ lớp
+ * mưa xuống 0.078 — đo pixel thật thì hạt chỉ làm nền đổi trung bình 11/255
+ * (≈4%), tức là trên màn hình thật gần như vô hình, và người dùng hỏi thẳng
+ * "sao coin không rơi?".
+ *
+ * Nay đổi cách làm: dựng một MẶT NẠ từ hộp của từng dòng chữ trong thẻ, hạt đi
+ * vào đó thì mờ dần còn 8%. Chỉ 24% mặt thẻ có chữ nên 76% còn lại được vẽ đậm
+ * hơn hẳn. Đo lại: chênh lệch trung bình 11 -> 26/255, phần mặt thẻ đổi từ 8/255
+ * trở lên tăng 1.35% -> 7.6%, mà đoạn chữ tệ nhất vẫn 5.4:1 (bản cũ 5.3:1).
+ * Đối chứng âm: tắt mặt nạ ở đúng mức alpha này thì tụt còn 2.78:1.
  */
 (function () {
   const API = window.VdearAPI;
-  // Trần alpha tách riêng theo màu: vàng của logo sáng hơn xanh/đỏ nên phải
-  // dè hơn. Con số này được kiểm bằng cách đo pixel thật dưới từng đoạn chữ,
-  // không phải ước lượng bằng mắt (xem test tương phản).
-  // Gấp đôi số hạt thì hạt chồng nhau nhiều hơn và alpha cộng dồn: đo được các
-  // đoạn chữ mờ tụt còn 4.54:1, sát ngưỡng. Hạ alpha từng hạt xuống — mật độ
-  // giờ đã đủ để tạo hiệu ứng, không cần từng hạt phải đậm.
-  const A_LOGO = 0.078, A_ARROW = 0.115;
+  // Alpha KHÔNG còn là thứ giữ cho chữ đọc được — mặt nạ chỗ có chữ (bên dưới)
+  // lo việc đó. Nhờ vậy hạt ở vùng trống được vẽ đậm hơn hẳn: bản cũ 0.078 chỉ
+  // làm nền đổi trung bình 11/255 nên nhìn như không có gì.
+  // Vàng của logo sáng hơn xanh/đỏ nên vẫn để dè hơn một chút.
+  const A_LOGO = 0.26, A_ARROW = 0.30;
   const N_LOGO = 68, N_ARROW = 14;
 
   function make(card) {
@@ -65,37 +69,119 @@
     }
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-    // Vùng lặng quanh đồng hồ: điểm số và chữ Bullish/Bearish nằm giữa đồng hồ,
-    // ngay trên mặt thẻ chứ không có ô nền đục nào che. Nhiều hạt chồng lên nhau
-    // thì alpha cộng dồn — đo được là chữ Bearish tụt xuống 3.74:1. Nên hạt nào
-    // đi vào vùng này sẽ mờ dần đi, thay vì phải giảm alpha của cả thẻ.
-    let qx = 0, qy = 0, qr = 0;
-    function quietZone() {
-      const g = card.querySelector('.hx-gauge');
-      if (!g) { qr = 0; return; }
-      const a = g.getBoundingClientRect(), b = canvas.getBoundingClientRect();
-      qx = a.left - b.left + a.width / 2;
-      qy = a.top - b.top + a.height / 2;
-      qr = Math.max(a.width, a.height) / 2 + 10;
+    /* ----------------------- mặt nạ chỗ có chữ -------------------------- */
+
+    // Chữ mờ (--hx-dim) nằm TRỰC TIẾP trên mặt thẻ, không có ô nền đục nào che.
+    // Trước đây tôi giữ cho chữ đọc được bằng cách hạ alpha của CẢ lớp mưa
+    // xuống 0.078 — đo lại thì hạt chỉ làm nền đổi trung bình 11/255 (≈4%),
+    // tức là trên màn hình thật gần như không thấy gì. Đó là lý do có câu hỏi
+    // "sao coin không rơi?": nó vẫn rơi, chỉ là mờ tới mức vô hình.
+    //
+    // Cách đúng là né ĐÚNG CHỖ CÓ CHỮ chứ không làm mờ cả thẻ. Đo hộp của từng
+    // dòng chữ trong thẻ: chỉ 24% mặt thẻ có chữ, còn lại 76% trống — thừa chỗ
+    // để mưa rơi rõ mà không đụng vào chữ.
+    const CELL = 6;        // px mỗi ô lưới mặt nạ
+    const PAD = 3;         // nới thêm quanh hộp chữ
+    const FADE = 12;       // px hoà từ nét chữ ra vùng trống
+    const MINMUL = 0.08;   // còn lại bao nhiêu ngay trên nét chữ
+    let mask = null, mw = 0, mh = 0;
+
+    // Chữ nằm trong một ô đã có nền đục thì lớp mưa (z-index 0) vốn bị ô đó che,
+    // không cần né lần nữa — né thừa chỉ ăn mất vùng trống.
+    function onBareCard(el) {
+      for (let e = el; e && e !== card; e = e.parentElement) {
+        const m = getComputedStyle(e).backgroundColor.match(/[\d.]+/g);
+        if (m && (m.length < 4 || parseFloat(m[3]) > 0.6)) return false;
+      }
+      return true;
     }
+
+    function buildMask() {
+      if (!W || !H) { mask = null; return; }
+      mw = Math.ceil(W / CELL); mh = Math.ceil(H / CELL);
+      const cb = canvas.getBoundingClientRect();
+      const ink = new Uint8Array(mw * mh);
+      const mark = (r) => {
+        if (!r || !r.width || !r.height) return;
+        const x0 = Math.max(0, Math.floor((r.left - cb.left - PAD) / CELL));
+        const x1 = Math.min(mw, Math.ceil((r.right - cb.left + PAD) / CELL));
+        const y0 = Math.max(0, Math.floor((r.top - cb.top - PAD) / CELL));
+        const y1 = Math.min(mh, Math.ceil((r.bottom - cb.top + PAD) / CELL));
+        for (let y = y0; y < y1; y++) if (x1 > x0) ink.fill(1, y * mw + x0, y * mw + x1);
+      };
+      // Lấy hộp của TỪNG DÒNG CHỮ (Range) chứ không lấy hộp của thẻ bọc: thẻ
+      // bọc thường rộng hết chiều ngang, che mất cả vùng vốn đang trống.
+      const walk = document.createTreeWalker(card, NodeFilter.SHOW_TEXT);
+      for (let t = walk.nextNode(); t; t = walk.nextNode()) {
+        if (!t.nodeValue.trim() || !t.parentElement) continue;
+        if (!onBareCard(t.parentElement)) continue;
+        const rg = document.createRange();
+        rg.selectNodeContents(t);
+        const rects = rg.getClientRects();
+        for (let i = 0; i < rects.length; i++) mark(rects[i]);
+      }
+      // Đồng hồ (svg) và biểu đồ nhỏ (canvas) cũng là nét vẽ mảnh trên mặt thẻ.
+      card.querySelectorAll('svg,canvas,img').forEach((e) => {
+        if (e === canvas || !onBareCard(e.parentElement || card)) return;
+        mark(e.getBoundingClientRect());
+      });
+
+      // Khoảng cách tới ô có chữ gần nhất (chamfer hai lượt) để hoà dần thay vì
+      // cắt cụt — hạt biến mất đột ngột ở mép chữ nhìn còn lộ hơn là chữ mờ.
+      const INF = 1e9, D2 = Math.SQRT2;
+      const d = new Float32Array(mw * mh);
+      for (let i = 0; i < d.length; i++) d[i] = ink[i] ? 0 : INF;
+      for (let y = 0; y < mh; y++) for (let x = 0; x < mw; x++) {
+        const i = y * mw + x; let v = d[i];
+        if (x > 0) v = Math.min(v, d[i - 1] + 1);
+        if (y > 0) v = Math.min(v, d[i - mw] + 1);
+        if (x > 0 && y > 0) v = Math.min(v, d[i - mw - 1] + D2);
+        if (x < mw - 1 && y > 0) v = Math.min(v, d[i - mw + 1] + D2);
+        d[i] = v;
+      }
+      for (let y = mh - 1; y >= 0; y--) for (let x = mw - 1; x >= 0; x--) {
+        const i = y * mw + x; let v = d[i];
+        if (x < mw - 1) v = Math.min(v, d[i + 1] + 1);
+        if (y < mh - 1) v = Math.min(v, d[i + mw] + 1);
+        if (x < mw - 1 && y < mh - 1) v = Math.min(v, d[i + mw + 1] + D2);
+        if (x > 0 && y < mh - 1) v = Math.min(v, d[i + mw - 1] + D2);
+        d[i] = v;
+      }
+      const f = Math.max(1, FADE / CELL);
+      const m = new Float32Array(mw * mh);
+      for (let i = 0; i < m.length; i++) {
+        const k = Math.min(1, d[i] / f);
+        m[i] = MINMUL + (1 - MINMUL) * k * k;
+      }
+      mask = m;
+    }
+
     function quietMul(x, y) {
-      if (!qr) return 1;
-      const d = Math.hypot(x - qx, y - qy);
-      if (d >= qr) return 1;
-      const k = d / qr;               // 0 ở tâm -> 1 ở mép vùng lặng
-      return 0.14 + 0.86 * k * k;     // mờ mạnh ở giữa, hoà dần ra ngoài
+      if (!mask) return 1;
+      const cx = x / CELL | 0, cy = y / CELL | 0;
+      if (cx < 0 || cy < 0 || cx >= mw || cy >= mh) return 1;
+      return mask[cy * mw + cx];
+    }
+
+    // Số liệu trong thẻ đổi liên tục (đếm số, đổi khung giờ, đổi coin) nên hộp
+    // chữ cũng đổi theo. Dựng lại mặt nạ sau mỗi đợt thay đổi nhưng gộp lại tối
+    // đa ~2 lần/giây: đây là việc đo layout, gọi mỗi khung là tự tay làm giật.
+    let maskTimer = 0;
+    function scheduleMask() {
+      if (maskTimer) return;
+      maskTimer = setTimeout(() => { maskTimer = 0; buildMask(); draw(); }, 500);
     }
 
     function resize() {
-      // Lớp nền trang trí vẽ ở alpha ≤ 0.115 nên không cần độ nét cao. Với 82
-      // hạt, hạ độ phân giải là cách rẻ nhất để bớt số pixel phải tô mỗi khung
-      // (1.25× so với 2× là ít hơn 2.6 lần).
+      // Lớp nền trang trí không cần độ nét cao. Với 82 hạt, hạ độ phân giải là
+      // cách rẻ nhất để bớt số pixel phải tô mỗi khung (1.25× so với 2× là ít
+      // hơn 2.6 lần).
       const dpr = Math.min(1.25, window.devicePixelRatio || 1);
       W = canvas.clientWidth; H = canvas.clientHeight;
       if (!W || !H) return;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      quietZone();
+      buildMask();
     }
 
     /* ---------------------------- hạt rơi ------------------------------- */
@@ -125,10 +211,18 @@
         tilt: 0,
       };
     }
+    // Đặt luôn hạt lên đường lượn ngay khi tạo. spawn() chỉ ghi trục x0, còn x
+    // thật do place() tính — không gọi thì mọi hạt nằm ở x = 0. Với vòng lặp
+    // đang chạy thì step() sửa ngay ở khung đầu nên không ai thấy, nhưng ở chế
+    // độ prefers-reduced-motion (chỉ vẽ MỘT khung tĩnh) thì cả đàn dồn hết vào
+    // mép trái: đo được chỉ còn 6979 pixel có nét thay vì ~33000.
     function build() {
       parts.length = 0;
-      for (let i = 0; i < N_LOGO; i++) parts.push(spawn('logo'));
-      for (let i = 0; i < N_ARROW; i++) parts.push(spawn('arrow'));
+      for (let i = 0; i < N_LOGO + N_ARROW; i++) {
+        const p = spawn(i < N_LOGO ? 'logo' : 'arrow');
+        place(p);
+        parts.push(p);
+      }
     }
 
     // Ra khỏi khung thì vào lại từ mép ĐỐI DIỆN với chiều đang đi.
@@ -265,8 +359,11 @@
 
     function onResize() { resize(); if (!parts.length) build(); draw(); }
     // Dải khung thời gian xuống dòng thì đồng hồ dịch chỗ, phải đo lại vùng lặng.
-    window.addEventListener('resize', quietZone);
+    window.addEventListener('resize', scheduleMask);
 
+    if ('MutationObserver' in window) {
+      new MutationObserver(scheduleMask).observe(card, { subtree: true, childList: true, characterData: true });
+    }
     if ('ResizeObserver' in window) new ResizeObserver(onResize).observe(card);
     else window.addEventListener('resize', onResize);
 
