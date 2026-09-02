@@ -1,13 +1,16 @@
 /*
  * Vdear — mưa nền cho thẻ Signal Radar.
  *
- * Logo của ĐÚNG coin đang chọn trôi liên tục ở nền thẻ, đi theo DỰ ĐOÁN: tín
- * hiệu TĂNG thì cả logo lẫn mũi tên xanh BAY LÊN, tín hiệu GIẢM thì cả hai RƠI
- * XUỐNG. Chiều chuyển động chính là nội dung chứ không phải trang trí.
+ * Logo của ĐÚNG coin đang chọn trôi liên tục ở nền thẻ, và hướng trôi CHÍNH LÀ
+ * nội dung của tín hiệu chứ không phải trang trí:
  *
- * Trung tính thì logo rơi xuống theo mặc định nhưng KHÔNG vẽ mũi tên: logo rơi
- * là nền, còn mũi tên là một phát biểu về hướng thị trường — vẽ nó khi chưa
- * biết hướng là bịa.
+ *   TĂNG        logo + mũi tên xanh BAY LÊN
+ *   GIẢM        logo + mũi tên đỏ  RƠI XUỐNG
+ *   TRUNG TÍNH  logo ĐI NGANG (trái -> phải), KHÔNG có mũi tên
+ *
+ * Đi ngang là cách thị trường tự gọi trạng thái chưa ngã ngũ, nên nó nói đúng
+ * thứ đang có. Và không vẽ mũi tên khi chưa biết hướng: mũi tên là một phát
+ * biểu về hướng thị trường, vẽ nó lúc này là bịa ra một tín hiệu không tồn tại.
  *
  * Về hiệu năng (trang này từng bị giật trên PC vì lớp nền động):
  *  - một canvas duy nhất, không filter/blur, không shadowBlur trên từng hạt;
@@ -190,26 +193,35 @@
 
     const parts = [];
 
-    // Cả đàn đi theo dự đoán: tăng thì BAY LÊN, giảm thì rơi xuống. Trước đây
-    // chỉ mũi tên quay đầu còn logo thì lúc nào cũng rơi xuống, nên nửa số hạt
-    // trên thẻ nói ngược lại với tín hiệu đang hiện.
-    function dirOf() { return trend === 'up' ? -1 : 1; }
+    // Hướng bay CHÍNH LÀ nội dung của tín hiệu:
+    //   tăng   -> bay lên      giảm -> rơi xuống      trung tính -> đi ngang
+    // Trước đây chỉ mũi tên quay đầu còn logo thì lúc nào cũng rơi xuống, nên
+    // phần lớn thứ đang chuyển động nói ngược lại với tín hiệu đang hiện.
+    //
+    // Nên hạt không còn "trục x, trục y" mà có TRỤC BAY (along) và TRỤC LƯỢN
+    // (across) vuông góc với nó; đổi tín hiệu chỉ là đổi xem trục nào ứng với
+    // x, trục nào ứng với y. Nhờ vậy đường lượn, cách tái sinh và cách bọc mép
+    // dùng chung một đoạn mã cho cả ba hướng.
+    function horiz() { return trend === ''; }
+    function dirOf() { return trend === 'up' ? -1 : 1; }   // đi ngang: trái -> phải
 
-    // Đường bay UỐN LƯỢN: hoành độ là hàm sin của tung độ, nên hạt vẽ ra một
-    // đường rắn lượn chứ không rơi thẳng. Vì x phụ thuộc y (không phải phụ
-    // thuộc thời gian), quỹ đạo là một hình cố định trong không gian — hạt
-    // trượt dọc theo nó, đúng kiểu "uốn lượn" chứ không phải rung ngang.
+    // Đường bay UỐN LƯỢN: độ lệch khỏi trục lượn là hàm sin của quãng đã đi,
+    // KHÔNG phải hàm của thời gian. Nhờ vậy quỹ đạo là một hình cố định trong
+    // không gian và hạt trượt dọc theo nó — đúng kiểu "uốn lượn" chứ không phải
+    // rung ngang tại chỗ.
     function spawn(kind) {
+      const h = horiz();
       return {
-        kind, size: 18 + Math.random() * 16, dir: dirOf(),
-        x0: Math.random() * Math.max(1, W),          // trục của đường lượn
-        x: 0, y: Math.random() * Math.max(1, H),
+        kind, size: 18 + Math.random() * 16, horiz: h, dir: dirOf(),
+        along: Math.random() * Math.max(1, h ? W : H),   // toạ độ trên trục bay
+        across: Math.random() * Math.max(1, h ? H : W),  // trục của đường lượn
+        x: 0, y: 0,
         // Tốc độ cũ 16–38 px/giây: một hạt mất gần nửa phút mới đi hết chiều cao
         // thẻ, nhìn hai giây chỉ nhích khoảng 40px — nhìn ra là đứng chứ không
-        // ra là rơi. Đo thẳng bằng cách đọc ma trận biến đổi lúc vẽ từng hạt:
+        // ra là bay. Đo thẳng bằng cách đọc ma trận biến đổi lúc vẽ từng hạt:
         // trung vị 20.5 px/giây. Nâng lên còn 49 px/giây, tức hạt đi hết chiều
         // cao thẻ trong khoảng 6–12 giây.
-        vy: (kind === 'logo' ? 42 : 62) + Math.random() * (kind === 'logo' ? 46 : 58),
+        vel: (kind === 'logo' ? 42 : 62) + Math.random() * (kind === 'logo' ? 46 : 58),
         amp: 10 + Math.random() * 16,                // biên độ lượn
         wav: 90 + Math.random() * 90,                // bước sóng
         rot: Math.random() * Math.PI * 2,
@@ -219,8 +231,11 @@
         tilt: 0,
       };
     }
-    // Đặt luôn hạt lên đường lượn ngay khi tạo. spawn() chỉ ghi trục x0, còn x
-    // thật do place() tính — không gọi thì mọi hạt nằm ở x = 0. Với vòng lặp
+    function runway(p) { return p.horiz ? W : H; }   // chiều dài trục bay
+    function sideway(p) { return p.horiz ? H : W; }  // chiều dài trục lượn
+
+    // Đặt luôn hạt lên đường lượn ngay khi tạo. spawn() chỉ ghi along/across,
+    // còn (x, y) thật do place() tính — không gọi thì mọi hạt nằm ở gốc. Vòng lặp
     // đang chạy thì step() sửa ngay ở khung đầu nên không ai thấy, nhưng ở chế
     // độ prefers-reduced-motion (chỉ vẽ MỘT khung tĩnh) thì cả đàn dồn hết vào
     // mép trái: đo được chỉ còn 6979 pixel có nét thay vì ~33000.
@@ -236,19 +251,21 @@
     // Ra khỏi khung thì vào lại từ mép ĐỐI DIỆN với chiều đang đi.
     function recycle(p) {
       const n = spawn(p.kind);
-      n.x0 = Math.random() * W;
-      n.y = n.dir > 0 ? -n.size : H + n.size;
+      n.across = Math.random() * sideway(n);
+      n.along = n.dir > 0 ? -n.size : runway(n) + n.size;
       Object.assign(p, n);
       place(p);
     }
 
-    // Đặt x theo y trên đường lượn, và tính luôn độ nghiêng theo tiếp tuyến để
-    // mũi tên ngả theo đường bay thay vì cắm cứng một góc.
+    // Quy toạ độ trên đường lượn về (x, y) thật, và tính luôn độ nghiêng theo
+    // tiếp tuyến để mũi tên ngả theo đường bay thay vì cắm cứng một góc.
     function place(p) {
       const k = (Math.PI * 2) / p.wav;
-      const a = p.y * k + p.phase;
-      p.x = p.x0 + p.amp * Math.sin(a);
-      const slope = p.amp * k * Math.cos(a);          // dx/dy
+      const a = p.along * k + p.phase;
+      const off = p.amp * Math.sin(a);
+      if (p.horiz) { p.x = p.along; p.y = p.across + off; }
+      else { p.x = p.across + off; p.y = p.along; }
+      const slope = p.amp * k * Math.cos(a);          // độ lệch trên mỗi bước đi
       p.tilt = Math.max(-0.5, Math.min(0.5, Math.atan(slope) * p.dir));
     }
 
@@ -265,12 +282,14 @@
       const calm = reduce.matches;
       if (calm) dt *= SLOW;
       for (const p of parts) {
-        p.y += p.vy * p.dir * dt;
+        p.along += p.vel * p.dir * dt;
         if (!calm) p.rot += p.vrot * dt;
-        if (p.dir > 0 ? p.y - p.size > H : p.y + p.size < 0) { recycle(p); continue; }
+        const L = runway(p);
+        if (p.dir > 0 ? p.along - p.size > L : p.along + p.size < 0) { recycle(p); continue; }
         place(p);
-        if (p.x0 < -p.size) p.x0 = W + p.size;
-        else if (p.x0 > W + p.size) p.x0 = -p.size;
+        const S = sideway(p);
+        if (p.across < -p.size) p.across = S + p.size;
+        else if (p.across > S + p.size) p.across = -p.size;
       }
     }
 
@@ -442,12 +461,30 @@
       const next = (t === 'up' || t === 'down') ? t : '';
       if (next === trend) return;
       trend = next;
-      // Quay đầu cả đàn ngay, không đợi hạt đi hết vòng. Con nào đang ở sát mép
-      // sai chiều thì thả lại từ mép đối diện, không thì nó bay ra ngoài rồi kẹt
-      // luôn ở đó — với 82 hạt thì chỗ kẹt đó thấy rõ là một mảng trống.
+      // Quay đầu cả đàn ngay, không đợi hạt đi hết vòng.
+      const h = horiz(), d = dirOf();
       for (const p of parts) {
-        p.dir = dirOf();
-        if (p.dir > 0 ? p.y > H : p.y < 0) { p.y = p.dir > 0 ? -p.size : H + p.size; p.x0 = Math.random() * W; place(p); }
+        if (p.horiz !== h) {
+          // Đổi trục bay mà giữ NGUYÊN chỗ hạt đang đứng: trừ sẵn độ lệch của
+          // đường lượn ra khỏi trục lượn mới, để place() dựng lại đúng (x, y)
+          // cũ. Không trừ thì cả đàn giật ngang một cái tới ±26px ngay lúc tín
+          // hiệu đổi — mắt bắt được ngay vì 82 hạt cùng giật một lượt.
+          const x = p.x, y = p.y;
+          const off = p.amp * Math.sin((h ? x : y) * ((Math.PI * 2) / p.wav) + p.phase);
+          p.horiz = h;
+          p.along = h ? x : y;
+          p.across = (h ? y : x) - off;
+        }
+        p.dir = d;
+        // Con nào đang ở sát mép sai chiều thì thả lại từ mép đối diện, không
+        // thì nó bay ra ngoài rồi kẹt luôn ở đó — với 82 hạt thì chỗ kẹt đó
+        // thấy rõ là một mảng trống.
+        const L = runway(p);
+        if (p.dir > 0 ? p.along > L : p.along < 0) {
+          p.along = p.dir > 0 ? -p.size : L + p.size;
+          p.across = Math.random() * sideway(p);
+        }
+        place(p);
       }
       draw();
     }
