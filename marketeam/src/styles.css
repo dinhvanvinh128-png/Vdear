@@ -1,0 +1,504 @@
+/* ==========================================================================
+   Marketeam — hero một màn hình
+   ========================================================================== */
+
+/*
+ * Góc của viền gradient xoay. Phải khai báo bằng @property thì trình duyệt mới
+ * NỘI SUY được nó — biến CSS thường chỉ là chuỗi, animation sẽ nhảy cóc
+ * 0deg -> 360deg chứ không quay đều.
+ */
+@property --border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+:root {
+  --accent: #A068FF;
+  --dark: #060218;
+  --dark-2: #070319;
+  --ink: #000000;
+  --paper: #ffffff;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: #0a0a0a;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Chỉ trình đọc màn hình thấy. Không dùng display:none vì như thế bị bỏ qua. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: url('https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260624_111401_56af5012-2263-45d3-849a-8688084d7c2a.png&w=1280&q=85')
+    center center / cover no-repeat;
+}
+
+/* ------------------------------------------------------------- header --- */
+
+.header {
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 24px 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  animation: fade-down 0.8s var(--ease) both;
+}
+
+.header-left,
+.header-right { display: flex; align-items: center; gap: 40px; }
+.header-right { gap: 28px; }
+
+.logo-mark { height: 32px; width: auto; display: block; }
+
+.nav { display: flex; align-items: center; gap: 36px; }
+
+.nav-link,
+.login-link {
+  position: relative;
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.nav-link { color: var(--ink); font-weight: 400; }
+.login-link { color: var(--paper); font-weight: 500; }
+
+/* Gạch chân chạy từ trái sang khi rê chuột. */
+.nav-link::after,
+.login-link::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -3px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.nav-link:hover::after,
+.login-link:hover::after { transform: scaleX(1); }
+
+.nav-link:focus-visible,
+.login-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+
+/* ------------------------------------------- nút + viền gradient xoay --- */
+
+.btn-border-wrap { position: relative; display: inline-block; border-radius: 50px; }
+
+/*
+ * Viền gradient: vẽ một lớp conic-gradient rộng hơn nút 3px rồi dùng mask để
+ * ĐỤC RỖNG phần ruột, chỉ chừa lại đúng vành 3px.
+ */
+.btn-border-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  padding: 3px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--border-angle),
+    #A068FF, #070319, #A068FF, #070319, #A068FF
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: spin-border 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spin-border {
+  to { --border-angle: 360deg; }
+}
+
+.btn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 50px;
+  cursor: pointer;
+  color: var(--paper);
+  font-family: inherit;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Lớp màu trượt vào khi rê chuột. z-index để nó nằm DƯỚI chữ. */
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  z-index: 0;
+  transition: transform 0.4s var(--ease);
+}
+.btn > * { position: relative; z-index: 1; }
+
+.btn-join {
+  background: var(--ink);
+  padding: 12px 26px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.btn-join::after { transform: translateX(-100%); }
+.btn-join:hover::after { transform: translateX(0); }
+
+.btn-start {
+  background: var(--dark);
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.btn-start::after { transform: translateX(100%); }
+.btn-start:hover::after { transform: translateX(0); }
+
+.btn:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+
+/*
+ * Chữ nằm trong nút là node văn bản trần, không bọc thẻ nên quy tắc `.btn > *`
+ * không với tới -> nếu để nguyên thì lớp ::after phủ lên chữ. Nâng cả nút lên
+ * một ngữ cảnh xếp lớp và cho ::after z-index 0 là chữ luôn ở trên.
+ */
+.btn { isolation: isolate; }
+.btn-icon { flex: none; }
+
+/* --------------------------------------------------------------- hero --- */
+
+.hero {
+  flex: 1;
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.hero-left {
+  flex: 0 1 600px;
+  padding-top: 40px;
+  animation: fade-up 1s var(--ease) both;
+}
+
+.hero-heading {
+  margin: 0 0 32px;
+  font-family: 'Urbanist', 'Inter', sans-serif;
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 64px;
+  letter-spacing: -1.5px;
+  /* Giữ chỗ sẵn cho câu đầy đủ: chữ gõ ra dần mà khối không nhảy cao thấp. */
+  min-height: 192px;
+}
+
+.heading-dark { color: var(--ink); }
+.heading-light { color: var(--paper); }
+
+.type-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 0.82em;
+  margin-left: 4px;
+  vertical-align: -0.08em;
+  background: var(--accent);
+  animation: blink 1s steps(1, end) infinite;
+}
+
+.start-wrap { animation: fade-up 0.6s var(--ease) 3.2s both; }
+
+.cursor-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 290px;
+  margin-top: 40px;
+  animation: fade-up 0.6s var(--ease) 3.6s both;
+}
+
+.pointer-icon { display: block; }
+
+.cursor-name {
+  background: var(--accent);
+  color: var(--paper);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+/* ------------------------------------------------ vòng tròn bên phải --- */
+
+.hero-right {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  animation: scale-in 1.2s var(--ease) 0.3s both;
+}
+
+.circles {
+  position: relative;
+  width: 720px;
+  height: 720px;
+  display: grid;
+  place-items: center;
+  /* Vòng ngoài cùng 797px rộng hơn khung 720px — cho tràn ra, không cắt. */
+  overflow: visible;
+}
+
+.orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  border-radius: 50%;
+  animation-duration: var(--duration);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Viền 1px chuyển sắc: lại là mask, vì border không nhận gradient. */
+.orbit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(217, 161, 255, 0) 0%,
+    rgba(217, 161, 255, 1) 43%,
+    rgba(217, 161, 255, 0) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.spin-right { animation-name: spin-cw; }
+.spin-left { animation-name: spin-ccw; }
+
+/*
+ * Lõi phải quay NGƯỢC lại đúng chu kỳ của quỹ đạo để chữ luôn đứng thẳng.
+ *
+ * Không dùng chung keyframes spin-cw/spin-ccw với quỹ đạo được: chúng đặt
+ * `transform: rotate(...)`, mà transform là MỘT thuộc tính — đặt lại là mất
+ * luôn `translate(-50%,-50%)` dùng để căn giữa. Hậu quả đo được: lõi vừa lệch
+ * chỗ vừa nghiêng theo quỹ đạo thay vì đứng yên. Nên phải có keyframes riêng
+ * mang theo cả phép tịnh tiến.
+ */
+.orbit-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  text-align: center;
+  animation-duration: var(--duration);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.orbit-core.spin-right { animation-name: core-cw; }
+.orbit-core.spin-left { animation-name: core-ccw; }
+
+@keyframes core-cw {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes core-ccw {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(-360deg); }
+}
+
+.core-number {
+  font-family: 'Urbanist', 'Inter', sans-serif;
+  font-size: 64px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--paper);
+}
+
+.core-label {
+  font-family: 'Urbanist', 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--paper);
+}
+
+.avatar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  transform: translate(-50%, -50%) rotate(var(--angle)) translate(var(--radius)) rotate(calc(var(--angle) * -1));
+  animation: fly-in 0.9s var(--ease) var(--delay) both;
+}
+
+/*
+ * CHÚ Ý thứ tự: tên animation do lớp .spin-* cấp, nên ở đây phải dùng LONGHAND.
+ * Viết tắt `animation: var(--duration) linear infinite` sẽ đặt animation-name
+ * về `none`; quy tắc nào nằm SAU .spin-* thì xoá luôn tên vừa được cấp. Lỗi này
+ * đã xảy ra thật với .avatar-inner: đo ra animation-name = none, avatar không
+ * quay ngược nên nghiêng theo quỹ đạo (hộp bao 58px phình thành 82px = √2).
+ */
+.avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--avatar-shape);
+  overflow: hidden;
+  animation-duration: var(--duration);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.glow-purple .avatar-inner { box-shadow: 0 0 28px 0 rgba(160, 104, 255, 0.65); }
+.glow-yellow .avatar-inner { box-shadow: 0 0 28px 0 rgba(255, 214, 102, 0.65); }
+.glow-pink   .avatar-inner { box-shadow: 0 0 28px 0 rgba(255, 122, 205, 0.65); }
+.glow-blue   .avatar-inner { box-shadow: 0 0 28px 0 rgba(104, 176, 255, 0.65); }
+.glow-orange .avatar-inner { box-shadow: 0 0 28px 0 rgba(255, 150, 84, 0.65); }
+
+/* --------------------------------------------------- dải logo đối tác --- */
+
+.logos {
+  width: 100%;
+  padding: 28px 0 40px;
+  overflow: hidden;
+  animation: fade-up 1s var(--ease) 0.6s both;
+  /* Mờ dần hai mép để dải trôi ra/vào chứ không bị cắt cụt. */
+  -webkit-mask: linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+  mask: linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+}
+
+.logo-track {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  width: max-content;
+  animation: ticker 20s linear infinite;
+}
+
+.logo {
+  width: 137px;
+  height: 40px;
+  object-fit: contain;
+  flex: none;
+}
+
+/* ---------------------------------------------------------- animation --- */
+
+@keyframes fade-down { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: none; } }
+@keyframes fade-up   { from { opacity: 0; transform: translateY(40px); }  to { opacity: 1; transform: none; } }
+@keyframes scale-in  { from { opacity: 0; transform: scale(0.85); }       to { opacity: 1; transform: none; } }
+@keyframes blink     { 50% { opacity: 0; } }
+@keyframes spin-cw   { to { transform: rotate(360deg); } }
+@keyframes spin-ccw  { to { transform: rotate(-360deg); } }
+
+/*
+ * Bốn bản sao logo -> chạy hết đúng MỘT phần tư bề rộng là khung hình trùng
+ * khít với lúc bắt đầu, nên vòng lặp không thấy điểm nối.
+ */
+@keyframes ticker { to { transform: translateX(-25%); } }
+
+/* Avatar bay vào: nhỏ + xoay + mờ -> về đúng chỗ trên quỹ đạo. */
+@keyframes fly-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translate(-50%, -50%) rotate(var(--angle)) translate(var(--radius))
+               rotate(calc(var(--angle) * -1)) scale(0.3) rotate(-180deg);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate(-50%, -50%) rotate(var(--angle)) translate(var(--radius))
+               rotate(calc(var(--angle) * -1));
+  }
+}
+
+/* ------------------------------------------------------- responsive --- */
+
+@media (max-width: 1280px) {
+  .circles { transform: scale(0.85); }
+  .header, .hero { padding-left: 40px; padding-right: 40px; }
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 24px;
+    padding-top: 24px;
+  }
+  .hero-left { flex: 0 1 auto; padding-top: 0; text-align: center; }
+  .hero-heading { font-size: 48px; line-height: 52px; min-height: 0; }
+  .cursor-badge { margin-left: 0; }
+  .circles { transform: scale(0.7); }
+  .nav { gap: 22px; }
+  .header-left { gap: 24px; }
+}
+
+@media (max-width: 768px) {
+  .nav { display: none; }
+  .hero-heading { font-size: 36px; line-height: 40px; letter-spacing: -1px; }
+  .circles { transform: scale(0.5); }
+  .header, .hero { padding-left: 24px; padding-right: 24px; }
+}
+
+@media (max-width: 480px) {
+  .hero-heading { font-size: 28px; line-height: 32px; letter-spacing: -0.6px; }
+  .circles { transform: scale(0.4); }
+  .btn-join { padding: 10px 20px; font-size: 14px; }
+  .btn-start { padding: 12px 22px; font-size: 15px; }
+  .logo-track { gap: 36px; }
+  .logo { width: 104px; height: 32px; }
+  .core-number { font-size: 52px; }
+}
+
+/*
+ * Tôn trọng cài đặt giảm chuyển động: tắt hết vòng quay, dải trôi, nhấp nháy.
+ * Phần gõ chữ và đếm số đã tự nhảy thẳng tới kết quả trong JS.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

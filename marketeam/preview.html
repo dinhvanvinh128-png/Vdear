@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketeam — xem trước (không cần cài đặt)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Urbanist:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+<div id="root"></div>
+<script>
+/*
+ * BẢN XEM TRƯỚC — không phải mã sản phẩm.
+ *
+ * Sandbox không cài được node_modules (registry npm bị chặn) nên không chạy
+ * được Vite. Tệp này dựng ĐÚNG cây DOM và ĐÚNG tệp CSS mà src/App.jsx sinh
+ * ra, bằng JS thuần, để: mở xem ngay không cần cài, và kiểm được bố cục/hiệu
+ * ứng bằng trình duyệt thật. Dữ liệu dưới đây phải khớp với src/App.jsx.
+ */
+const ASSETS = 'https://polo-pecan-73837341.figma.site/_assets/v11';
+const HEADING = 'Unlock Top Marketing Talent You Thought Was Out of Reach — Now Just One Click Away!';
+const SPLIT = 67;
+const NAV = ['Your Team', 'Solutions', 'Blog', 'Pricing'];
+const ORBITS = [
+  { id: 1, size: 353, dir: 'left', duration: 30 },
+  { id: 2, size: 501, dir: 'right', duration: 40 },
+  { id: 3, size: 649, dir: 'right', duration: 50 },
+  { id: 4, size: 797, dir: 'left', duration: 60 },
+];
+const AVATARS = [
+  { file:'aa51718fb3af3637e6d666b6543fc27a175fada6.png', orbit:1, angle:270, radius:177, size:58, shape:'20px', glow:'purple', delay:0.6 },
+  { file:'ca755f7f93c1126fb8bdbf99ab364a33aa9ab272.png', orbit:2, angle:60,  radius:251, size:58, shape:'50%',  glow:'yellow', delay:0.8 },
+  { file:'dc01064c7093dcc32674876ee3cf5e41c4a485c6.png', orbit:2, angle:180, radius:251, size:78, shape:'50%',  glow:'pink',   delay:1.0 },
+  { file:'d5470a58b02388336141575048720f19a50de832.png', orbit:2, angle:300, radius:251, size:58, shape:'20px', glow:'blue',   delay:1.2 },
+  { file:'018736aa5d0275c4ce56cfebaf2ae3007d81ca1e.png', orbit:3, angle:130, radius:325, size:88, shape:'50%',  glow:'pink',   delay:1.4 },
+  { file:'c76d8a0b99676de31c014344bfaf75bad090758d.png', orbit:4, angle:30,  radius:399, size:58, shape:'50%',  glow:'purple', delay:1.7 },
+  { file:'7b1b5f039de7b54cc9913e96c1923c3b15a157fa.png', orbit:4, angle:95,  radius:399, size:88, shape:'24px', glow:'orange', delay:1.9 },
+  { file:'9ae171d8895199349755c43fbff00e122221a027.png', orbit:4, angle:220, radius:399, size:88, shape:'24px', glow:'pink',   delay:2.1 },
+  { file:'926c9eb7b4bc1df846fa0e39f0b0dc3fefd80671.png', orbit:4, angle:320, radius:399, size:58, shape:'50%',  glow:'purple', delay:2.3 },
+];
+const TICKER = [
+  '1e7b0e6fcc016cd28aec5c68990118b8c54c35a5.svg','3eac03c183db2ae080d910159211c14843398b61.svg',
+  '17705a4c0023a0e5a99154dfb10582adbbf4260b.svg','0e5f442b09dc5c248e3e60d40a65505fb1887228.svg',
+  '63f99030ceb459e3c9ab9e429cfa2353491d3816.svg',
+];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el = (t, c, h) => { const n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
+
+const app = el('div', 'app');
+
+/* header */
+const header = el('header', 'header');
+const hl = el('div', 'header-left');
+const mark = el('img', 'logo-mark'); mark.src = ASSETS + '/17ae538989a509947a8de3892c644664895e69b1.png'; mark.alt = 'Marketeam';
+const nav = el('nav', 'nav'); nav.setAttribute('aria-label', 'Main');
+NAV.forEach((t) => { const a = el('a', 'nav-link', t); a.href = '#'; nav.appendChild(a); });
+hl.append(mark, nav);
+const hr = el('div', 'header-right');
+const login = el('a', 'login-link', 'Log In'); login.href = '#';
+const joinWrap = el('div', 'btn-border-wrap');
+const join = el('button', 'btn btn-join', 'Join Now'); join.type = 'button';
+joinWrap.appendChild(join);
+hr.append(login, joinWrap);
+header.append(hl, hr);
+
+/* hero */
+const hero = el('main', 'hero');
+const left = el('div', 'hero-left');
+const h1 = el('h1', 'hero-heading');
+const srOnly = el('span', 'sr-only', HEADING);
+const vis = el('span'); vis.setAttribute('aria-hidden', 'true');
+const dark = el('span', 'heading-dark');
+const light = el('span', 'heading-light');
+const caret = el('span', 'type-cursor');
+vis.append(dark, light, caret);
+h1.append(srOnly, vis);
+const startWrap = el('div', 'btn-border-wrap start-wrap');
+const start = el('button', 'btn btn-start', 'Start Project' +
+  '<svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">' +
+  '<path d="M6.75 3.75 12 9l-5.25 5.25" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+start.type = 'button';
+startWrap.appendChild(start);
+const badge = el('div', 'cursor-badge',
+  '<svg class="pointer-icon" width="22" height="24" viewBox="0 0 22 24" aria-hidden="true">' +
+  '<path d="M2 1.5 19 12.2l-7.3 1.2L8.4 21 2 1.5Z" fill="#A068FF"/></svg>' +
+  '<span class="cursor-name">David</span>');
+left.append(h1, startWrap, badge);
+
+const right = el('div', 'hero-right');
+const circles = el('div', 'circles'); circles.setAttribute('aria-hidden', 'true');
+ORBITS.forEach((o) => {
+  const orb = el('div', 'orbit orbit-' + o.id + ' spin-' + o.dir);
+  orb.style.setProperty('--size', o.size + 'px');
+  orb.style.setProperty('--duration', o.duration + 's');
+  if (o.id === 1) {
+    const core = el('div', 'orbit-core spin-' + (o.dir === 'left' ? 'right' : 'left'),
+      '<span class="core-number">0k+</span><span class="core-label">Specialists</span>');
+    core.style.setProperty('--duration', o.duration + 's');
+    orb.appendChild(core);
+  }
+  AVATARS.filter((a) => a.orbit === o.id).forEach((a) => {
+    const av = el('div', 'avatar glow-' + a.glow);
+    av.style.setProperty('--angle', a.angle + 'deg');
+    av.style.setProperty('--radius', a.radius + 'px');
+    av.style.setProperty('--avatar-size', a.size + 'px');
+    av.style.setProperty('--avatar-shape', a.shape);
+    av.style.setProperty('--delay', a.delay + 's');
+    const inner = el('div', 'avatar-inner spin-' + (o.dir === 'left' ? 'right' : 'left'));
+    inner.style.setProperty('--duration', o.duration + 's');
+    const img = el('img'); img.src = ASSETS + '/' + a.file; img.alt = ''; img.loading = 'lazy';
+    inner.appendChild(img); av.appendChild(inner); orb.appendChild(av);
+  });
+  circles.appendChild(orb);
+});
+right.appendChild(circles);
+hero.append(left, right);
+
+/* dải logo */
+const logos = el('div', 'logos');
+const track = el('div', 'logo-track');
+for (let i = 0; i < 4; i++) TICKER.forEach((f) => {
+  const im = el('img', 'logo'); im.src = ASSETS + '/' + f; im.alt = ''; im.setAttribute('aria-hidden', 'true');
+  track.appendChild(im);
+});
+logos.appendChild(track);
+
+app.append(header, hero, logos);
+document.getElementById('root').appendChild(app);
+
+/* gõ chữ */
+let n = 0;
+function paint() {
+  const s = HEADING.slice(0, n);
+  dark.textContent = s.slice(0, SPLIT);
+  light.textContent = s.slice(SPLIT);
+  caret.style.display = n >= HEADING.length ? 'none' : '';
+}
+if (reduce) { n = HEADING.length; paint(); }
+else {
+  paint();
+  setTimeout(() => {
+    const id = setInterval(() => { n++; paint(); if (n >= HEADING.length) clearInterval(id); }, 35);
+  }, 400);
+}
+
+/* đếm số */
+const num = circles.querySelector('.core-number');
+if (reduce) num.textContent = '20k+';
+else setTimeout(() => {
+  let t0 = 0;
+  const step = (now) => {
+    if (!t0) t0 = now;
+    const t = Math.min(1, (now - t0) / 2000);
+    num.textContent = Math.round(20 * (1 - Math.pow(1 - t, 3))) + 'k+';
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}, 1200);
+</script>
+</body>
+</html>
