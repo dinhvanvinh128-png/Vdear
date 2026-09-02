@@ -43,7 +43,12 @@
   // làm nền đổi trung bình 11/255 nên nhìn như không có gì.
   // Vàng của logo sáng hơn xanh/đỏ nên vẫn để dè hơn một chút.
   const A_LOGO = 0.26, A_ARROW = 0.30;
-  const N_LOGO = 68, N_ARROW = 14;
+  // Số hạt tính theo DIỆN TÍCH thẻ, không gõ cứng: cùng một lớp mưa nhưng thẻ
+  // Trading plan thấp hơn thẻ Signal Radar khoảng bốn lần, đổ đủ 68 logo vào đó
+  // thì thành một đám đặc kín. Mật độ dưới đây chính là mật độ đang có ở thẻ
+  // radar (68 logo trên 528×515), nên thẻ radar không đổi gì.
+  const DENSITY = 68 / (528 * 515);
+  const ARROW_RATIO = 14 / 68;
 
   function make(card) {
     const canvas = document.createElement('canvas');
@@ -239,10 +244,17 @@
     // đang chạy thì step() sửa ngay ở khung đầu nên không ai thấy, nhưng ở chế
     // độ prefers-reduced-motion (chỉ vẽ MỘT khung tĩnh) thì cả đàn dồn hết vào
     // mép trái: đo được chỉ còn 6979 pixel có nét thay vì ~33000.
+    function counts() {
+      const logos = Math.max(6, Math.min(120, Math.round(W * H * DENSITY)));
+      return { logos, arrows: Math.max(2, Math.round(logos * ARROW_RATIO)) };
+    }
+    let want = { logos: 0, arrows: 0 };
     function build() {
       parts.length = 0;
-      for (let i = 0; i < N_LOGO + N_ARROW; i++) {
-        const p = spawn(i < N_LOGO ? 'logo' : 'arrow');
+      want = counts();
+      const total = want.logos + want.arrows;
+      for (let i = 0; i < total; i++) {
+        const p = spawn(i < want.logos ? 'logo' : 'arrow');
         place(p);
         parts.push(p);
       }
@@ -395,7 +407,15 @@
 
     /* --------------------------- vòng đời ------------------------------- */
 
-    function onResize() { resize(); if (!parts.length) build(); draw(); }
+    // Dựng lại đàn hạt là một cú nhảy nhìn thấy được (mọi hạt về chỗ mới), nên
+    // chỉ làm khi số hạt cần có lệch quá 25% — xoay ngang màn hình thì đáng,
+    // còn thanh địa chỉ trên mobile trượt lên xuống vài chục pixel thì không.
+    function onResize() {
+      resize();
+      const n = counts();
+      if (!parts.length || Math.abs(n.logos - want.logos) > want.logos * 0.25) build();
+      draw();
+    }
     // Dải khung thời gian xuống dòng thì đồng hồ dịch chỗ, phải đo lại vùng lặng.
     window.addEventListener('resize', scheduleMask);
 
@@ -492,12 +512,22 @@
     return { setCoin, setTrend };
   }
 
-  let inst = null;
+  // Các thẻ cùng nhận một lớp mưa. Thẻ nào cũng nói về CÙNG một coin và CÙNG
+  // một tín hiệu, nên chúng phải chuyển động cùng hướng — hai thẻ cạnh nhau mà
+  // một cái rơi xuống, một cái bay lên thì tự mâu thuẫn.
+  const CARDS = ['hxRadar', 'hxPlan'];
+
+  let insts = null;
   function init() {
-    const card = document.getElementById('hxRadar');
-    if (!card || inst) return;
-    inst = make(card);
-    window.VdearRadarRain = inst;
+    if (insts) return;
+    insts = CARDS.map((id) => document.getElementById(id)).filter(Boolean).map(make);
+    if (!insts.length) { insts = null; return; }
+    // Giữ nguyên giao diện cũ: hero.js gọi setCoin/setTrend một lần, ở đây toả
+    // ra hết các thẻ. Thẻ nào lỗi thì không được kéo theo các thẻ còn lại.
+    const fan = (fn) => (arg) => {
+      for (const it of insts) { try { it[fn](arg); } catch (e) { /* bỏ qua */ } }
+    };
+    window.VdearRadarRain = { setCoin: fan('setCoin'), setTrend: fan('setTrend') };
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
