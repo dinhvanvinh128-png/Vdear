@@ -205,7 +205,55 @@
       <td class="mv-price">$${fmt(c.price)}</td>
       <td><span class="mv-pill ${up ? 'up' : 'down'}">${up ? '+' : ''}${c.change.toFixed(2)}%</span></td>
       <td class="mv-klgd">$${shortNum(c.quoteVolume)}</td>
+      ${oiCell(c.base)}${lsCell(c.base)}
     </tr>`;
+  }
+
+  /* ------------------- Cột OI 24h % và Long/Short ---------------------- */
+
+  /*
+   * Dữ liệu đến từ /api/oi-scan — một máy chủ quét, mọi người đọc chung. Xem
+   * đầu api/oi-scan.js để biết vì sao không quét từ trình duyệt.
+   *
+   * Hàm đó chỉ quét TOP coin theo khối lượng, nên coin ngoài top KHÔNG có dữ
+   * liệu. Ô đó hiện "—": nói thật là chưa quét tới, hơn là bịa ra số.
+   */
+  let oiScan = null;   // { coins: { BASE: {oiPct, longPct, shortPct} } }
+
+  async function loadOiScan() {
+    try {
+      const r = await fetch('/api/oi-scan', { headers: { Accept: 'application/json' } });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      oiScan = j && j.coins ? j : null;
+    } catch (e) {
+      oiScan = null;   // hai cột hiện "—", bảng vẫn chạy
+    }
+    if (market.length) renderMovers();
+  }
+
+  function oiOf(base) {
+    const c = oiScan && oiScan.coins && oiScan.coins[base];
+    return c && c.oiPct != null ? c.oiPct : null;
+  }
+  function lsOf(base) {
+    const c = oiScan && oiScan.coins && oiScan.coins[base];
+    return c && c.longPct != null ? c.longPct : null;
+  }
+
+  function oiCell(base) {
+    const v = oiOf(base);
+    if (v == null) return '<td class="mv-oi muted">—</td>';
+    const up = v >= 0;
+    return `<td class="mv-oi"><span class="mv-pill ${up ? 'up' : 'down'}">${up ? '+' : ''}${v.toFixed(2)}%</span></td>`;
+  }
+  function lsCell(base) {
+    const v = lsOf(base);
+    if (v == null) return '<td class="mv-ls muted">—</td>';
+    // Một thanh nhỏ CỘNG một con số: thanh cho thấy nghiêng bên nào chỉ bằng
+    // liếc mắt, con số để so chính xác giữa các hàng và để sắp xếp.
+    return `<td class="mv-ls"><span class="mv-lsbar" aria-hidden="true"><i style="width:${v.toFixed(1)}%"></i></span>`
+      + `<b>${v.toFixed(1)}%</b></td>`;
   }
 
   function sortedMarket() {
@@ -220,6 +268,19 @@
     if (key === 'name') list.sort((a, b) => sgn * a.base.localeCompare(b.base));
     else if (key === 'price') list.sort((a, b) => sgn * (a.price - b.price));
     else if (key === 'change') list.sort((a, b) => sgn * (a.change - b.change));
+    // Coin chưa có dữ liệu OI/LS luôn bị đẩy XUỐNG CUỐI dù sắp tăng hay giảm.
+    // Coi null là 0 thì cả trăm coin "chưa quét tới" chen vào giữa bảng và
+    // trông y như coin có OI đứng yên — hai chuyện hoàn toàn khác nhau.
+    else if (key === 'oi' || key === 'ls') {
+      const get = key === 'oi' ? oiOf : lsOf;
+      list.sort((a, b) => {
+        const x = get(a.base), y = get(b.base);
+        if (x == null && y == null) return b.quoteVolume - a.quoteVolume;
+        if (x == null) return 1;
+        if (y == null) return -1;
+        return sgn * (x - y);
+      });
+    }
     else list.sort((a, b) => sgn * (a.quoteVolume - b.quoteVolume)); // vol / KLGD
     return list;
   }
@@ -250,7 +311,7 @@
     const body = $('moversBody');
     body.innerHTML = page.length
       ? page.map((c) => moverRow(c)).join('')
-      : `<tr><td colspan="4" class="muted">${favOnly
+      : `<tr><td colspan="6" class="muted">${favOnly
           ? T('movers.noFavMatch')
           : T('movers.noneInGroup')}</td></tr>`;
     body.querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
@@ -447,6 +508,11 @@
     // TTL của chính module OI — gọi dày hơn chỉ tốn hạn mức mà không có số mới.
     loadLongShort();
     setInterval(() => { if (!document.hidden) loadLongShort(); }, 5 * 60000);
+
+    // Bản quét OI/LS cho cả bảng. Không await: bảng coin phải hiện ngay, hai
+    // cột điền vào sau. Làm mới 5 phút một lần cho khớp s-maxage của CDN.
+    loadOiScan();
+    setInterval(() => { if (!document.hidden) loadOiScan(); }, 5 * 60000);
 
     try {
       market = await API.getMarket();

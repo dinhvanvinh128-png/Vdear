@@ -178,6 +178,25 @@ h1,h2,h3{margin:0;font-weight:700}
   background:var(--bg);opacity:.9}
 .ls-note{margin:9px 0 0;font-size:11px;color:var(--muted);line-height:1.4}
 .ls-empty{margin:9px 0 0;font-size:11.5px;color:var(--muted)}
+
+/* ---- Hai cột OI 24h và L/S trong bảng Biến động 24h ---- */
+.movers td.mv-oi,.movers td.mv-ls{white-space:nowrap}
+.movers td.mv-ls{display:table-cell}
+/* Thanh nhỏ + con số: thanh để liếc mắt biết nghiêng bên nào, con số để so
+   chính xác giữa các hàng. Chỉ có thanh thì không so được, chỉ có số thì phải
+   đọc từng dòng một. */
+.mv-lsbar{display:inline-block;vertical-align:middle;width:46px;height:6px;border-radius:4px;
+  background:var(--down);overflow:hidden;margin-right:7px;position:relative}
+.mv-lsbar i{display:block;height:100%;background:var(--up)}
+.movers td.mv-ls b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;
+  font-weight:600;color:var(--text);vertical-align:middle}
+
+/* Màn hẹp: hai cột này là thông tin phụ, ẩn trước khi bảng phải cuộn ngang.
+   Cột KLGD và 24H% mới là thứ người ta mở bảng để xem. */
+@media (max-width:900px){
+  .movers th.mv-oi-th,.movers td.mv-oi,
+  .movers th.mv-ls-th,.movers td.mv-ls{display:none}
+}
 .gauge-track{position:relative;flex:1;height:14px;border-radius:20px;
   background:linear-gradient(90deg,rgba(224,87,79,.25),rgba(138,148,166,.18),rgba(79,180,119,.25));
   border:1px solid var(--line-2);overflow:visible}
