@@ -27,7 +27,7 @@
       <button class="kbd-hint" data-cmd-open><span data-i18n="nav.search">🔍 Tìm nhanh</span> <kbd>Ctrl</kbd><kbd>K</kbd></button>
       <button class="icon-btn" data-theme-toggle title="Đổi nền" data-i18n-attr="title:nav.theme">☀️</button>
       <button class="icon-btn lang-btn" type="button" data-lang-toggle title="Switch to English">EN</button>
-      <a href="/" class="btn-ghost">← Thị trường</a>
+      <a href="/" class="btn-ghost" data-i18n="coin.backToMarkets">← Thị trường</a>
       <a class="btn-primary" data-auth-login href="#" hidden data-i18n="nav.login">Đăng nhập</a>
       <div class="tb-user" data-auth-user hidden></div>
     </div>
@@ -46,8 +46,8 @@
         <div class="big-chg" id="coinChange">—</div>
       </div>
       <div class="coin-stats">
-        <div><span>24h Cao</span><b id="statHigh">—</b></div>
-        <div><span>24h Thấp</span><b id="statLow">—</b></div>
+        <div><span data-i18n="coin.high24">24h Cao</span><b id="statHigh">—</b></div>
+        <div><span data-i18n="coin.low24">24h Thấp</span><b id="statLow">—</b></div>
         <div><span>Volume</span><b id="statVol">—</b></div>
       </div>
     </section>
@@ -60,11 +60,11 @@
 
     <!-- Thang đo 0-100 -->
     <section class="panel gauge-panel">
-      <div class="panel-head"><h2>Đánh giá tín hiệu (khung đang chọn)</h2>
+      <div class="panel-head"><h2 data-i18n="coin.gauge.title">Đánh giá tín hiệu (khung đang chọn)</h2>
         <span class="gauge-side neutral" id="gaugeSide">—</span></div>
       <div class="gauge">
         <div class="gauge-track"><div class="gauge-fill neutral" id="gaugeFill" style="width:50%"></div>
-          <div class="gauge-ticks"><span>0 · SHORT</span><span>50</span><span>100 · LONG</span></div>
+          <div class="gauge-ticks"><span data-i18n="home.sentiment.tickLow">0 · SHORT</span><span>50</span><span data-i18n="home.sentiment.tickHigh">100 · LONG</span></div>
         </div>
         <div class="gauge-val" id="gaugeValue">—</div>
       </div>
@@ -74,11 +74,11 @@
     <!-- Chart -->
     <section class="panel">
       <div class="panel-head">
-        <h2>Biểu đồ</h2>
+        <h2 data-i18n="coin.chart.title">Biểu đồ</h2>
         <!-- Máy để bàn dùng chuột phải trên biểu đồ; máy cảm ứng không có chuột
              phải nên cần nút này. CSS chỉ hiện nó ở màn hẹp / trỏ thô. -->
         <button type="button" class="chart-reset" id="chartReset"
-                title="Tải lại khung xem của biểu đồ" aria-label="Tải lại biểu đồ">
+                title="Tải lại khung xem của biểu đồ" aria-label="Tải lại biểu đồ" data-i18n-attr="title:coin.chart.resetTitle;aria-label:coin.chart.resetLabel">
           <svg viewBox="0 0 20 20" aria-hidden="true">
             <path d="M16 10a6 6 0 1 1-1.8-4.3"/><path d="M16 3.4V7h-3.6"/>
           </svg>
@@ -93,40 +93,40 @@
         <div class="chart-menu" id="chartMenu" role="menu" hidden>
           <button type="button" role="menuitem" data-act="reset">
             <span class="cm-ico" aria-hidden="true">↺</span>
-            <span>Tải lại chart</span><kbd>Alt + R</kbd>
+            <span data-i18n="coin.menu.reset">Tải lại chart</span><kbd>Alt + R</kbd>
           </button>
           <button type="button" role="menuitem" data-act="fit">
             <span class="cm-ico" aria-hidden="true">⊞</span>
-            <span>Xem toàn bộ nến</span>
+            <span data-i18n="coin.menu.fit">Xem toàn bộ nến</span>
           </button>
           <button type="button" role="menuitem" data-act="autoPrice">
             <span class="cm-ico" aria-hidden="true">↕</span>
-            <span>Khung giá vừa khít</span>
+            <span data-i18n="coin.menu.autoPrice">Khung giá vừa khít</span>
           </button>
         </div>
       </div>
       <div class="rsi-legend">
-        <span><i class="sw" style="background:#E0574F"></i> RSI 70–80 quá mua · &gt;80 quá mua mạnh (chú ý SHORT)</span>
-        <span><i class="sw" style="background:#4FB477"></i> RSI 20–30 quá bán · &lt;20 quá bán mạnh (chú ý LONG)</span>
+        <span data-i18n-html="coin.rsiLegend.high"><i class="sw" style="background:#E0574F"></i> RSI 70–80 quá mua · &gt;80 quá mua mạnh (chú ý SHORT)</span>
+        <span data-i18n-html="coin.rsiLegend.low"><i class="sw" style="background:#4FB477"></i> RSI 20–30 quá bán · &lt;20 quá bán mạnh (chú ý LONG)</span>
       </div>
-      <p class="hint"><b>Điều khiển biểu đồ</b> — <u>Thời gian (trục ngang)</u>: lăn chuột để phóng to/thu nhỏ, giữ chuột kéo ngang để trượt qua lại; trên điện thoại chụm hai ngón theo chiều ngang, một ngón kéo ngang để trượt (kéo dọc vẫn cuộn trang như thường). <u>Khung giá (trục dọc)</u>: <b>kéo dọc ngay trên dải giá bên phải</b> để nới rộng hay bó hẹp khung giá — nới ra thì nến nhỏ lại và bạn nhìn được tổng quát, đúng như kéo trục giá trên TradingView; chụm hai ngón theo chiều dọc cũng vậy. Kéo lệch dọc trong lòng biểu đồ thì dời khung giá lên xuống. Nháy đúp trên dải giá trả riêng khung giá về vừa khít, nháy đúp trong biểu đồ trả cả hai. Kéo hoặc lăn ở khung RSI phía dưới cũng điều khiển chung một cửa sổ thời gian.</p>
-      <p class="hint">Biểu đồ mở ra ở <b>khung xem vừa mắt</b> — chỉ hiện phần nến gần nhất, đủ rộng để mỗi cây nến còn ra hình nến, và neo sát mép phải như mọi phần mềm biểu đồ. Muốn về khung mặc định thì <b>bấm chuột phải trong biểu đồ</b> rồi chọn <i>Tải lại chart</i>, hoặc nhấn <b>Alt + R</b>; trên điện thoại dùng nút ↺ cạnh tiêu đề.</p>
+      <p class="hint" data-i18n-html="coin.chart.controls"><b>Điều khiển biểu đồ</b> — <u>Thời gian (trục ngang)</u>: lăn chuột để phóng to/thu nhỏ, giữ chuột kéo ngang để trượt qua lại; trên điện thoại chụm hai ngón theo chiều ngang, một ngón kéo ngang để trượt (kéo dọc vẫn cuộn trang như thường). <u>Khung giá (trục dọc)</u>: <b>kéo dọc ngay trên dải giá bên phải</b> để nới rộng hay bó hẹp khung giá — nới ra thì nến nhỏ lại và bạn nhìn được tổng quát, đúng như kéo trục giá trên TradingView; chụm hai ngón theo chiều dọc cũng vậy. Kéo lệch dọc trong lòng biểu đồ thì dời khung giá lên xuống. Nháy đúp trên dải giá trả riêng khung giá về vừa khít, nháy đúp trong biểu đồ trả cả hai. Kéo hoặc lăn ở khung RSI phía dưới cũng điều khiển chung một cửa sổ thời gian.</p>
+      <p class="hint" data-i18n-html="coin.chart.defaultView">Biểu đồ mở ra ở <b>khung xem vừa mắt</b> — chỉ hiện phần nến gần nhất, đủ rộng để mỗi cây nến còn ra hình nến, và neo sát mép phải như mọi phần mềm biểu đồ. Muốn về khung mặc định thì <b>bấm chuột phải trong biểu đồ</b> rồi chọn <i>Tải lại chart</i>, hoặc nhấn <b>Alt + R</b>; trên điện thoại dùng nút ↺ cạnh tiêu đề.</p>
     </section>
 
     <!-- Điểm các khung -->
     <section class="panel">
-      <div class="panel-head"><h2>⏱️ Tín hiệu theo khung thời gian</h2>
-        <span class="muted small">⭐ = khung có khả năng đảo chiều cao nhất</span></div>
+      <div class="panel-head"><h2 data-i18n="coin.tf.title">⏱️ Tín hiệu theo khung thời gian</h2>
+        <span class="muted small" data-i18n="coin.tf.note">⭐ = khung có khả năng đảo chiều cao nhất</span></div>
       <div class="tfs-row" id="tfScores"></div>
     </section>
 
     <!-- Hỗ trợ / Kháng cự -->
     <section class="panel">
-      <div class="panel-head"><h2>🧱 Vùng hỗ trợ &amp; kháng cự</h2>
-        <span class="muted small">Bấm 1 vùng để chart chỉ hiện vùng đó</span>
-        <button type="button" class="sr-showall" id="srShowAll" hidden>Hiện tất cả vùng</button></div>
+      <div class="panel-head"><h2 data-i18n="coin.sr.title">🧱 Vùng hỗ trợ &amp; kháng cự</h2>
+        <span class="muted small" data-i18n="coin.sr.note">Bấm 1 vùng để chart chỉ hiện vùng đó</span>
+        <button type="button" class="sr-showall" id="srShowAll" hidden data-i18n="coin.sr.showAll">Hiện tất cả vùng</button></div>
       <div class="sr-list" id="srList"></div>
-      <p class="hint">★ càng nhiều = vùng càng an toàn để vào lệnh. <span class="sr-tag long">LONG</span> tại hỗ trợ · <span class="sr-tag short">SHORT</span> tại kháng cự. Dải giá là vùng có thể đảo chiều mạnh.</p>
+      <p class="hint" data-i18n-html="coin.sr.hint">★ càng nhiều = vùng càng an toàn để vào lệnh. <span class="sr-tag long">LONG</span> tại hỗ trợ · <span class="sr-tag short">SHORT</span> tại kháng cự. Dải giá là vùng có thể đảo chiều mạnh.</p>
     </section>
   </main>
 

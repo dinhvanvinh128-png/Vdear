@@ -4,6 +4,11 @@
  * thang đo 0-100 LONG/SHORT, giá đa sàn, chú thích quá mua/quá bán.
  */
 (function () {
+  // Chữ hiển thị lấy qua i18n. t() tự rơi về tiếng Việt khi thiếu bản dịch;
+  // i18n.js được nạp trước mọi module nên nhánh dự phòng dưới đây gần như
+  // không bao giờ chạy, để đó cho chắc.
+  const T = (k, v) => (window.VdearI18n ? window.VdearI18n.t(k, v) : k);
+
   const CFG = window.VDEAR_CONFIG;
   const API = window.VdearAPI;
   const TA = window.VdearTA;
@@ -59,7 +64,7 @@
   function renderTfTabs() {
     const wrap = $('tfTabs');
     wrap.innerHTML = CFG.timeframes.map((t) =>
-      `<button class="tf-btn ${t.id === currentTf ? 'active' : ''}" data-tf="${t.id}">${t.label}</button>`
+      `<button class="tf-btn ${t.id === currentTf ? 'active' : ''}" data-tf="${t.id}">${t.k ? T(t.k) : t.label}</button>`
     ).join('');
     wrap.querySelectorAll('.tf-btn').forEach((b) => b.addEventListener('click', () => selectTf(b.dataset.tf)));
   }
@@ -87,10 +92,10 @@
 
     if (sig.side === 'NEUTRAL') {
       chart.setPlan(null);
-      box.innerHTML = `<div class="panel-head"><h2>⚔️ Chiến lược thực chiến</h2>
-        <span class="gauge-side neutral">CHƯA CÓ TÍN HIỆU</span></div>
-        <p class="hint">Khung ${currentTf.toUpperCase()} chưa xuất hiện đảo chiều RSI rõ ràng. Chờ giá về vùng quá mua/quá bán rồi quay đầu.</p>
-        <p class="hint"><b>Chỉ tham khảo, không phải lời khuyên đầu tư.</b></p>`;
+      box.innerHTML = `<div class="panel-head"><h2>${T('coin.combat.title')}</h2>
+        <span class="gauge-side neutral">${T('coin.combat.noSignal')}</span></div>
+        <p class="hint">${T('coin.combat.noSignalWhy', { tf: currentTf.toUpperCase() })}</p>
+        <p class="hint"><b>${T('coin.refOnly')}</b></p>`;
       return;
     }
 
@@ -115,23 +120,23 @@
 
     // khung layout cố định + vùng động cập nhật theo slider
     box.innerHTML = `
-      <div class="panel-head"><h2>⚔️ Chiến lược thực chiến · ${currentTf.toUpperCase()}</h2>
+      <div class="panel-head"><h2>${T('coin.combat.titleTf', { tf: currentTf.toUpperCase() })}</h2>
         <span class="gauge-side ${isLong ? 'long' : 'short'}" id="cbVerdict"></span></div>
       <div class="combat-conf">
-        <span class="cf-item ${sig.rsiNote ? 'on' : ''}">RSI đảo chiều: <b>${sig.rsiNote || '—'}</b></span>
-        <span class="cf-item ${okSR ? 'on' : ''}">Hợp tụ S&amp;R: <b>${srTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
-        <span class="cf-item ${okPA ? 'on' : ''}">Price Action: <b>${paTf}/${CFG.strategy.confirmTfs.length} khung</b></span>
-        <span class="cf-item ${sig.breakout ? 'on' : ''}">Breakout: <b>${sig.breakout ? 'đã xác nhận ✓' : 'chưa'}</b></span>
-        <span class="cf-item ${sig.volume ? 'on' : ''}">Volume giá: <b>${sig.volume ? 'bùng nổ ✓' : 'yếu'}</b></span>
+        <span class="cf-item ${sig.rsiNote ? 'on' : ''}">${T('coin.cf.rsi')}: <b>${sig.rsiNote || '—'}</b></span>
+        <span class="cf-item ${okSR ? 'on' : ''}">${T('coin.cf.sr')}: <b>${T('coin.cf.nTf', { n: srTf, total: CFG.strategy.confirmTfs.length })}</b></span>
+        <span class="cf-item ${okPA ? 'on' : ''}">${T('coin.cf.pa')}: <b>${T('coin.cf.nTf', { n: paTf, total: CFG.strategy.confirmTfs.length })}</b></span>
+        <span class="cf-item ${sig.breakout ? 'on' : ''}">${T('coin.cf.breakout')}: <b>${T(sig.breakout ? 'coin.cf.confirmed' : 'coin.cf.notYet')}</b></span>
+        <span class="cf-item ${sig.volume ? 'on' : ''}">${T('coin.cf.volume')}: <b>${T(sig.volume ? 'coin.cf.surge' : 'coin.cf.weak')}</b></span>
       </div>
       <div class="lev-box">
-        <div class="lev-head"><span>Đòn bẩy: <b id="levVal">x${combatLev}</b></span>
+        <div class="lev-head"><span>${T('coin.lev')}: <b id="levVal">x${combatLev}</b></span>
           <span class="lev-best" id="levBest"></span></div>
         <input type="range" id="levSlider" min="${CFG.money.minLeverage}" max="${CFG.money.maxLeverage}" value="${combatLev}" step="1">
         <div class="lev-scale"><span>x1</span><span>x25</span><span>x50</span><span>x75</span><span>x100</span></div>
       </div>
       <div class="plan-grid" id="planGrid"></div>
-      <p class="hint"><b>Chỉ tham khảo, không phải lời khuyên đầu tư.</b></p>`;
+      <p class="hint"><b>${T('coin.refOnly')}</b></p>`;
 
     const slider = $('levSlider');
     const update = () => {
@@ -140,15 +145,15 @@
       const p = TA.tradePlan(sig.price, sig.side, combatLev);
       chart.setPlan(p); // các mức đổi theo đòn bẩy, vẽ lên chart
       const bt = TA.miniBacktest(candles, combatLev); // win-rate THẬT theo đòn bẩy
-      const winTxt = bt.winRate != null ? `${bt.winRate}%` : 'chưa đủ mẫu';
+      const winTxt = bt.winRate != null ? `${bt.winRate}%` : T('coin.notEnoughSamples');
       $('cbVerdict').textContent = `${verdict ? '✓ ' : ''}${sig.side} · Win ${winTxt}`;
       $('cbVerdict').className = 'gauge-side ' + (isLong ? 'long' : 'short');
       if (best && best.winRate != null)
-        $('levBest').innerHTML = `Đề xuất <b>x${best.lev}</b> · win cao nhất ${best.winRate}%`;
+        $('levBest').innerHTML = T('coin.levBest', { lev: best.lev, win: best.winRate });
       $('planGrid').innerHTML = `
-        <div class="plan-cell"><span>Vào lệnh (Entry)</span><b>$${fmt(p.entry)}</b></div>
-        <div class="plan-cell up"><span>TP chốt lời +100% margin</span><b>$${fmt(p.tp)}</b></div>
-        <div class="plan-cell down"><span>SL cắt lỗ −50% margin</span><b>$${fmt(p.sl)}</b></div>`;
+        <div class="plan-cell"><span>${T('coin.plan.entry')}</span><b>$${fmt(p.entry)}</b></div>
+        <div class="plan-cell up"><span>${T('coin.plan.tp')}</span><b>$${fmt(p.tp)}</b></div>
+        <div class="plan-cell down"><span>${T('coin.plan.sl')}</span><b>$${fmt(p.sl)}</b></div>`;
     };
     slider.addEventListener('input', update);
     update();
@@ -162,16 +167,16 @@
     gauge.style.width = sig.score + '%';
     gauge.className = 'gauge-fill ' + (sig.side === 'LONG' ? 'long' : sig.side === 'SHORT' ? 'short' : 'neutral');
     $('gaugeValue').textContent = sig.score + '/100';
-    $('gaugeSide').textContent = sig.side === 'LONG' ? 'NÊN LONG' : sig.side === 'SHORT' ? 'NÊN SHORT' : 'TRUNG TÍNH';
+    $('gaugeSide').textContent = T(sig.side === 'LONG' ? 'coin.goLong' : sig.side === 'SHORT' ? 'coin.goShort' : 'coin.goNeutral');
     $('gaugeSide').className = 'gauge-side ' + sig.side.toLowerCase();
-    $('gaugeWin').textContent = 'Ước tính win-rate ' + sig.winRate + '%';
+    $('gaugeWin').textContent = T('coin.winEstimate', { n: sig.winRate });
 
     // RSI note (nhấn mạnh)
     const z = sig.zone;
     const noteEl = $('rsiNote');
     noteEl.className = 'rsi-note ' + (z.side === 'LONG' ? 'long' : z.side === 'SHORT' ? 'short' : 'neutral');
-    const cta = z.side === 'SHORT' ? '→ Đang QUÁ MUA nên cân nhắc <b>SHORT</b>'
-      : z.side === 'LONG' ? '→ Đang QUÁ BÁN nên cân nhắc <b>LONG</b>' : '';
+    const cta = z.side === 'SHORT' ? T('coin.cta.short')
+      : z.side === 'LONG' ? T('coin.cta.long') : '';
     noteEl.innerHTML = `<span class="rsi-badge" style="background:${z.color}">RSI ${sig.rsi.toFixed(1)} · ${z.label}</span>
       <span class="rsi-text">${z.note} ${cta}</span>`;
   }
@@ -185,19 +190,19 @@
       const dir = z.side;
       return `<div class="sr-row ${z.kind}" data-price="${z.price}" data-low="${z.low}" data-high="${z.high}" data-side="${dir}">
         <span class="sr-tag ${dir === 'LONG' ? 'long' : 'short'}">${dir}</span>
-        <span class="sr-kind">${z.kind === 'support' ? 'Hỗ trợ' : 'Kháng cự'}</span>
+        <span class="sr-kind">${T(z.kind === 'support' ? 'coin.sr.support' : 'coin.sr.resistance')}</span>
         <span class="sr-price">$${fmt(z.price)}</span>
         <span class="sr-band">$${fmt(z.low)} – $${fmt(z.high)}</span>
         <span class="sr-dist">${z.distancePct.toFixed(2)}%</span>
-        <span class="sr-stars" title="Độ an toàn vào lệnh">${stars(z.stars)}</span>
+        <span class="sr-stars" title="${T('coin.sr.safety')}">${stars(z.stars)}</span>
       </div>`;
     };
     const res = (sr.resistances || []).slice().reverse().map(mk).join('');
     const sup = (sr.supports || []).map(mk).join('');
     box.innerHTML =
-      `<div class="sr-head"><span>Loại</span><span>Vùng</span><span>Giá</span><span>Vùng đảo chiều mạnh</span><span>K.cách</span><span>An toàn</span></div>` +
+      `<div class="sr-head"><span>${T('coin.sr.th.kind')}</span><span>${T('coin.sr.th.zone')}</span><span>${T('coin.sr.th.price')}</span><span>${T('coin.sr.th.band')}</span><span>${T('coin.sr.th.dist')}</span><span>${T('coin.sr.th.safe')}</span></div>` +
       res +
-      `<div class="sr-current">◈ Giá hiện tại: <b>$${fmt(coin ? coin.price : cacheCandles[tf][cacheCandles[tf].length-1].close)}</b></div>` +
+      `<div class="sr-current">${T('coin.sr.current')}: <b>$${fmt(coin ? coin.price : cacheCandles[tf][cacheCandles[tf].length-1].close)}</b></div>` +
       sup;
 
     // Bấm vào một vùng -> chart CHỈ hiện vùng đó. Bấm lại vùng đang chọn (hoặc
@@ -224,7 +229,7 @@
 
     rows.forEach((row, i) => {
       const zone = order[i];
-      row.title = 'Bấm để chỉ hiện vùng này trên chart; bấm lại để hiện tất cả';
+      row.title = T('coin.sr.rowTitle');
       row.addEventListener('click', () => {
         const dangChon = row.classList.contains('sel');
         focus(dangChon ? null : zone, dangChon ? null : row);
@@ -236,7 +241,7 @@
   /* -------- điểm các khung (ưu tiên khung rate cao khả năng đảo chiều) -- */
   async function renderTfScores() {
     const box = $('tfScores');
-    box.innerHTML = '<div class="muted small">Đang quét các khung thời gian…</div>';
+    box.innerHTML = `<div class="muted small">${T('coin.tf.scanning')}</div>`;
     const results = [];
     for (const t of CFG.timeframes) {
       try {
@@ -251,7 +256,7 @@
       const s = r.sig.side;
       const isSel = r.tf.id === currentTf; // khung đang xem
       return `<button class="tfs-chip ${s.toLowerCase()} ${i === 0 ? 'top' : ''} ${isSel ? 'sel' : ''}" data-tf="${r.tf.id}">
-        ${i === 0 ? '⭐ ' : ''}${r.tf.label}
+        ${i === 0 ? '⭐ ' : ''}${r.tf.k ? T(r.tf.k) : r.tf.label}
         <b>${s === 'LONG' ? 'LONG' : s === 'SHORT' ? 'SHORT' : '—'}</b>
         <span class="tfs-score">${r.sig.score}</span></button>`;
     }).join('');
@@ -341,9 +346,40 @@
       await selectTf(currentTf);
     } catch (e) {
       $('chartError').style.display = 'block';
-      $('chartError').textContent = 'Không tải được dữ liệu chart cho ' + base + '. Thử lại sau.';
+      // Giữ KHOÁ chứ không giữ câu: trang có thể đứng ở thông báo lỗi này rất
+      // lâu, đổi ngôn ngữ phải dịch lại được đúng câu đang hiện.
+      // KHÔNG dùng data-i18n ở đây: apply() của i18n sẽ gọi t() mà không có
+      // biến, và câu tiếng Anh sẽ hiện nguyên chữ "{base}" ra màn hình.
+      $('chartError').dataset.errKey = 'coin.chartFailed';
+      $('chartError').dataset.errVars = JSON.stringify({ base: base });
+      $('chartError').textContent = T('coin.chartFailed', { base: base });
       console.error(e);
     }
+    // Đổi ngôn ngữ: vẽ lại mọi phần sinh từ dữ liệu bằng ĐÚNG nến đang có trong
+    // cache, không gọi lại sàn — đổi chữ mà bắn lại request là tiêu rate limit
+    // của người dùng cho không.
+    window.addEventListener('vdear:langchange', () => {
+      // Dải khung thời gian luôn hiện, kể cả khi chart lỗi -> dịch trước.
+      try { renderTfTabs(); } catch (e) { /* bỏ qua */ }
+      const err = $('chartError');
+      if (err && err.dataset.errKey) {
+        err.textContent = T(err.dataset.errKey, JSON.parse(err.dataset.errVars || '{}'));
+      }
+      // Trang đang ở trạng thái lỗi thì CHỈ dịch lại câu lỗi. Nến có thể đã nằm
+      // sẵn trong cache dù lượt vẽ đầu đã bỏ dở giữa chừng; vẽ tiếp ở đây thì
+      // đổi ngôn ngữ lại làm hiện ra những panel mà trang vốn không hiện —
+      // đổi ngôn ngữ chỉ được đổi CHỮ, không được đổi thứ đang hiển thị.
+      if (err && getComputedStyle(err).display !== 'none') return;
+      const c = cacheCandles[currentTf];
+      if (!c) return;
+      try {
+        renderSignal(c);
+        renderCombat(c);
+        renderSR(TA.supportResistance(c, c[c.length - 1].close), currentTf);
+        renderTfScores();
+      } catch (e) { /* đổi ngôn ngữ không được phép làm vỡ trang */ }
+    });
+
     // ticker top
     window.VdearTicker.initTicker('ticker');
     // cập nhật header định kỳ

@@ -4,6 +4,11 @@
  * chấm điểm tín hiệu LONG/SHORT (0-100) và xếp hạng an toàn 1-5 sao.
  */
 (function () {
+  // Chữ hiển thị lấy qua i18n. t() tự rơi về tiếng Việt khi thiếu bản dịch;
+  // i18n.js được nạp trước mọi module nên nhánh dự phòng dưới đây gần như
+  // không bao giờ chạy, để đó cho chắc.
+  const T = (k, v) => (window.VdearI18n ? window.VdearI18n.t(k, v) : k);
+
   const CFG = window.VDEAR_CONFIG;
 
   /* ------------------------------- RSI ---------------------------------- */
@@ -38,11 +43,11 @@
   // Diễn giải vùng RSI theo yêu cầu người dùng.
   function rsiZone(rsi) {
     const r = CFG.rsi;
-    if (rsi >= r.overboughtStrong) return { key: 'ob_strong', side: 'SHORT', label: 'Quá mua MẠNH', color: '#E0574F', note: 'RSI > 80 — tín hiệu quá mua mạnh, khả năng đảo chiều GIẢM cao. Cân nhắc SHORT.' };
-    if (rsi >= r.overbought) return { key: 'ob', side: 'SHORT', label: 'Quá mua', color: '#C6483F', note: 'RSI 70–80 — vùng quá mua, chú ý khả năng đảo chiều GIẢM. Ưu tiên SHORT.' };
-    if (rsi <= r.oversoldStrong) return { key: 'os_strong', side: 'LONG', label: 'Quá bán MẠNH', color: '#4FB477', note: 'RSI < 20 — tín hiệu quá bán mạnh, khả năng đảo chiều TĂNG cao. Cân nhắc LONG.' };
-    if (rsi <= r.oversold) return { key: 'os', side: 'LONG', label: 'Quá bán', color: '#3E9E6A', note: 'RSI 20–30 — vùng quá bán, chú ý khả năng đảo chiều TĂNG. Ưu tiên LONG.' };
-    return { key: 'neutral', side: 'NEUTRAL', label: 'Trung tính', color: '#9A9078', note: 'RSI trung tính (30–70) — chưa có tín hiệu đảo chiều rõ ràng.' };
+    if (rsi >= r.overboughtStrong) return { key: 'ob_strong', side: 'SHORT', label: T('rsi.obStrong'), color: '#E0574F', note: T('rsi.obStrong.note') };
+    if (rsi >= r.overbought) return { key: 'ob', side: 'SHORT', label: T('rsi.ob'), color: '#C6483F', note: T('rsi.ob.note') };
+    if (rsi <= r.oversoldStrong) return { key: 'os_strong', side: 'LONG', label: T('rsi.osStrong'), color: '#4FB477', note: T('rsi.osStrong.note') };
+    if (rsi <= r.oversold) return { key: 'os', side: 'LONG', label: T('rsi.os'), color: '#3E9E6A', note: T('rsi.os.note') };
+    return { key: 'neutral', side: 'NEUTRAL', label: T('rsi.neutral'), color: '#9A9078', note: T('rsi.neutral.note') };
   }
 
   /* ------------------------------- EMA ---------------------------------- */
@@ -249,9 +254,9 @@
     const now = rsiSeries[idx];
     if (now == null) return null;
     if (mn <= R.oversold && now > R.oversold)
-      return { dir: 'bullish', note: mn < R.oversoldStrong ? 'quá bán mạnh (<20)' : 'quá bán (20–30)', rsi: now };
+      return { dir: 'bullish', note: T(mn < R.oversoldStrong ? 'rsi.n.osStrong' : 'rsi.n.os'), rsi: now };
     if (mx >= R.overbought && now < R.overbought)
-      return { dir: 'bearish', note: mx > R.overboughtStrong ? 'quá mua mạnh (>80)' : 'quá mua (70–80)', rsi: now };
+      return { dir: 'bearish', note: T(mx > R.overboughtStrong ? 'rsi.n.obStrong' : 'rsi.n.ob'), rsi: now };
     return null;
   }
 

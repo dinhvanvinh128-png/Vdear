@@ -4,6 +4,11 @@
  * Hỗ trợ: HiDPI, ZOOM (lăn chuột / nút +−), PAN (kéo), tooltip, chống đè nhãn.
  */
 (function () {
+  // Chữ hiển thị lấy qua i18n. t() tự rơi về tiếng Việt khi thiếu bản dịch;
+  // i18n.js được nạp trước mọi module nên nhánh dự phòng dưới đây gần như
+  // không bao giờ chạy, để đó cho chắc.
+  const T = (k, v) => (window.VdearI18n ? window.VdearI18n.t(k, v) : k);
+
   const TA = window.VdearTA;
 
   const COLORS = {
@@ -535,9 +540,8 @@
       const b = Math.min(n, Math.round(this.viewStart + this.viewCount));
       this.pc.setAttribute('role', 'img');
       this.pc.setAttribute('aria-label',
-        `Biểu đồ nến: đang xem nến ${a}–${b} trên ${n}, `
-        + `giá từ ${fmt(lo)} đến ${fmt(hi)}`
-        + (this.priceView ? ' (khung giá tự chỉnh)' : ''));
+        T('chart.aria', { a: a, b: b, n: n, lo: fmt(lo), hi: fmt(hi) })
+        + (this.priceView ? T('chart.ariaCustomRange') : ''));
 
       // legend EMA + hướng dẫn zoom
       ctx.textAlign = 'left'; ctx.font = '11px Inter, Arial';
@@ -546,7 +550,7 @@
       ctx.fillStyle = COLORS.axis; ctx.font = '10px Inter, Arial';
       // Màn hẹp: bỏ dòng hướng dẫn trên canvas — nó chạy thẳng vào cụm nút zoom
       // và bị cắt cụt. Nội dung đó đã có đủ ở phần chú thích dưới biểu đồ.
-      if (w >= 620) ctx.fillText('Lăn chuột / chụm 2 ngón để zoom · kéo để di chuyển · nháy đúp để xem toàn bộ', this.padL + 108, plotT + 12);
+      if (w >= 620) ctx.fillText(T('chart.hint'), this.padL + 108, plotT + 12);
     }
 
     _crosshair(ctx, w, h, yFor, plotT, plotB) {

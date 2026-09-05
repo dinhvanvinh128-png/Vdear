@@ -24,88 +24,88 @@
     <button class="nav-toggle" type="button" data-nav-open aria-label="Mở menu" data-i18n-attr="aria-label:nav.open" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
     <a class="brand" href="/">
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><path fill="#0A0906" d="M3 4 L16 27.5 L28 4 L24.2 4 L16 20 L7.2 4 Z"/></svg></span>
-      <div><div class="brand-name">Vdearypto</div><div class="brand-sub">Bong bóng thị trường</div></div>
+      <div><div class="brand-name">Vdearypto</div><div class="brand-sub" data-i18n="bub.title2">Bong bóng thị trường</div></div>
     </a>
     <div class="tb-actions">
       <span class="pill live"><span class="live-dot"></span> <span data-i18n="nav.realtime">Realtime</span></span>
       <button class="icon-btn" data-theme-toggle title="Đổi nền" data-i18n-attr="title:nav.theme">☀️</button>
       <button class="icon-btn lang-btn" type="button" data-lang-toggle title="Switch to English">EN</button>
-      <a class="btn-ghost" href="/">← Về bảng thị trường</a>
+      <a class="btn-ghost" href="/" data-i18n="bub.back">← Về bảng thị trường</a>
     </div>
   </header>
 
   <main class="container">
     <section class="panel bubbles-panel bub-page">
       <div class="panel-head">
-        <h2>🫧 Bong bóng thị trường <span class="tag">24H</span></h2>
+        <h2><span data-i18n="bub.title">🫧 Bong bóng thị trường</span> <span class="tag">24H</span></h2>
         <div class="bub-controls">
           <span class="bub-stat" id="bubStat">Đang tải…</span>
           <div class="seg" id="bubFilter">
-            <button class="seg-btn active" type="button" data-v="all">Tất cả</button>
-            <button class="seg-btn" type="button" data-v="up">Tăng</button>
-            <button class="seg-btn" type="button" data-v="down">Giảm</button>
+            <button class="seg-btn active" type="button" data-v="all" data-i18n="bub.all">Tất cả</button>
+            <button class="seg-btn" type="button" data-v="up" data-i18n="bub.up">Tăng</button>
+            <button class="seg-btn" type="button" data-v="down" data-i18n="bub.down">Giảm</button>
           </div>
-          <select class="bub-select" id="bubSector" aria-label="Danh mục coin"></select>
-          <select class="bub-select" id="bubPer" aria-label="Số coin mỗi nhóm">
-            <option value="100" selected>100 coin/nhóm</option>
-            <option value="200">200 coin/nhóm</option>
-            <option value="500">500 coin/nhóm</option>
-            <option value="0">Tất cả một lần</option>
+          <select class="bub-select" id="bubSector" aria-label="Danh mục coin" data-i18n-attr="aria-label:bub.sectorLabel"></select>
+          <select class="bub-select" id="bubPer" aria-label="Số coin mỗi nhóm" data-i18n-attr="aria-label:bub.perLabel">
+            <option value="100" selected data-i18n="bub.per100">100 coin/nhóm</option>
+            <option value="200" data-i18n="bub.per200">200 coin/nhóm</option>
+            <option value="500" data-i18n="bub.per500">500 coin/nhóm</option>
+            <option value="0" data-i18n="bub.perAll">Tất cả một lần</option>
           </select>
-          <select class="bub-select bub-page" id="bubPage" aria-label="Nhóm coin theo thứ hạng khối lượng"></select>
-          <button class="icon-btn bub-gear" type="button" id="bubGear" aria-expanded="false" aria-controls="bubSettings" title="Tuỳ chọn hiển thị" aria-label="Tuỳ chọn hiển thị">⚙</button>
+          <select class="bub-select bub-page" id="bubPage" aria-label="Nhóm coin theo thứ hạng khối lượng" data-i18n-attr="aria-label:bub.pageLabel"></select>
+          <button class="icon-btn bub-gear" type="button" id="bubGear" aria-expanded="false" aria-controls="bubSettings" title="Tuỳ chọn hiển thị" aria-label="Tuỳ chọn hiển thị" data-i18n-attr="title:bub.settings;aria-label:bub.settings">⚙</button>
         </div>
       </div>
 
       <div class="bub-settings" id="bubSettings" hidden>
         <div class="bs-group">
-          <h4>Khung thời gian</h4>
+          <h4 data-i18n="bub.g.period">Khung thời gian</h4>
           <div class="bs-chips" id="bsPeriod">
-            <button class="bs-chip" type="button" data-v="1h">1 giờ</button>
-            <button class="bs-chip active" type="button" data-v="24h">24 giờ</button>
-            <button class="bs-chip" type="button" data-v="7d">7 ngày</button>
-            <button class="bs-chip" type="button" data-v="30d">30 ngày</button>
-            <button class="bs-chip" type="button" data-v="1y">1 năm</button>
+            <button class="bs-chip" type="button" data-v="1h" data-i18n="tf.1h">1 giờ</button>
+            <button class="bs-chip active" type="button" data-v="24h" data-i18n="bub.p.24h">24 giờ</button>
+            <button class="bs-chip" type="button" data-v="7d" data-i18n="bub.p.7d">7 ngày</button>
+            <button class="bs-chip" type="button" data-v="30d" data-i18n="bub.p.30d">30 ngày</button>
+            <button class="bs-chip" type="button" data-v="1y" data-i18n="bub.p.1y">1 năm</button>
           </div>
         </div>
         <div class="bs-group">
-          <h4>Cỡ bong bóng</h4>
+          <h4 data-i18n="bub.g.size">Cỡ bong bóng</h4>
           <div class="bs-chips" id="bsSize">
-            <button class="bs-chip active" type="button" data-v="perf">Biến động</button>
-            <button class="bs-chip" type="button" data-v="mcap">Vốn hoá</button>
-            <button class="bs-chip" type="button" data-v="vol">KLGD 24h</button>
-            <button class="bs-chip" type="button" data-v="rank">Thứ hạng</button>
+            <button class="bs-chip active" type="button" data-v="perf" data-i18n="bub.v.perf">Biến động</button>
+            <button class="bs-chip" type="button" data-v="mcap" data-i18n="bub.v.mcap">Vốn hoá</button>
+            <button class="bs-chip" type="button" data-v="vol" data-i18n="bub.v.vol">KLGD 24h</button>
+            <button class="bs-chip" type="button" data-v="rank" data-i18n="bub.v.rank">Thứ hạng</button>
           </div>
         </div>
         <div class="bs-group">
-          <h4>Nội dung trong bong bóng</h4>
+          <h4 data-i18n="bub.g.content">Nội dung trong bong bóng</h4>
           <div class="bs-chips" id="bsContent">
-            <button class="bs-chip active" type="button" data-v="perf">Biến động</button>
-            <button class="bs-chip" type="button" data-v="mcap">Vốn hoá</button>
-            <button class="bs-chip" type="button" data-v="vol">KLGD 24h</button>
-            <button class="bs-chip" type="button" data-v="price">Giá</button>
-            <button class="bs-chip" type="button" data-v="rank">Thứ hạng</button>
-            <button class="bs-chip" type="button" data-v="name">Chỉ tên coin</button>
+            <button class="bs-chip active" type="button" data-v="perf" data-i18n="bub.v.perf">Biến động</button>
+            <button class="bs-chip" type="button" data-v="mcap" data-i18n="bub.v.mcap">Vốn hoá</button>
+            <button class="bs-chip" type="button" data-v="vol" data-i18n="bub.v.vol">KLGD 24h</button>
+            <button class="bs-chip" type="button" data-v="price" data-i18n="bub.v.price">Giá</button>
+            <button class="bs-chip" type="button" data-v="rank" data-i18n="bub.v.rank">Thứ hạng</button>
+            <button class="bs-chip" type="button" data-v="name" data-i18n="bub.v.name">Chỉ tên coin</button>
           </div>
         </div>
         <div class="bs-group">
-          <h4>Màu bong bóng</h4>
+          <h4 data-i18n="bub.g.color">Màu bong bóng</h4>
           <div class="bs-chips" id="bsColor">
-            <button class="bs-chip active" type="button" data-v="perf">Theo biến động</button>
-            <button class="bs-chip" type="button" data-v="neutral">Trung tính</button>
+            <button class="bs-chip active" type="button" data-v="perf" data-i18n="bub.v.byPerf">Theo biến động</button>
+            <button class="bs-chip" type="button" data-v="neutral" data-i18n="bub.v.neutral">Trung tính</button>
           </div>
         </div>
-        <p class="bs-note"><b>24 giờ</b> lấy thẳng từ 4 sàn nên có đủ mọi coin được niêm yết. <b>1 giờ · 7 ngày · 30 ngày · 1 năm</b>, cùng <b>vốn hoá</b> và <b>thứ hạng</b>, đến từ CoinGecko — nguồn này chỉ phủ khoảng 750 coin vốn hoá lớn nhất, nên coin nào không có sẽ bị loại khỏi khung hình và được đếm ở dòng trạng thái, chứ không bị gán bừa một con số. Lựa chọn của bạn được nhớ lại cho lần sau.</p>
+        <p class="bs-note" data-i18n-html="bub.note"><b>24 giờ</b> lấy thẳng từ 4 sàn nên có đủ mọi coin được niêm yết. <b>1 giờ · 7 ngày · 30 ngày · 1 năm</b>, cùng <b>vốn hoá</b> và <b>thứ hạng</b>, đến từ CoinGecko — nguồn này chỉ phủ khoảng 750 coin vốn hoá lớn nhất, nên coin nào không có sẽ bị loại khỏi khung hình và được đếm ở dòng trạng thái, chứ không bị gán bừa một con số. Lựa chọn của bạn được nhớ lại cho lần sau.</p>
       </div>
       <div class="bub-stage">
-        <canvas id="bubbleCanvas" aria-label="Bản đồ bong bóng biến động 24h của thị trường crypto"></canvas>
+        <canvas id="bubbleCanvas" aria-label="Bản đồ bong bóng biến động 24h của thị trường crypto" data-i18n-attr="aria-label:bub.canvasLabel"></canvas>
         <div class="bub-tip" id="bubTip" hidden></div>
-        <div class="bub-empty" id="bubEmpty" hidden>Không có coin nào khớp bộ lọc này.</div>
+        <div class="bub-empty" id="bubEmpty" hidden data-i18n="bub.empty">Không có coin nào khớp bộ lọc này.</div>
       </div>
-      <p class="hint">Bong bóng <b class="up">xanh</b> = tăng, <b class="down">đỏ</b> = giảm trong 24h. Bong bóng càng lớn thì biên độ biến động (hoặc khối lượng, tuỳ chế độ) càng lớn. Rê chuột để xem giá &amp; KLGD · <b>bấm</b> để mở trang phân tích coin · <b>kéo</b> để hất bong bóng. Số liệu gộp từ Binance · Bybit · OKX · Bitget, không có coin ổn định (stablecoin).</p>
-      <p class="hint"><b>Toàn bộ coin</b> của sàn đều có mặt, chia thành từng nhóm xếp theo khối lượng: nhóm <b>1–100</b> là các coin giao dịch nhiều nhất, càng về sau càng nhỏ và mỏng thanh khoản. Nhóm <b>301–400</b> nghĩa là coin thứ 301 đến 400, tức đúng 100 coin — muốn thấy nhiều hơn trong một màn hình thì đổi <b>coin/nhóm</b> lên 200, 500 hoặc <b>Tất cả một lần</b>. Càng nhiều coin thì bong bóng càng nhỏ và nhãn tên sẽ tự ẩn dần khi không còn chỗ.</p>
-      <p class="hint">Con số cạnh mỗi nhóm là biến động trung bình của chính nhóm đó — nhìn qua là biết tiền đang xanh ở vùng nào của thị trường. Chọn <b>danh mục</b> (Layer 1, Meme, AI…) để chia nhóm trong riêng mảng đó.</p>
-      <p class="hint">Kích thước chỉ nói lên <b>biên độ</b>, không nói lên chất lượng: một coin vốn hoá nhỏ nhảy 40% trong ngày sẽ là bong bóng to nhất màn hình mà vẫn có thể là coin thanh khoản mỏng, dễ trượt giá. Đổi sang <b>Cỡ theo KLGD</b> để thấy tiền thật đang chảy ở đâu.</p>
+      <p class="hint" data-i18n-html="bub.hint1">Bong bóng <b class="up">xanh</b> = tăng, <b class="down">đỏ</b> = giảm trong 24h. Bong bóng càng lớn thì biên độ biến động (hoặc khối lượng, tuỳ chế độ) càng lớn. Rê chuột để xem giá &amp; KLGD · <b>bấm</b> để mở trang phân tích coin · <b>kéo</b> để hất bong bóng. Số liệu gộp từ Binance · Bybit · OKX · Bitget, không có coin ổn định (stablecoin).</p>
+      <p class="hint" data-i18n-html="bub.hint2"><b>Toàn bộ coin</b> của sàn đều có mặt, chia thành từng nhóm xếp theo khối lượng: nhóm <b>1–100</b> là các coin giao dịch nhiều nhất, càng về sau càng nhỏ và mỏng thanh khoản. Nhóm <b>301–400</b> nghĩa là coin thứ 301 đến 400, tức đúng 100 coin — muốn thấy nhiều hơn trong một màn hình thì đổi <b>coin/nhóm</b> lên 200, 500 hoặc <b>Tất cả một lần</b>. Càng nhiều coin thì bong bóng càng nhỏ và nhãn tên sẽ tự ẩn dần khi không còn chỗ.</p>
+      <p class="hint" data-i18n-html="bub.hint3">Con số cạnh mỗi nhóm là biến động trung bình của chính nhóm đó — nhìn qua là biết tiền đang xanh ở vùng nào của thị trường. Chọn <b>danh mục</b> (Layer 1, Meme, AI…) để chia nhóm trong riêng mảng đó.</p>
+      <p class="hint" data-i18n-html="bub.hint4">Kích thước chỉ nói lên <b>biên độ</b>, không nói lên chất lượng: một coin vốn hoá nhỏ nhảy 40% trong ngày sẽ là bong bóng to nhất màn hình mà vẫn có thể là coin thanh khoản mỏng, dễ trượt giá. Đổi sang <b>Cỡ theo KLGD</b> để thấy tiền thật đang chảy ở đâu.</p>
     </section>
   </main>
 

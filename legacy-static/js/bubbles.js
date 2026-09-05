@@ -10,6 +10,11 @@
  * kéo chuột để hất bong bóng, bấm để mở trang phân tích coin.
  */
 (function () {
+  // Chữ hiển thị lấy qua i18n. t() tự rơi về tiếng Việt khi thiếu bản dịch;
+  // i18n.js được nạp trước mọi module nên nhánh dự phòng dưới đây gần như
+  // không bao giờ chạy, để đó cho chắc.
+  const T = (k, v) => (window.VdearI18n ? window.VdearI18n.t(k, v) : k);
+
   const CFG = window.VDEAR_CONFIG;
   const API = window.VdearAPI;
 
@@ -90,7 +95,10 @@
       } catch (e) { /* riêng tư/hết chỗ -> bỏ qua, không ảnh hưởng hiển thị */ }
     }
 
-    const PERIODS = { '1h': '1 giờ', '24h': '24 giờ', '7d': '7 ngày', '30d': '30 ngày', '1y': '1 năm' };
+    // Tra LẠI mỗi lần dùng chứ không chốt một lần lúc nạp tệp: chốt cứng thì
+    // đổi ngôn ngữ xong tooltip vẫn ghi nhãn khung thời gian của ngôn ngữ cũ.
+    const PERIOD_KEY = { '1h': 'tf.1h', '24h': 'bub.p.24h', '7d': 'bub.p.7d', '30d': 'bub.p.30d', '1y': 'bub.p.1y' };
+    const periodLabel = (p) => T(PERIOD_KEY[p] || p);
     // Chỉ 24h đến từ ticker của sàn (có đủ mọi coin sàn niêm yết). Các khung
     // còn lại chỉ CoinGecko có, và CoinGecko chỉ phủ ~750 coin vốn hoá lớn.
     function needsCG() {
@@ -263,7 +271,7 @@
         const block = all.slice(i * per, (i + 1) * per);
         const vals = block.map(perfOf).filter((v) => v != null);
         const avg = vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : 0;
-        const span = n === 1 ? `Tất cả ${block.length} coin` : `${i * per + 1}–${i * per + block.length}`;
+        const span = n === 1 ? T('bub.allN', { n: block.length }) : `${i * per + 1}–${i * per + block.length}`;
         labels.push(`${span} · ${avg >= 0 ? '+' : ''}${avg.toFixed(2)}%`);
       }
       // Dựng lại cả danh sách sẽ đóng dropdown người dùng đang mở, mà nhãn thì
@@ -305,14 +313,14 @@
         // Nói rõ ĐANG XEM ĐOẠN NÀO. Ghi mỗi "100 coin" thì chọn nhóm 301–400
         // xong lại tưởng máy chỉ tải được 100 coin đầu.
         const up = block.filter((c) => perfOf(c) > 0).length;
-        const span = `Coin ${from}–${to} / ${total}`;
+        const span = T('bub.range', { from: from, to: to, total: total });
         // Số coin bị loại luôn hiện ra. Người xem phải biết khung hình này
         // không phải toàn bộ thị trường, và thiếu bao nhiêu.
-        const miss = dropped ? ` · ${dropped} coin thiếu dữ liệu` : '';
-        stat.textContent = !block.length ? 'Không có coin nào có đủ dữ liệu cho lựa chọn này'
-          : opts.filter === 'up' ? `${span} · hiện ${list.length} coin tăng${miss}`
-          : opts.filter === 'down' ? `${span} · hiện ${list.length} coin giảm${miss}`
-          : `${span} · ${up} tăng · ${block.length - up} giảm${miss}`;
+        const miss = dropped ? T('bub.missing', { n: dropped }) : '';
+        stat.textContent = !block.length ? T('bub.noData')
+          : opts.filter === 'up' ? T('bub.statUp', { span: span, n: list.length }) + miss
+          : opts.filter === 'down' ? T('bub.statDown', { span: span, n: list.length }) + miss
+          : T('bub.statBoth', { span: span, up: up, down: block.length - up }) + miss;
       }
       if (reduced) settleStatic();
     }
@@ -538,10 +546,10 @@
       // đây là chỗ để tra, không phải chỗ để nhìn lướt.
       tip.innerHTML = `<b>${c.base}<small>USDT</small></b>
         <span>Giá <i>$${fmtPrice(c.price)}</i></span>
-        <span>${PERIODS[opts.period]} <i class="${cls}">${perfTxt}</i></span>
+        <span>${periodLabel(opts.period)} <i class="${cls}">${perfTxt}</i></span>
         <span>KLGD 24h <i>$${shortNum(c.quoteVolume)}</i></span>
-        ${mc != null ? `<span>Vốn hoá <i>$${shortNum(mc)}</i></span>` : ''}
-        ${rk != null ? `<span>Hạng <i>#${rk}</i></span>` : ''}
+        ${mc != null ? `<span>${T('bub.v.mcap')} <i>$${shortNum(mc)}</i></span>` : ''}
+        ${rk != null ? `<span>${T('bub.v.rank')} <i>#${rk}</i></span>` : ''}
         <em>Bấm để mở phân tích ${c.base}</em>`;
       tip.hidden = false;
       const tw = tip.offsetWidth || 170, th = tip.offsetHeight || 90;
@@ -636,7 +644,7 @@
     async function ensureCG() {
       if (cgReady || !needsCG() || !API.loadCoinGecko) return;
       if (!cgLoading) {
-        if (stat) stat.textContent = 'Đang tải vốn hoá & biến động đa khung…';
+        if (stat) stat.textContent = T('bub.loadingCg');
         cgLoading = API.loadCoinGecko().then(() => { cgReady = true; }).catch(() => { cgReady = false; })
           .finally(() => { cgLoading = null; });
       }
@@ -645,7 +653,7 @@
 
     const secSel = document.getElementById('bubSector');
     if (secSel) {
-      secSel.innerHTML = CFG.sectors.map((s) => `<option value="${s.id}">${s.label}</option>`).join('');
+      secSel.innerHTML = CFG.sectors.map((s) => `<option value="${s.id}">${s.k ? T(s.k) : s.label}</option>`).join('');
       if (CFG.sectors.some((x) => x.id === opts.sector)) secSel.value = opts.sector;
       else opts.sector = 'all';
       // Đổi danh mục thì số coin đổi hẳn -> quay về trang đầu.
@@ -684,9 +692,21 @@
         rebuild();
         start();
       } catch (e) {
-        if (empty) { empty.hidden = false; empty.textContent = 'Không tải được dữ liệu thị trường. Kiểm tra kết nối mạng.'; }
+        if (empty) { empty.hidden = false; empty.textContent = T('bub.loadFailed'); }
       }
     }
+    // Đổi ngôn ngữ: dựng lại nhãn nhóm, ô danh mục và dòng trạng thái từ dữ
+    // liệu đang có, không gọi lại sàn.
+    window.addEventListener('vdear:langchange', () => {
+      try {
+        if (secSel) {
+          secSel.innerHTML = CFG.sectors.map((x) => `<option value="${x.id}">${x.k ? T(x.k) : x.label}</option>`).join('');
+          secSel.value = opts.sector;
+        }
+        rebuild();   // kể cả khi rỗng: dòng trạng thái cũng là chữ
+      } catch (e) { /* đổi ngôn ngữ không được phép làm vỡ trang */ }
+    });
+
     resize();
     load(false);
     // Không dùng force: bảng biến động đã làm mới mỗi 30s, gọi không-force sẽ
