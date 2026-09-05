@@ -361,6 +361,28 @@ h1,h2,h3{margin:0;font-weight:700}
 /* Khung Open Interest thấp hơn khung RSI: nó chỉ để đọc HƯỚNG của dòng tiền,
    không cần đọc mức chính xác như RSI có ngưỡng 30/70. */
 .oi-area{height:96px;position:relative;margin-top:6px;border-top:1px solid var(--line)}
+
+/* Badge trạng thái giá/OI. Bốn trạng thái dùng ba mức màu chứ không phải bốn
+   màu riêng: hai trạng thái "đà yếu / lực bán cạn" đều là tín hiệu CẢNH BÁO
+   chứ không phải tín hiệu hướng, nên dùng chung màu trung gian. */
+.oi-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
+  border-radius:999px;border:1px solid var(--line-2);background:var(--panel-2);
+  font-size:11.5px;font-weight:600;color:var(--muted);cursor:help;
+  white-space:nowrap;transition:border-color .12s,color .12s}
+.oi-badge:hover,.oi-badge:focus-visible{border-color:var(--accent-2);color:var(--text);outline:none}
+.oi-badge i{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none;font-style:normal}
+.oi-badge b{font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:700}
+.oi-badge.up{color:var(--up);border-color:color-mix(in srgb,var(--up) 40%,transparent)}
+.oi-badge.down{color:var(--down);border-color:color-mix(in srgb,var(--down) 40%,transparent)}
+.oi-badge.warn{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+
+/* Tooltip đặt trong luồng chứ không absolute so với badge: panel-head bọc dòng
+   trên màn hẹp, neo tuyệt đối vào badge thì tooltip chui ra ngoài mép phải. */
+.oi-tip{flex-basis:100%;order:99;margin-top:8px;padding:10px 12px;border-radius:10px;
+  border:1px solid var(--line-2);background:var(--panel);color:var(--muted);
+  font-size:12px;line-height:1.55;max-width:640px}
+.oi-tip b{color:var(--text)}
+.oi-tip .oi-tip-foot{display:block;margin-top:6px;font-size:11px;opacity:.75}
 /* touch-action: pan-y là mấu chốt để KÉO ĐƯỢC BẰNG TAY trên điện thoại. Mặc
    định (auto) trình duyệt tự khởi động cuộn ngay khi ngón vừa nhích, và một
    khi cuộn đã bắt đầu thì preventDefault bị bỏ qua — cú kéo ngang không bao

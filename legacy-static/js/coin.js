@@ -178,6 +178,65 @@
     try { series = await OI.hist(base, tf, 200); } catch (e) { series = null; }
     if (my !== oiSeq) return;
     chart.setOI(series);
+    renderOiBadge(series, candles);
+  }
+
+  /*
+   * Badge trạng thái giá/OI + phần giải thích.
+   *
+   * Giữ lại chuỗi vừa dùng để đổi ngôn ngữ là dựng lại được nguyên văn mà
+   * không phải gọi lại nguồn.
+   */
+  let lastOi = null;
+
+  function renderOiBadge(series, candles) {
+    const OI = window.VdearOI;
+    const badge = $('oiBadge'), tip = $('oiTip');
+    if (!badge || !tip || !OI) return;
+    lastOi = { series: series, candles: candles };
+
+    const r = OI.classify(series, candles, 1);
+    if (!r) {
+      // Không có dữ liệu thì ẩn hẳn badge. Badge trống hoặc badge ghi "—" chỉ
+      // làm người đọc tưởng có kết luận nào đó mà họ chưa hiểu.
+      badge.hidden = true; tip.hidden = true;
+      badge.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    const key = OI.stateKey(r.state);
+    const cls = r.state === 'longsIn' ? 'up'
+      : r.state === 'shortsIn' ? 'down'
+      : r.state === 'flat' ? '' : 'warn';
+    badge.className = 'oi-badge' + (cls ? ' ' + cls : '');
+    badge.hidden = false;
+    badge.innerHTML = '<i></i>' + T(key) + ' <b>'
+      + (r.oiPct >= 0 ? '+' : '') + r.oiPct.toFixed(2) + '%</b>';
+
+    tip.innerHTML = '<b>' + T('oi.tip.head') + '</b><br>'
+      + T(key + '.why', { dead: OI.DEAD })
+      + '<span class="oi-tip-foot">' + T('oi.tip.foot') + '</span>';
+  }
+
+  function wireOiBadge() {
+    const badge = $('oiBadge'), tip = $('oiTip');
+    if (!badge || !tip) return;
+    // Hiện bằng cả hover LẪN focus: máy cảm ứng không hover được, chạm vào chỉ
+    // sinh focus — chỉ bắt hover là trên điện thoại không đọc được lời giải
+    // thích nào cả.
+    const show = (on) => {
+      tip.hidden = !on;
+      badge.setAttribute('aria-expanded', on ? 'true' : 'false');
+    };
+    badge.addEventListener('mouseenter', () => show(true));
+    badge.addEventListener('mouseleave', () => { if (document.activeElement !== badge) show(false); });
+    badge.addEventListener('focus', () => show(true));
+    badge.addEventListener('blur', () => show(false));
+    badge.addEventListener('click', () => show(tip.hidden));
+    badge.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(tip.hidden); }
+      if (e.key === 'Escape') show(false);
+    });
   }
 
   /* ----------------------- signal + gauge + RSI note ------------------- */
@@ -359,6 +418,7 @@
     document.title = base + '/USDT — Vdear';
     chart = new window.VdearChart($('priceCanvas'), $('rsiCanvas'), $('oiCanvas'));
     wireChartMenu();
+    wireOiBadge();
     // Cảm ứng (chụm để zoom, kéo ngang để di chuyển) do chart.js tự lo — để ở
     // đây nữa thì mỗi cú chụm bị nhân đôi hệ số zoom.
     renderTfTabs();
@@ -395,6 +455,7 @@
       if (!c) return;
       try {
         chart.render();            // khung OI có chữ, phải vẽ lại
+        if (lastOi) renderOiBadge(lastOi.series, lastOi.candles);
         renderSignal(c);
         renderCombat(c);
         renderSR(TA.supportResistance(c, c[c.length - 1].close), currentTf);

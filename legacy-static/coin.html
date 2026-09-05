@@ -75,6 +75,11 @@
     <section class="panel">
       <div class="panel-head">
         <h2 data-i18n="coin.chart.title">Biểu đồ</h2>
+        <!-- Trạng thái giá/OI của khung đang chọn. Ẩn khi nguồn không có dữ
+             liệu OI cho khung đó — badge trống còn khó hiểu hơn là không có. -->
+        <span class="oi-badge" id="oiBadge" tabindex="0" role="button"
+              aria-describedby="oiTip" aria-expanded="false" hidden></span>
+        <div class="oi-tip" id="oiTip" role="tooltip" hidden></div>
         <!-- Máy để bàn dùng chuột phải trên biểu đồ; máy cảm ứng không có chuột
              phải nên cần nút này. CSS chỉ hiện nó ở màn hẹp / trỏ thô. -->
         <button type="button" class="chart-reset" id="chartReset"
