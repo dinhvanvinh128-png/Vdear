@@ -12,6 +12,11 @@
  * file này sinh ra số liệu thị trường.
  */
 (function () {
+  // Chữ hiển thị lấy qua i18n. t() tự rơi về tiếng Việt khi thiếu bản dịch;
+  // i18n.js được nạp trước mọi module nên nhánh dự phòng dưới đây gần như
+  // không bao giờ chạy, để đó cho chắc.
+  const T = (k, v) => (window.VdearI18n ? window.VdearI18n.t(k, v) : k);
+
   const CFG = window.VDEAR_CONFIG;
 
   /*
@@ -184,11 +189,11 @@
     const items = isoChart(asset, d);
     // Nguồn nói có bao nhiêu quỹ, mà chi tiết chỉ về được ít hơn -> nói ra.
     const short = d.fundCount && funds.length < d.fundCount
-      ? `<p class="efd-note">Nguồn ghi ${d.fundCount} quỹ nhưng chỉ trả về chi tiết của ${funds.length}.</p>`
+      ? `<p class="efd-note">${T('etf.short', { said: d.fundCount, got: funds.length })}</p>`
       : '';
     return `<tr class="etf-detail" id="${id}" hidden><td colspan="6">
       <div class="efd">
-        <h4>${asset.symbol} · dòng tiền từng quỹ <span class="muted small">ngày ${d.date || '—'}</span></h4>
+        <h4>${T('etf.perFund', { sym: asset.symbol })} <span class="muted small">${T('etf.onDate', { d: d.date || '—' })}</span></h4>
         ${items}${short}
       </div></td></tr>`;
   }
@@ -201,15 +206,12 @@
   function flowTable(flow) {
     const assets = CFG.etf.assets;
     if (!flow) {
-      return `<p class="hint">Dòng tiền ETF <b>chưa cấu hình nguồn</b>. Số này chỉ nhà cung cấp
-        có API mới công bố; cần đặt <code>SOSOVALUE_API_KEY</code>
-        ở biến môi trường phía server. Chừng nào chưa có, ở đây để trống — trang này không ước lượng dòng tiền.</p>`;
+      return `<p class="hint">${T('etf.notConfigured')}</p>`;
     }
     const got = assets.filter((a) => flow.assets && flow.assets[a.symbol]);
     if (!got.length) {
       const why = (flow.errors || []).slice(0, 4).join(' · ');
-      return `<p class="hint">Đã cấu hình <code>SOSOVALUE_API_KEY</code> nhưng lần gọi này nguồn
-        không trả về tài sản nào.${why ? ' Lý do: ' + why + '.' : ''} Không có số thật thì để trống.</p>`;
+      return `<p class="hint">${T('etf.emptyResponse')}${why ? ' ' + T('etf.reason', { why: why }) : ''} ${T('etf.blankIfNoReal')}</p>`;
     }
     const rows = assets.map((a) => {
       const d = flow.assets && flow.assets[a.symbol];
@@ -224,7 +226,7 @@
         // Nhãn ngắn: câu giải thích đầy đủ nằm một lần ở dưới bảng. Lặp lại
         // nguyên câu trên 8 dòng vừa rối vừa kéo bảng rộng ra trên điện thoại.
         return `<tr class="etf-na"><td class="etf-name"><b>${a.symbol}</b><small>${a.label}</small></td>
-          <td colspan="5" class="muted small">${supported ? 'Lần gọi này không lấy được' : 'Nguồn không công bố'}</td></tr>`;
+          <td colspan="5" class="muted small">${T(supported ? 'etf.missedThisCall' : 'etf.notPublished')}</td></tr>`;
       }
       const net = d.netInflow;
       // 0 không phải tiền vào cũng không phải tiền ra -> chip trung tính.
@@ -240,7 +242,7 @@
       // liệu quỹ thì không dựng nút — nút bấm ra chỗ trống là nút lừa người.
       const id = 'etfd-' + a.symbol;
       const name = `<b>${a.symbol}</b><small>${a.label}</small>${
-        d.fundCount ? `<span class="etf-count">×${d.fundCount} quỹ</span>` : ''}`;
+        d.fundCount ? `<span class="etf-count">${T('etf.fundCount', { n: d.fundCount })}</span>` : ''}`;
       const head = funds.length
         ? `<button type="button" class="etf-toggle" aria-expanded="false" aria-controls="${id}"
              data-sym="${a.symbol}"><span class="etf-caret" aria-hidden="true">▸</span><span>${name}</span></button>`
@@ -260,16 +262,13 @@
     // Nguồn phủ hết danh sách; giữ nhánh này phòng khi nguồn rút bớt tài sản.
     const outside = assets.filter((a) => sup.length && sup.indexOf(a.symbol) < 0).map((a) => a.symbol);
     return `<div class="table-wrap"><table class="movers etf-table">
-        <thead><tr><th>Tài sản</th><th>Dòng tiền ròng ngày</th><th>Tài sản ròng</th><th>GT giao dịch</th><th>Quỹ đóng góp nhiều nhất</th><th>Ngày</th></tr></thead>
+        <thead><tr><th>${T('etf.th.asset')}</th><th>${T('etf.th.netFlow')}</th><th>${T('etf.th.netAssets')}</th><th>${T('etf.th.traded')}</th><th>${T('etf.th.topFunds')}</th><th>${T('etf.th.date')}</th></tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
-      <p class="hint">Số liệu ngày <b>${flow.date || '—'}</b> · ${got.length}/${supported} tài sản đã lấy được dữ liệu${miss ? ` · ${miss} lỗi` : ''}.
-        ${flow.sameValue ? `<br><b>⚠ Mọi tài sản đang ra cùng một con số.</b> Gần như chắc chắn nguồn
-        không dùng tham số phân biệt tài sản, nên trả cùng một bản ghi cho mọi lần gọi. <b>Đừng tin
-        bảng này</b> cho tới khi sửa xong — gọi <code>/api/etf-flow?diag=1</code> để xem nguồn thực sự trả gì.` : ''}
-        ${flow.mixedDates ? '<b>⚠ Có dòng lệch ngày</b> — nguồn chưa chốt xong ngày này cho tài sản đó; dòng lệch được đánh dấu ⚠ ở cột ngày. Đừng cộng cả bảng lại thành một con số.' : ''}
-        ${outside.length ? `<b>Nguồn không công bố</b> ETF của ${outside.join(', ')} — đó là giới hạn của
-        nguồn, không phải đang chờ dữ liệu.` : ''}</p>`;
+      <p class="hint">${T('etf.summary', { date: flow.date || '—', got: got.length, total: supported })}${miss ? T('etf.errCount', { n: miss }) : ''}
+        ${flow.sameValue ? '<br>' + T('etf.sameValue') : ''}
+        ${flow.mixedDates ? T('etf.mixedDates') : ''}
+        ${outside.length ? T('etf.outside', { list: outside.join(', ') }) : ''}</p>`;
   }
 
 
@@ -321,6 +320,8 @@
   const REFRESH_MS = 15 * 60000;
   const STALE_MS = 5 * 60000;      // quay lại tab sau ngần này thì lấy lại
   let lastAt = 0;
+  // Giữ lại lần vẽ gần nhất để đổi ngôn ngữ là vẽ lại được ngay từ dữ liệu cũ.
+  let lastMount = null, lastPayload = null;
   let hadFlow = false;             // đã từng có bảng dòng tiền tử tế chưa
   let busy = false;
 
@@ -338,6 +339,7 @@
       if (!payload.flow && hadFlow) return;
       lastAt = Date.now();
       hadFlow = !!payload.flow;
+      lastMount = mountId; lastPayload = payload;
       render(mountId, { ...payload, at: lastAt });
     } catch (e) {
       // Hỏng hẳn cũng giữ nguyên bảng đang có, vì lý do trên.
@@ -347,14 +349,15 @@
   async function init(mountId) {
     const el = document.getElementById(mountId);
     if (!el) return;
-    el.innerHTML = '<p class="hint">Đang tải báo giá ETF…</p>';
+    el.innerHTML = `<p class="hint">${T('etf.loadingQuotes')}</p>`;
     try {
       const payload = await load();
       lastAt = Date.now();
       hadFlow = !!payload.flow;
+      lastMount = mountId; lastPayload = payload;
       render(mountId, { ...payload, at: lastAt });
     } catch (e) {
-      el.innerHTML = '<p class="hint">Không lấy được báo giá ETF. Trang này không hiển thị số liệu ước lượng.</p>';
+      el.innerHTML = `<p class="hint">${T('etf.quotesFailed')}</p>`;
     }
     setInterval(() => { if (!document.hidden) refresh(mountId); }, REFRESH_MS);
     // Quan trọng hơn cả nhịp định kỳ: người ta mở lại tab hôm sau. Trình duyệt
@@ -363,6 +366,13 @@
       if (!document.hidden && Date.now() - lastAt > STALE_MS) refresh(mountId);
     });
   }
+
+  // Đổi ngôn ngữ: vẽ lại bằng ĐÚNG dữ liệu đang có, không gọi lại nguồn. Gọi
+  // lại chỉ để đổi chữ là tiêu một lượt rate limit của người dùng cho không.
+  window.addEventListener('vdear:langchange', () => {
+    if (!lastMount || !lastPayload) return;
+    try { render(lastMount, { ...lastPayload, at: lastAt }); } catch (e) { /* không làm vỡ trang */ }
+  });
 
   window.VdearETF = { init, load, refresh };
 })();

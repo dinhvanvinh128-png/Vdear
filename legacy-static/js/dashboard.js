@@ -8,6 +8,11 @@
  * - Thang tâm lý thị trường 0-100
  */
 (function () {
+  // Chữ hiển thị lấy qua i18n. t() tự rơi về tiếng Việt khi thiếu bản dịch;
+  // i18n.js được nạp trước mọi module nên nhánh dự phòng dưới đây gần như
+  // không bao giờ chạy, để đó cho chắc.
+  const T = (k, v) => (window.VdearI18n ? window.VdearI18n.t(k, v) : k);
+
   const CFG = window.VDEAR_CONFIG;
   const API = window.VdearAPI;
   const TA = window.VdearTA;
@@ -71,7 +76,8 @@
     scanning = true;
     const status = $('scanStatus');
     const btn = $('scanRescan');
-    if (status) status.textContent = 'Đang quét…';
+    scanStatusKey = { k: 'st.scanning', v: null };
+    if (status) status.textContent = T('st.scanning');
     if (btn) { btn.disabled = true; btn.classList.add('spin'); }
     const cap = CFG.scan.universeSize === 'all' ? CFG.scan.maxUniverse : CFG.scan.universeSize;
     const universe = market.slice(0, cap);
@@ -97,7 +103,8 @@
     scanResults.sort((a, b) => b.rank - a.rank);
     scanResults = scanResults.slice(0, CFG.scan.targetSignals);
 
-    if (status) status.textContent = `Đã quét · ${scanResults.length} tín hiệu`;
+    scanStatusKey = { k: 'scan.done', v: { n: scanResults.length } };
+    if (status) status.textContent = T(scanStatusKey.k, scanStatusKey.v);
     if (btn) { btn.disabled = false; btn.classList.remove('spin'); }
     scanning = false;
     renderScan();
@@ -108,9 +115,9 @@
     const c = r.coin, s = r.sig, z = s.zone;
     const isLong = s.side === 'LONG';
     const extremeBadge = s.valid
-      ? '<span class="ex-flag strong">HỘI TỤ ✓</span>'
-      : r.extreme === 2 ? `<span class="ex-flag">${isLong ? 'QUÁ BÁN MẠNH' : 'QUÁ MUA MẠNH'}</span>`
-      : r.extreme === 1 ? `<span class="ex-flag">${isLong ? 'QUÁ BÁN' : 'QUÁ MUA'}</span>` : '';
+      ? `<span class="ex-flag strong">${T('scan.confluence')}</span>`
+      : r.extreme === 2 ? `<span class="ex-flag">${T(isLong ? 'scan.oversoldHard' : 'scan.overboughtHard')}</span>`
+      : r.extreme === 1 ? `<span class="ex-flag">${T(isLong ? 'scan.oversold' : 'scan.overbought')}</span>` : '';
     const conf = `<div class="sc-conf">
       <span class="cf ${s.rsiNote ? 'on' : ''}" title="RSI đảo chiều">RSI</span>
       <span class="cf ${s.srNear ? 'on' : ''}" title="Gần vùng S&amp;R">S&amp;R</span>
@@ -142,7 +149,7 @@
     const more = $('scanMore');
     if (scanResults.length > CFG.scan.initialShow) {
       more.style.display = 'inline-flex';
-      more.textContent = scanExpanded ? '▲ Thu gọn' : `▼ Xem thêm (${scanResults.length - CFG.scan.initialShow})`;
+      more.textContent = scanExpanded ? T('st.less') : T('scan.moreN', { n: scanResults.length - CFG.scan.initialShow });
     } else more.style.display = 'none';
   }
 
@@ -150,7 +157,7 @@
   function renderSectorBar() {
     const bar = $('sectorBar');
     bar.innerHTML = CFG.sectors.map((s) =>
-      `<button class="sector-chip ${s.id === activeSector ? 'active' : ''}" data-sec="${s.id}">${s.label}</button>`
+      `<button class="sector-chip ${s.id === activeSector ? 'active' : ''}" data-sec="${s.id}">${s.k ? T(s.k) : s.label}</button>`
     ).join('');
     bar.querySelectorAll('.sector-chip').forEach((b) => b.addEventListener('click', () => {
       activeSector = b.dataset.sec; moversPage = 1; renderSectorBar(); renderMovers();
@@ -177,9 +184,9 @@
   function volIcon(base) {
     const r = volRank[base];
     if (r == null) return '';
-    if (r < 3) return '<span class="vico hot" title="Volume rất cao">🔥</span>';
-    if (r < 8) return '<span class="vico high" title="Volume cao">🔥</span>';
-    if (r < CFG.scan.volIconTop) return '<span class="vico" title="Volume khá">🔥</span>';
+    if (r < 3) return `<span class="vico hot" title="${T('vol.veryHigh')}">🔥</span>`;
+    if (r < 8) return `<span class="vico high" title="${T('vol.high')}">🔥</span>`;
+    if (r < CFG.scan.volIconTop) return `<span class="vico" title="${T('vol.decent')}">🔥</span>`;
     return '';
   }
 
@@ -191,7 +198,7 @@
 
   function moverRow(c) {
     const up = c.change >= 0;
-    const star = `<button class="fav-star ${favHas(c.base) ? 'on' : ''}" data-fav="${c.base}" title="Yêu thích">${favHas(c.base) ? '★' : '☆'}</button>`;
+    const star = `<button class="fav-star ${favHas(c.base) ? 'on' : ''}" data-fav="${c.base}" title="${T('movers.favStar')}">${favHas(c.base) ? '★' : '☆'}</button>`;
     return `<tr class="mv-row" data-base="${c.base}">
       <td class="mv-coin"><div class="mv-coin-in">${star}<img class="mv-logo" alt="" data-logo="${c.base}">
         <span class="mv-sym">${c.base}<small>USDT</small> ${volIcon(c.base)}</span></div></td>
@@ -244,8 +251,8 @@
     body.innerHTML = page.length
       ? page.map((c) => moverRow(c)).join('')
       : `<tr><td colspan="4" class="muted">${favOnly
-          ? 'Chưa có coin yêu thích nào khớp. Bấm ⭐ ở cột đầu để thêm.'
-          : 'Không có coin trong nhóm này.'}</td></tr>`;
+          ? T('movers.noFavMatch')
+          : T('movers.noneInGroup')}</td></tr>`;
     body.querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
     bindRowActions(body);
     renderPager(totalPages, list.length);
@@ -271,7 +278,7 @@
   function renderPager(totalPages, totalItems) {
     const pager = $('moversPager');
     if (!pager) return;
-    if (totalPages <= 1) { pager.innerHTML = `<span class="pager-info">${totalItems} coin</span>`; return; }
+    if (totalPages <= 1) { pager.innerHTML = `<span class="pager-info">${T('movers.count', { n: totalItems })}</span>`; return; }
     const cur = moversPage;
     const nums = new Set([1, totalPages, cur, cur - 1, cur + 1, 2, totalPages - 1]);
     const pages = [...nums].filter((n) => n >= 1 && n <= totalPages).sort((a, b) => a - b);
@@ -283,7 +290,7 @@
       prev = n;
     }
     html += `<button class="pg-btn" data-go="${Math.min(totalPages, cur + 1)}" ${cur === totalPages ? 'disabled' : ''}>›</button>`;
-    html += `<span class="pager-info">${totalItems} coin</span>`;
+    html += `<span class="pager-info">${T('movers.count', { n: totalItems })}</span>`;
     pager.innerHTML = html;
     pager.querySelectorAll('.pg-btn').forEach((b) => b.addEventListener('click', () => {
       moversPage = +b.dataset.go; renderMovers();
@@ -294,6 +301,23 @@
   /* ------------------------------ Favorites ---------------------------- */
 
   /* --------------------- Thang tâm lý thị trường ----------------------- */
+  // Câu đang hiện ở ô trạng thái quét, giữ dạng KHOÁ để đổi ngôn ngữ là dịch
+  // lại được đúng câu đó — thẻ có thể đứng ở "Đã quét · 0 tín hiệu" rất lâu.
+  let scanStatusKey = null;
+
+  // Đổi ngôn ngữ: những phần vẽ từ dữ liệu (lưới tín hiệu, bảng, dải mảng, thang
+  // tâm lý) nằm ngoài tầm với của lượt dịch DOM, phải tự vẽ lại. Chỉ vẽ lại khi
+  // ĐÃ có dữ liệu — gọi sớm sẽ đạp lên trạng thái "đang quét".
+  window.addEventListener('vdear:langchange', () => {
+    try {
+      renderSectorBar();
+      const st = $('scanStatus');
+      if (st && scanStatusKey) st.textContent = T(scanStatusKey.k, scanStatusKey.v);
+      renderMovers();                       // kể cả khi rỗng: dòng "không có coin" cũng là chữ
+      if (scanResults.length) { renderScan(); renderSentiment(); }
+    } catch (e) { /* đổi ngôn ngữ không được phép làm vỡ trang */ }
+  });
+
   function renderSentiment() {
     if (!scanResults.length) return;
     const avg = Math.round(scanResults.reduce((a, r) => a + r.sig.score, 0) / scanResults.length);
@@ -301,9 +325,9 @@
     const val = Math.max(0, Math.min(100, Math.round(avg * 0.6 + upRatio * 0.4)));
     $('sentFill').style.width = val + '%';
     let label, cls;
-    if (val >= 65) { label = 'Tham lam · thiên LONG'; cls = 'long'; }
-    else if (val <= 35) { label = 'Sợ hãi · thiên SHORT'; cls = 'short'; }
-    else { label = 'Trung tính'; cls = 'neutral'; }
+    if (val >= 65) { label = T('sent.greed'); cls = 'long'; }
+    else if (val <= 35) { label = T('sent.fear'); cls = 'short'; }
+    else { label = T('sent.neutral'); cls = 'neutral'; }
     $('sentFill').className = 'gauge-fill ' + cls;
     $('sentValue').textContent = val + '/100';
     $('sentLabel').textContent = label;
@@ -352,7 +376,8 @@
       renderMovers();
       await runScan();
     } catch (e) {
-      $('scanStatus').textContent = 'Không tải được dữ liệu thị trường. Kiểm tra kết nối mạng và thử lại.';
+      scanStatusKey = { k: 'scan.loadFailed', v: null };
+    $('scanStatus').textContent = T('scan.loadFailed');
       console.error(e);
     }
 

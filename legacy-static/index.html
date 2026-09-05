@@ -16,15 +16,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
-  <script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+  <script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t);
+    var l=localStorage.getItem('vdear_lang');if(l==='en'||l==='vi')document.documentElement.setAttribute('lang',l)}catch(e){}</script>
 </head>
 <body>
   <!-- Ticker 50px -->
-  <div id="ticker" class="ticker-bar" aria-label="Bảng giá chạy"></div>
+  <div id="ticker" class="ticker-bar" aria-label="Bảng giá chạy" data-i18n-attr="aria-label:nav.ticker"></div>
 
   <!-- Header -->
   <header class="topbar">
-    <button class="nav-toggle" type="button" data-nav-open aria-label="Mở menu" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
+    <button class="nav-toggle" type="button" data-nav-open aria-label="Mở menu" data-i18n-attr="aria-label:nav.open" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
     <div class="brand">
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><path fill="#0A0906" d="M3 4 L16 27.5 L28 4 L24.2 4 L16 20 L7.2 4 Z"/></svg></span>
       <div>
@@ -33,10 +34,11 @@
       </div>
     </div>
     <div class="tb-actions">
-      <span class="pill live"><span class="live-dot"></span> Realtime</span>
-      <button class="kbd-hint" data-cmd-open>🔍 Tìm nhanh <kbd>Ctrl</kbd><kbd>K</kbd></button>
-      <button class="icon-btn" data-theme-toggle title="Đổi nền">☀️</button>
-      <a class="btn-primary" data-auth-login href="#" hidden>Đăng nhập</a>
+      <span class="pill live"><span class="live-dot"></span> <span data-i18n="nav.realtime">Realtime</span></span>
+      <button class="kbd-hint" data-cmd-open><span data-i18n="nav.search">🔍 Tìm nhanh</span> <kbd>Ctrl</kbd><kbd>K</kbd></button>
+      <button class="icon-btn" data-theme-toggle title="Đổi nền" data-i18n-attr="title:nav.theme">☀️</button>
+      <button class="icon-btn lang-btn" type="button" data-lang-toggle title="Switch to English">EN</button>
+      <a class="btn-primary" data-auth-login href="#" hidden data-i18n="nav.login">Đăng nhập</a>
       <div class="tb-user" data-auth-user hidden></div>
     </div>
   </header>
@@ -45,22 +47,22 @@
   <section class="hx-sec">
     <div class="hx">
       <div class="hx-left">
-        <p class="hx-eyebrow"><i></i>FUTURES INTELLIGENCE · REALTIME</p>
-        <h1 class="hx-h1">Radar tín hiệu <em>Futures</em><br>cho trader Crypto</h1>
-        <p class="hx-sub">Quét toàn bộ Futures trên Binance · Bybit · OKX · Bitget, phát hiện hội tụ RSI đảo chiều, hỗ trợ/kháng cự và Price Action trên nhiều khung thời gian.</p>
+        <p class="hx-eyebrow"><i></i><span data-i18n="hero.eyebrow">FUTURES INTELLIGENCE · REALTIME</span></p>
+        <h1 class="hx-h1" data-i18n-html="hero.h1">Radar tín hiệu <em>Futures</em><br>cho trader Crypto</h1>
+        <p class="hx-sub" data-i18n="hero.sub">Quét toàn bộ Futures trên Binance · Bybit · OKX · Bitget, phát hiện hội tụ RSI đảo chiều, hỗ trợ/kháng cự và Price Action trên nhiều khung thời gian.</p>
 
         <ul class="hx-chips">
-          <li>Realtime 4 sàn</li>
-          <li>Tín hiệu hội tụ</li>
-          <li>RSI + Support/Resistance</li>
-          <li>Backtest trên chart</li>
+          <li data-i18n="hero.chip.realtime">Realtime 4 sàn</li>
+          <li data-i18n="hero.chip.confluence">Tín hiệu hội tụ</li>
+          <li data-i18n="hero.chip.rsi">RSI + Support/Resistance</li>
+          <li data-i18n="hero.chip.backtest">Backtest trên chart</li>
         </ul>
 
         <dl class="hx-stats">
-          <div><dt id="hxStCoins">600+</dt><dd>Coins</dd></div>
-          <div><dt id="hxStEx">4</dt><dd>Exchanges</dd></div>
-          <div><dt id="hxStTf">10</dt><dd>Timeframes</dd></div>
-          <div><dt class="hx-stat-word">Realtime</dt><dd>Data</dd></div>
+          <div><dt id="hxStCoins">600+</dt><dd data-i18n="hero.stat.coins">Coins</dd></div>
+          <div><dt id="hxStEx">4</dt><dd data-i18n="hero.stat.exchanges">Exchanges</dd></div>
+          <div><dt id="hxStTf">10</dt><dd data-i18n="hero.stat.timeframes">Timeframes</dd></div>
+          <div><dt class="hx-stat-word" data-i18n="hero.stat.realtime">Realtime</dt><dd data-i18n="hero.stat.data">Data</dd></div>
         </dl>
       </div>
 
@@ -69,10 +71,10 @@
              không có giá trị nào gõ tay. Chưa lấy được thì hiện "—". -->
         <article class="hx-card hx-radar" id="hxRadar" aria-busy="true">
           <header>
-            <span class="hx-kicker">Signal Radar</span>
+            <span class="hx-kicker" data-i18n="radar.kicker">Signal Radar</span>
             <div class="hx-pair">
               <button type="button" class="hx-sym" id="hxSymBtn" aria-haspopup="dialog"
-                      aria-expanded="false" aria-controls="hxPop" title="Đổi coin — bấm để tìm">
+                      aria-expanded="false" aria-controls="hxPop" title="Đổi coin — bấm để tìm" data-i18n-attr="title:radar.symTitle">
                 <span id="hxSymTxt">BTCUSDT</span>
                 <svg viewBox="0 0 16 16" aria-hidden="true">
                   <circle cx="6.8" cy="6.8" r="4.3"/><path d="M10 10 L14 14"/>
@@ -84,19 +86,20 @@
 
           <!-- Bảng chọn coin: danh sách lấy từ VdearAPI.getMarket() (4 sàn),
                không có danh sách coin nào gõ cứng trong HTML. -->
-          <div class="hx-pop" id="hxPop" role="dialog" aria-label="Chọn coin" hidden>
+          <div class="hx-pop" id="hxPop" role="dialog" aria-label="Chọn coin" data-i18n-attr="aria-label:radar.popLabel" hidden>
             <div class="hx-pop-search">
               <svg viewBox="0 0 16 16" aria-hidden="true">
                 <circle cx="6.8" cy="6.8" r="4.3"/><path d="M10 10 L14 14"/>
               </svg>
               <input type="search" id="hxQ" placeholder="Tìm coin…" autocomplete="off"
-                     spellcheck="false" aria-label="Tìm coin">
+                     spellcheck="false" aria-label="Tìm coin"
+                     data-i18n-attr="placeholder:radar.searchPlaceholder;aria-label:radar.searchLabel">
             </div>
-            <ul class="hx-pop-list" id="hxList" role="listbox" aria-label="Kết quả"></ul>
-            <p class="hx-pop-empty" id="hxEmpty" hidden>Không có coin nào khớp.</p>
+            <ul class="hx-pop-list" id="hxList" role="listbox" aria-label="Kết quả" data-i18n-attr="aria-label:radar.results"></ul>
+            <p class="hx-pop-empty" id="hxEmpty" hidden data-i18n="radar.noMatch">Không có coin nào khớp.</p>
           </div>
 
-          <div class="hx-tfs" id="hxTfs" role="group" aria-label="Khung thời gian"></div>
+          <div class="hx-tfs" id="hxTfs" role="group" aria-label="Khung thời gian" data-i18n-attr="aria-label:radar.timeframes"></div>
 
           <div class="hx-gauge">
             <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -113,43 +116,43 @@
           </div>
 
           <dl class="hx-rows">
-            <div><dt>RSI</dt><dd id="hxRsi">—</dd></div>
-            <div><dt>Support</dt><dd id="hxSup">—</dd></div>
-            <div><dt>Resistance</dt><dd id="hxRes">—</dd></div>
-            <div><dt>Price action</dt><dd id="hxPa">—</dd></div>
+            <div><dt data-i18n="radar.rsi">RSI</dt><dd id="hxRsi">—</dd></div>
+            <div><dt data-i18n="radar.support">Support</dt><dd id="hxSup">—</dd></div>
+            <div><dt data-i18n="radar.resistance">Resistance</dt><dd id="hxRes">—</dd></div>
+            <div><dt data-i18n="radar.priceAction">Price action</dt><dd id="hxPa">—</dd></div>
           </dl>
 
           <svg class="hx-spark" id="hxSpark" viewBox="0 0 280 44" preserveAspectRatio="none" aria-hidden="true"></svg>
 
           <footer>
-            <span title="Số điều kiện cùng xác nhận: RSI đảo chiều, gần hỗ trợ/kháng cự, price action cùng hướng, breakout, volume">Confluence</span>
+            <span title="Số điều kiện cùng xác nhận: RSI đảo chiều, gần hỗ trợ/kháng cự, price action cùng hướng, breakout, volume" data-i18n="radar.confluence" data-i18n-attr="title:radar.confluenceTitle">Confluence</span>
             <b id="hxConf">—</b>
           </footer>
         </article>
 
         <article class="hx-card hx-plan" id="hxPlan">
           <header>
-            <span class="hx-kicker">Trading plan</span>
-            <span class="hx-demo">tính từ tín hiệu · không phải khuyến nghị</span>
+            <span class="hx-kicker" data-i18n="plan.kicker">Trading plan</span>
+            <span class="hx-demo" data-i18n="plan.demo">tính từ tín hiệu · không phải khuyến nghị</span>
           </header>
           <dl class="hx-plan-grid">
-            <div><dt>Entry</dt><dd id="hxEntry">—</dd></div>
-            <div><dt>TP</dt><dd class="up" id="hxTp">—</dd></div>
-            <div><dt>SL</dt><dd class="down" id="hxSl">—</dd></div>
-            <div><dt>R:R</dt><dd id="hxRr">—</dd></div>
+            <div><dt data-i18n="plan.entry">Entry</dt><dd id="hxEntry">—</dd></div>
+            <div><dt data-i18n="plan.tp">TP</dt><dd class="up" id="hxTp">—</dd></div>
+            <div><dt data-i18n="plan.sl">SL</dt><dd class="down" id="hxSl">—</dd></div>
+            <div><dt data-i18n="plan.rr">R:R</dt><dd id="hxRr">—</dd></div>
           </dl>
         </article>
       </div>
 
-      <ol class="hx-flow" aria-label="Chuỗi xử lý tín hiệu">
-        <li><span>RSI reversal</span></li>
-        <li><span>Support / Resistance</span></li>
-        <li><span>Price action</span></li>
-        <li><span>Confluence</span></li>
-        <li><span>Entry / TP / SL</span></li>
+      <ol class="hx-flow" aria-label="Chuỗi xử lý tín hiệu" data-i18n-attr="aria-label:flow.label">
+        <li><span data-i18n="flow.rsi">RSI reversal</span></li>
+        <li><span data-i18n="flow.sr">Support / Resistance</span></li>
+        <li><span data-i18n="flow.pa">Price action</span></li>
+        <li><span data-i18n="flow.confluence">Confluence</span></li>
+        <li><span data-i18n="flow.plan">Entry / TP / SL</span></li>
       </ol>
 
-      <p class="hx-risk">⚠ <b>Risk disclosure</b> — Không phải lời khuyên đầu tư. Tín hiệu được tính toán từ dữ liệu thị trường công khai. Không có tín hiệu nào đảm bảo lợi nhuận. <a href="risk.html">Chi tiết</a></p>
+      <p class="hx-risk" data-i18n-html="hero.risk.full">⚠ <b>Risk disclosure</b> — Không phải lời khuyên đầu tư. Tín hiệu được tính toán từ dữ liệu thị trường công khai. Không có tín hiệu nào đảm bảo lợi nhuận. <a href="risk.html">Chi tiết</a></p>
     </div>
   </section>
 
@@ -159,12 +162,12 @@
       <!-- Thang tâm lý thị trường 0-100 -->
       <section class="panel sentiment">
         <div class="panel-head">
-          <h2>Tâm lý thị trường — nên LONG hay SHORT?</h2>
-          <span class="gauge-side neutral" id="sentLabel">Đang tính…</span>
+          <h2 data-i18n="home.sentiment.title">Tâm lý thị trường — nên LONG hay SHORT?</h2>
+          <span class="gauge-side neutral" id="sentLabel" data-i18n="st.calculatingCap">Đang tính…</span>
         </div>
         <div class="gauge">
           <div class="gauge-track"><div class="gauge-fill neutral" id="sentFill" style="width:50%"></div>
-            <div class="gauge-ticks"><span>0 · SHORT</span><span>50</span><span>100 · LONG</span></div>
+            <div class="gauge-ticks"><span data-i18n="home.sentiment.tickLow">0 · SHORT</span><span>50</span><span data-i18n="home.sentiment.tickHigh">100 · LONG</span></div>
           </div>
           <div class="gauge-val" id="sentValue">—</div>
         </div>
@@ -173,32 +176,32 @@
       <!-- Gợi ý Long/Short (quét 4h) — chỉ hiện 4, còn lại "Xem thêm" -->
       <section class="panel" id="futures-radar">
         <div class="panel-head">
-          <h2>🎯 Futures Radar · Tín hiệu thực chiến · khung 4H <span class="tag">Confluence</span></h2>
+          <h2><span data-i18n="home.scan.title">🎯 Futures Radar · Tín hiệu thực chiến · khung 4H</span> <span class="tag" data-i18n="home.scan.tag">Confluence</span></h2>
           <div class="scan-status-wrap">
             <span class="muted small" id="scanStatus">Đang quét…</span>
-            <button id="scanRescan" class="rescan-btn" title="Quét lại">↻ Quét lại</button>
+            <button id="scanRescan" class="rescan-btn" title="Quét lại" data-i18n="st.rescan" data-i18n-attr="title:st.rescanTitle">↻ Quét lại</button>
           </div>
         </div>
-        <p class="hint">Chiến lược <b>thực chiến</b>: RSI H4 đảo chiều (quá mua/bán rồi quay đầu) → hướng lệnh; xác nhận thêm bằng vùng <b>hỗ trợ/kháng cự</b> và <b>Price Action</b>. Coin đạt <b>hội tụ ✓</b> (RSI + S&amp;R + PA) được ưu tiên lên đầu.</p>
+        <p class="hint" data-i18n-html="home.scan.hint">Chiến lược <b>thực chiến</b>: RSI H4 đảo chiều (quá mua/bán rồi quay đầu) → hướng lệnh; xác nhận thêm bằng vùng <b>hỗ trợ/kháng cự</b> và <b>Price Action</b>. Coin đạt <b>hội tụ ✓</b> (RSI + S&amp;R + PA) được ưu tiên lên đầu.</p>
         <div class="scan-grid" id="scanGrid"></div>
-        <div class="center"><button class="more-btn" id="scanMore" style="display:none">▼ Xem thêm</button></div>
+        <div class="center"><button class="more-btn" id="scanMore" style="display:none" data-i18n="st.more">▼ Xem thêm</button></div>
       </section>
 
       <!-- Bảng biến động: sector bar (kéo ngang) NẰM TRÊN, rồi bảng phân trang -->
       <section class="panel" id="movers">
         <div class="panel-head">
-          <h2>📊 Biến động 24h · Volume &amp; Giá</h2>
+          <h2 data-i18n="home.movers.title">📊 Biến động 24h · Volume &amp; Giá</h2>
           <!-- Yêu thích là BỘ LỌC của chính bảng này, không phải một trang
                riêng: đặt nút vào một panel rồi ẩn panel đó đi khi bật thì mất
                luôn đường tắt lại. -->
           <button type="button" class="fav-filter" id="favFilter" aria-pressed="false"
-                  title="Chỉ hiện coin đã đánh dấu sao">
-            ⭐ Yêu thích <span class="fav-count" id="favCount">0</span>
+                  title="Chỉ hiện coin đã đánh dấu sao" data-i18n-attr="title:home.movers.favTitle">
+            <span data-i18n="home.movers.fav">⭐ Yêu thích</span> <span class="fav-count" id="favCount">0</span>
           </button>
           <div class="search-box">
             <span class="search-ico">🔍</span>
-            <input id="moverSearch" type="text" autocomplete="off" placeholder="Tìm coin (VD: BTC, SOL…)">
-            <button id="searchClear" class="search-clear" title="Xoá" hidden>✕</button>
+            <input id="moverSearch" type="text" autocomplete="off" placeholder="Tìm coin (VD: BTC, SOL…)" data-i18n-attr="placeholder:home.movers.searchPlaceholder">
+            <button id="searchClear" class="search-clear" title="Xoá" data-i18n-attr="title:home.movers.clear" hidden>✕</button>
           </div>
         </div>
         <!-- Thanh phân loại mảng coin: cuộn/kéo ngang -->
@@ -206,23 +209,23 @@
         <div class="table-wrap">
           <table class="movers">
             <thead><tr>
-              <th class="th-sort" data-sort="name">Tên</th>
-              <th class="th-sort" data-sort="price">Giá mở vị thế</th>
-              <th class="th-sort" data-sort="change">24H %</th>
-              <th class="th-sort" data-sort="vol">KLGD</th>
+              <th class="th-sort" data-sort="name" data-i18n="home.movers.th.name">Tên</th>
+              <th class="th-sort" data-sort="price" data-i18n="home.movers.th.price">Giá mở vị thế</th>
+              <th class="th-sort" data-sort="change" data-i18n="home.movers.th.change">24H %</th>
+              <th class="th-sort" data-sort="vol" data-i18n="home.movers.th.vol">KLGD</th>
             </tr></thead>
             <tbody id="moversBody"></tbody>
           </table>
         </div>
         <div class="pager" id="moversPager"></div>
-        <p class="hint">🔥 = 15 coin volume cao nhất (lửa càng đậm, volume càng lớn). Cột <b>Funding/8h</b>: dương → LONG trả phí, âm → SHORT trả phí. Bấm ⭐ để thêm Yêu thích · bấm hàng để mở trang coin.</p>
+        <p class="hint" data-i18n-html="home.movers.hint">🔥 = 15 coin volume cao nhất (lửa càng đậm, volume càng lớn). Cột <b>Funding/8h</b>: dương → LONG trả phí, âm → SHORT trả phí. Bấm ⭐ để thêm Yêu thích · bấm hàng để mở trang coin.</p>
       </section>
     </div>
 
       <!-- ETF giao ngay BTC/ETH -->
       <section class="panel" id="etf">
         <div class="panel-head">
-          <h2>🏛️ ETF giao ngay · Dòng tiền</h2>
+          <h2 data-i18n="home.etf.title">🏛️ ETF giao ngay · Dòng tiền</h2>
         </div>
         <div id="etfBody"></div>
       </section>
@@ -238,29 +241,30 @@
     <div class="foot-cols">
       <div class="foot-brand">
         <div class="brand-name">Vdearypto</div>
-        <p>Radar tín hiệu futures — quét toàn thị trường, vào lệnh có kế hoạch. Dữ liệu từ Binance · Bybit · OKX · Bitget.</p>
+        <p data-i18n="foot.tagline">Radar tín hiệu futures — quét toàn thị trường, vào lệnh có kế hoạch. Dữ liệu từ Binance · Bybit · OKX · Bitget.</p>
       </div>
-      <div class="foot-col"><h4>Sản phẩm</h4>
-        <a href="/">Thị trường</a>
-        <a href="bubbles.html">Bong bóng thị trường</a>
-        <a href="/#etf">Dòng tiền ETF</a>
-        <a href="coin.html?c=BTC">Phân tích coin</a>
-        <a href="about.html">Giới thiệu</a>
+      <div class="foot-col"><h4 data-i18n="foot.product">Sản phẩm</h4>
+        <a href="/" data-i18n="foot.markets">Thị trường</a>
+        <a href="bubbles.html" data-i18n="foot.bubbles">Bong bóng thị trường</a>
+        <a href="/#etf" data-i18n="foot.etf">Dòng tiền ETF</a>
+        <a href="coin.html?c=BTC" data-i18n="foot.coin">Phân tích coin</a>
+        <a href="about.html" data-i18n="foot.about">Giới thiệu</a>
       </div>
-      <div class="foot-col"><h4>Pháp lý</h4>
-        <a href="terms.html">Điều khoản</a>
-        <a href="privacy.html">Bảo mật</a>
-        <a href="risk.html">Khuyến cáo rủi ro</a>
+      <div class="foot-col"><h4 data-i18n="foot.legal">Pháp lý</h4>
+        <a href="terms.html" data-i18n="foot.terms">Điều khoản</a>
+        <a href="privacy.html" data-i18n="foot.privacy">Bảo mật</a>
+        <a href="risk.html" data-i18n="foot.risk">Khuyến cáo rủi ro</a>
       </div>
-      <div class="foot-col"><h4>Liên hệ</h4>
-        <a href="contact.html">Liên hệ</a>
+      <div class="foot-col"><h4 data-i18n="foot.contact">Liên hệ</h4>
+        <a href="contact.html" data-i18n="foot.contact">Liên hệ</a>
         <a href="mailto:support@vdear.io">support@vdear.io</a>
       </div>
     </div>
-    <p class="hint" style="text-align:center;margin-top:24px">© 2026 Vdearypto · Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
+    <p class="hint" style="text-align:center;margin-top:24px"><span data-i18n="foot.copy">© 2026 Vdearypto · Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</span></p>
   </footer>
 
   <script src="env.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/navmenu.js"></script>
   <script src="js/favstore.js"></script>
   <script src="js/config.js"></script>

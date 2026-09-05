@@ -3,14 +3,19 @@
  * Tìm nhanh & nhảy tới bất kỳ coin nào, cùng vài lối tắt điều hướng.
  */
 (function () {
+  // Chữ hiển thị lấy qua i18n. t() tự rơi về tiếng Việt khi thiếu bản dịch;
+  // i18n.js được nạp trước mọi module nên nhánh dự phòng dưới đây gần như
+  // không bao giờ chạy, để đó cho chắc.
+  const T = (k, v) => (window.VdearI18n ? window.VdearI18n.t(k, v) : k);
+
   const API = window.VdearAPI;
   let market = [];
   let overlay, input, results, items = [], active = 0;
 
   const NAV = [
-    { type: 'nav', label: 'Thị trường', sub: 'Trang chủ', href: 'index.html' },
-    { type: 'nav', label: 'BTC · Bitcoin', sub: 'Phân tích', href: 'coin.html?c=BTC' },
-    { type: 'nav', label: 'ETH · Ethereum', sub: 'Phân tích', href: 'coin.html?c=ETH' },
+    { type: 'nav', k: 'cmd.markets', ks: 'cmd.home', label: 'Thị trường', sub: 'Trang chủ', href: 'index.html' },
+    { type: 'nav', k: null, ks: 'cmd.analysis', label: 'BTC · Bitcoin', sub: 'Phân tích', href: 'coin.html?c=BTC' },
+    { type: 'nav', k: null, ks: 'cmd.analysis', label: 'ETH · Ethereum', sub: 'Phân tích', href: 'coin.html?c=ETH' },
   ];
 
   function build() {
@@ -20,12 +25,14 @@
       <div class="cmd-box" role="dialog" aria-label="Tìm kiếm">
         <div class="cmd-input-row">
           <span class="cmd-ico">🔍</span>
-          <input type="text" placeholder="Tìm coin hoặc trang… (vd BTC, SOL)" autocomplete="off" spellcheck="false">
+          <input type="text" placeholder="Tìm coin hoặc trang… (vd BTC, SOL)" data-i18n-attr="placeholder:cmd.placeholder" autocomplete="off" spellcheck="false">
           <span class="cmd-esc">ESC</span>
         </div>
         <div class="cmd-results"></div>
       </div>`;
     document.body.appendChild(overlay);
+    // Bảng lệnh dựng bằng JS nên nằm ngoài lượt dịch đầu tiên của i18n.
+    if (window.VdearI18n) window.VdearI18n.apply(overlay);
     input = overlay.querySelector('input');
     results = overlay.querySelector('.cmd-results');
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
@@ -54,15 +61,15 @@
       list = coins.concat(nav);
     }
     items = list; active = 0;
-    if (!list.length) { results.innerHTML = '<div class="cmd-empty">Không tìm thấy. Thử mã khác…</div>'; return; }
+    if (!list.length) { results.innerHTML = '<div class="cmd-empty">' + T('cmd.empty') + '</div>'; return; }
     results.innerHTML =
-      '<div class="cmd-section">Kết quả</div>' +
+      '<div class="cmd-section">' + T('cmd.results') + '</div>' +
       list.map((it, i) => it.type === 'coin'
         ? `<div class="cmd-item ${i === 0 ? 'active' : ''}" data-i="${i}">
              <img alt="" data-logo="${it.base}">
              <span class="ci-sym">${it.base}</span><span class="ci-sub">${it.sub}</span></div>`
         : `<div class="cmd-item ${i === 0 ? 'active' : ''}" data-i="${i}">
-             <span class="ci-sym">${it.label}</span><span class="ci-sub">${it.sub}</span></div>`
+             <span class="ci-sym">${it.k ? T(it.k) : it.label}</span><span class="ci-sub">${it.ks ? T(it.ks) : it.sub}</span></div>`
       ).join('');
     results.querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
     results.querySelectorAll('.cmd-item').forEach((el) => {

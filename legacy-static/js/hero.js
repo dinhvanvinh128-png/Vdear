@@ -14,6 +14,11 @@
  * coin trước — đổi coin mà số cũ còn nằm đó là kiểu sai nguy hiểm nhất ở đây.
  */
 (function () {
+  // Chữ hiển thị lấy qua i18n. t() tự rơi về tiếng Việt khi thiếu bản dịch;
+  // i18n.js được nạp trước mọi module nên nhánh dự phòng dưới đây gần như
+  // không bao giờ chạy, để đó cho chắc.
+  const T = (k, v) => (window.VdearI18n ? window.VdearI18n.t(k, v) : k);
+
   const $ = (id) => document.getElementById(id);
   const API = window.VdearAPI, TA = window.VdearTA, CFG = window.VDEAR_CONFIG;
   const R = 52;                                   // bán kính vòng cung
@@ -100,18 +105,25 @@
     if (r && typeof r[fn] === 'function') { try { r[fn](arg); } catch (e) { /* bỏ qua */ } }
   }
 
-  function fail(msg) {
+  // Nhận KHOÁ chứ không nhận câu đã dựng sẵn, để đổi ngôn ngữ là dịch lại được
+  // đúng câu đang hiện — thẻ có thể đứng ở trạng thái lỗi rất lâu.
+  function fail(key, vars) {
     const radar = $('hxRadar');
     if (radar) radar.setAttribute('aria-busy', 'false');
+    last = { fail: key, vars: vars || null };
     const side = $('hxSide');
-    if (side) { side.textContent = msg; side.className = ''; }
+    if (side) { side.textContent = T(key, vars); side.className = ''; }
   }
 
   /* ----------------------------- vẽ tín hiệu ---------------------------- */
 
+  // Giữ lại tín hiệu vừa vẽ để đổi ngôn ngữ là vẽ lại được ngay, không phải
+  // gọi lại API — nhãn Bullish/Bearish và "Chưa xác nhận" nằm trong đó.
+  let last = null;
+
   function paint(sig, candles) {
     const dir = sig.side === 'LONG' ? 'up' : sig.side === 'SHORT' ? 'down' : '';
-    const label = sig.side === 'LONG' ? 'Bullish' : sig.side === 'SHORT' ? 'Bearish' : 'Trung tính';
+    const label = T(sig.side === 'LONG' ? 'radar.bullish' : sig.side === 'SHORT' ? 'radar.bearish' : 'radar.neutral');
     rain('setTrend', dir);
     const score = Math.max(0, Math.min(100, Math.round(sig.score || 0)));
 
@@ -136,7 +148,7 @@
     $('hxRes').textContent = sr.resistances[0] ? money(sr.resistances[0].price) : '—';
 
     const pa = $('hxPa');
-    pa.textContent = sig.paMatch ? '✓ Confirmed' : 'Chưa xác nhận';
+    pa.textContent = T(sig.paMatch ? 'sig.confirmed' : 'sig.unconfirmed');
     pa.className = sig.paMatch ? 'up' : '';
 
     // combatSignal đếm 5 điều kiện hội tụ (RSI đảo chiều, gần S&R, price action
@@ -173,7 +185,7 @@
     const my = ++seq;
     if (!quiet) {
       radar.setAttribute('aria-busy', 'true');
-      $('hxSide').textContent = 'đang tính…';
+      $('hxSide').textContent = T('st.calculating');
       $('hxSide').className = '';
     }
 
@@ -185,16 +197,17 @@
     // Nạp nền hỏng thì GIỮ NGUYÊN số đang hiện, chỉ ghi lại ở lần sau; xoá sạch
     // một thẻ đang đúng chỉ vì một request rớt mạng là làm hỏng thứ đang tốt.
     if (!candles || candles.length < 60) {
-      if (!quiet) { clearAll(); fail('chưa đủ nến ' + tfLabel()); }
+      if (!quiet) { clearAll(); fail('sig.notEnough', { tf: tfLabel() }); }
       return;
     }
 
     let sig = null;
     try { sig = TA.combatSignal(candles); } catch (e) { sig = null; }
     if (my !== seq) return;
-    if (!sig) { if (!quiet) { clearAll(); fail('chưa tính được tín hiệu'); } return; }
+    if (!sig) { if (!quiet) { clearAll(); fail('sig.noSignal'); } return; }
 
     radar.setAttribute('aria-busy', 'false');
+    last = { sig: sig, candles: candles };
     paint(sig, candles);
   }
 
@@ -411,6 +424,11 @@
     ensureMarket();
     schedule();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });
+    window.addEventListener('vdear:langchange', () => {
+      if (!last) return;
+      if (last.fail) fail(last.fail, last.vars);
+      else paint(last.sig, last.candles);
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -470,6 +470,13 @@ h1,h2,h3{margin:0;font-weight:700}
   background:var(--panel);color:var(--text);cursor:pointer;display:grid;place-items:center;
   font-size:15px;transition:background .12s,border-color .12s}
 .icon-btn:hover{background:var(--panel-2);border-color:var(--accent-2)}
+/* Nút đổi ngôn ngữ dùng chung khung với nút đổi nền, nhưng bên trong là CHỮ
+   ("EN"/"VI") chứ không phải emoji: hạ cỡ chữ và bám lưới đơn cách để hai chữ
+   cái không tràn ra khỏi ô 38px. Nhãn ghi ngôn ngữ SẼ CHUYỂN SANG, không phải
+   ngôn ngữ đang dùng — xem js/i18n.js. */
+.lang-btn{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;
+  font-weight:700;letter-spacing:.04em;color:var(--muted)}
+.lang-btn:hover{color:var(--text)}
 .kbd-hint{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;
   border:1px solid var(--line-2);background:var(--panel);color:var(--muted);font-size:13px;
   font-weight:600;cursor:pointer;transition:all .12s}

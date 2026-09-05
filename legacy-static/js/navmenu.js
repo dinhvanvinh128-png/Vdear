@@ -40,58 +40,61 @@
   // các trang tĩnh vẫn giữ nguyên. Mục nào chưa có trang thì đặt `soon: true`
   // để hiện ra mà không bấm được — gắn link vào trang chưa tồn tại chỉ để menu
   // trông đầy đủ là đẩy người dùng vào 404.
+  // `k` là khoá i18n; nhãn tiếng Việt vẫn nằm ngay đây vì đó là bản gốc và là
+  // thứ đọc được khi mở tệp. Thiếu khoá hay thiếu bản dịch thì rơi về nhãn
+  // tiếng Việt, không bao giờ hiện mã khoá ra menu (xem js/i18n.js).
   const GROUPS = [
     {
-      title: 'Thị trường',
+      title: 'Thị trường', k: 'nav.g.market',
       items: [
-        { href: '/', label: 'Tổng quan thị trường', icon: 'market' },
-        { href: '/#movers', label: 'Biến động 24h', icon: 'table' },
-        { href: '/#etf', label: 'Dòng tiền ETF', icon: 'etf' },
-        { href: 'bubbles.html', label: 'Bong bóng thị trường', icon: 'bubble' },
-        { href: '/#futures-radar', label: 'Futures Radar', icon: 'radar' },
-        { label: 'Spot Radar', icon: 'spot', soon: true },
-        { label: 'Sector Rotation', icon: 'sector', soon: true },
+        { href: '/', label: 'Tổng quan thị trường', k: 'nav.i.overview', icon: 'market' },
+        { href: '/#movers', label: 'Biến động 24h', k: 'nav.i.movers', icon: 'table' },
+        { href: '/#etf', label: 'Dòng tiền ETF', k: 'nav.i.etf', icon: 'etf' },
+        { href: 'bubbles.html', label: 'Bong bóng thị trường', k: 'nav.i.bubbles', icon: 'bubble' },
+        { href: '/#futures-radar', label: 'Futures Radar', k: 'nav.i.radar', icon: 'radar' },
+        { label: 'Spot Radar', k: 'nav.i.spot', icon: 'spot', soon: true },
+        { label: 'Sector Rotation', k: 'nav.i.sector', icon: 'sector', soon: true },
       ],
     },
     {
-      title: 'Phân tích',
+      title: 'Phân tích', k: 'nav.g.analysis',
       items: [
-        { href: 'coin.html?c=BTC', label: 'Phân tích coin', icon: 'coin' },
-        { label: 'Dòng tiền', icon: 'flow', soon: true },
-        { label: 'Whale & Exchange Flow', icon: 'whale', soon: true },
-        { label: 'On-chain', icon: 'chain', soon: true },
-        { label: 'Thanh khoản', icon: 'drop', soon: true },
-        { label: 'Độ rộng thị trường', icon: 'breadth', soon: true },
+        { href: 'coin.html?c=BTC', label: 'Phân tích coin', k: 'nav.i.coin', icon: 'coin' },
+        { label: 'Dòng tiền', k: 'nav.i.flow', icon: 'flow', soon: true },
+        { label: 'Whale & Exchange Flow', k: 'nav.i.whale', icon: 'whale', soon: true },
+        { label: 'On-chain', k: 'nav.i.onchain', icon: 'chain', soon: true },
+        { label: 'Thanh khoản', k: 'nav.i.liquidity', icon: 'drop', soon: true },
+        { label: 'Độ rộng thị trường', k: 'nav.i.breadth', icon: 'breadth', soon: true },
       ],
     },
     {
-      title: 'Phái sinh',
+      title: 'Phái sinh', k: 'nav.g.derivatives',
       items: [
-        { label: 'Open Interest', icon: 'layers', soon: true },
-        { label: 'Funding', icon: 'percent', soon: true },
-        { label: 'Thanh lý', icon: 'drop', soon: true },
-        { label: 'Long / Short', icon: 'scale', soon: true },
+        { label: 'Open Interest', k: 'nav.i.oi', icon: 'layers', soon: true },
+        { label: 'Funding', k: 'nav.i.funding', icon: 'percent', soon: true },
+        { label: 'Thanh lý', k: 'nav.i.liquidation', icon: 'drop', soon: true },
+        { label: 'Long / Short', k: 'nav.i.ls', icon: 'scale', soon: true },
       ],
     },
     {
-      title: 'Của bạn',
+      title: 'Của bạn', k: 'nav.g.yours',
       items: [
-        { href: '/?view=fav', label: 'Coin yêu thích', icon: 'star' },
+        { href: '/?view=fav', label: 'Coin yêu thích', k: 'nav.i.fav', icon: 'star' },
       ],
     },
     {
-      title: 'Thông tin',
+      title: 'Thông tin', k: 'nav.g.info',
       items: [
-        { href: 'about.html', label: 'Giới thiệu', icon: 'info' },
-        { href: 'contact.html', label: 'Liên hệ', icon: 'mail' },
+        { href: 'about.html', label: 'Giới thiệu', k: 'nav.i.about', icon: 'info' },
+        { href: 'contact.html', label: 'Liên hệ', k: 'nav.i.contact', icon: 'mail' },
       ],
     },
     {
-      title: 'Pháp lý',
+      title: 'Pháp lý', k: 'nav.g.legal',
       items: [
-        { href: 'terms.html', label: 'Điều khoản sử dụng', icon: 'doc' },
-        { href: 'privacy.html', label: 'Chính sách bảo mật', icon: 'lock' },
-        { href: 'risk.html', label: 'Khuyến cáo rủi ro', icon: 'warn' },
+        { href: 'terms.html', label: 'Điều khoản sử dụng', k: 'nav.i.terms', icon: 'doc' },
+        { href: 'privacy.html', label: 'Chính sách bảo mật', k: 'nav.i.privacy', icon: 'lock' },
+        { href: 'risk.html', label: 'Khuyến cáo rủi ro', k: 'nav.i.risk', icon: 'warn' },
       ],
     },
   ];
@@ -120,12 +123,12 @@
     const here = currentKey();
     const body = GROUPS.map((g) => `
       <div class="nd-group">
-        <h3>${g.title}</h3>
+        <h3 data-i18n="${g.k}">${g.title}</h3>
         ${g.items.map((it) => {
           const ico = `<svg class="nd-ico" viewBox="0 0 20 20" aria-hidden="true">${I[it.icon] || ''}</svg>`;
-          const txt = `<span class="nd-txt"><b>${it.label}</b></span>`;
+          const txt = `<span class="nd-txt"><b data-i18n="${it.k}">${it.label}</b></span>`;
           if (it.soon || !it.href) {
-            return `<div class="nd-item soon" aria-disabled="true">${ico}${txt}<span class="nd-soon">sắp có</span></div>`;
+            return `<div class="nd-item soon" aria-disabled="true">${ico}${txt}<span class="nd-soon" data-i18n="nav.soon">sắp có</span></div>`;
           }
           const cur = isCurrent(it.href, here);
           return `<a class="nd-item${cur ? ' current' : ''}" href="${it.href}"${cur ? ' aria-current="page"' : ''}>${ico}${txt}</a>`;
@@ -136,15 +139,19 @@
     wrap.className = 'nd-root';
     wrap.innerHTML = `
       <div class="nd-scrim" data-nav-close></div>
-      <nav id="siteNav" class="nd-panel" aria-label="Menu chính" aria-hidden="true">
+      <nav id="siteNav" class="nd-panel" aria-label="Menu chính" data-i18n-attr="aria-label:nav.menuLabel" aria-hidden="true">
         <div class="nd-head">
           <span class="nd-brand">Vdearypto</span>
-          <button class="nd-close" data-nav-close aria-label="Đóng menu">✕</button>
+          <button class="nd-close" data-nav-close aria-label="Đóng menu" data-i18n-attr="aria-label:nav.close">✕</button>
         </div>
         ${body}
-        <p class="nd-foot">Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
+        <p class="nd-foot" data-i18n="nav.foot">Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
       </nav>`;
     document.body.appendChild(wrap);
+    // Menu dựng bằng JS nên nằm ngoài lượt dịch đầu tiên của i18n (cả hai cùng
+    // chạy ở DOMContentLoaded). Dịch ngay phần vừa dựng; các lần đổi ngôn ngữ
+    // sau thì apply(document) của i18n đã với tới rồi.
+    if (window.VdearI18n) window.VdearI18n.apply(wrap);
 
     /*
      * Chiều cao thanh đầu, đo THẬT chứ không gán số cố định: header bọc dòng

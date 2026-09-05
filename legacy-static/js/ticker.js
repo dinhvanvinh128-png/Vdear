@@ -4,6 +4,11 @@
  * Cuộn bằng CSS transform + requestAnimationFrame để mượt và không "màn hình đen".
  */
 (function () {
+  // Chữ hiển thị lấy qua i18n. t() tự rơi về tiếng Việt khi thiếu bản dịch;
+  // i18n.js được nạp trước mọi module nên nhánh dự phòng dưới đây gần như
+  // không bao giờ chạy, để đó cho chắc.
+  const T = (k, v) => (window.VdearI18n ? window.VdearI18n.t(k, v) : k);
+
   const CFG = window.VDEAR_CONFIG;
   const API = window.VdearAPI;
 
@@ -37,7 +42,7 @@
       const market = await API.getMarket();
       coins = market.slice(0, CFG.scan.tickerCount);
     } catch (e) {
-      mount.innerHTML = '<div class="tk-fallback">Đang kết nối dữ liệu thị trường…</div>';
+      mount.innerHTML = '<div class="tk-fallback">' + T('ticker.connecting') + '</div>';
       return;
     }
     if (!coins.length) return;
