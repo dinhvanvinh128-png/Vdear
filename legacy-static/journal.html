@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nhật ký lệnh — Vdearypto</title>
+  <meta name="description" content="Nhật ký lệnh: ghi lại kế hoạch vào lệnh, theo dõi chạm TP/SL, và thống kê winrate cùng tổng R theo bội số rủi ro.">
+  <meta property="og:title" content="Nhật ký lệnh — Vdearypto">
+  <meta property="og:description" content="Mỗi coin là một bong bóng: xanh tăng, đỏ giảm, càng lớn càng biến động mạnh.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0A0906">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('vdear_lang');if(l==='en'||l==='vi')document.documentElement.setAttribute('lang',l)}catch(e){}</script>
+</head>
+<body>
+  <div id="ticker" class="ticker-bar" aria-label="Bảng giá chạy" data-i18n-attr="aria-label:nav.ticker"></div>
+
+  <header class="topbar">
+    <button class="nav-toggle" type="button" data-nav-open aria-label="Mở menu" data-i18n-attr="aria-label:nav.open" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><path fill="#0A0906" d="M3 4 L16 27.5 L28 4 L24.2 4 L16 20 L7.2 4 Z"/></svg></span>
+      <div><div class="brand-name">Vdearypto</div><div class="brand-sub" data-i18n="journal.title2">Nhật ký lệnh</div></div>
+    </a>
+    <div class="tb-actions">
+      <span class="pill live"><span class="live-dot"></span> <span data-i18n="nav.realtime">Realtime</span></span>
+      <button class="icon-btn" data-theme-toggle title="Đổi nền" data-i18n-attr="title:nav.theme">☀️</button>
+      <button class="icon-btn lang-btn" type="button" data-lang-toggle title="Switch to English">EN</button>
+      <a class="btn-ghost" href="/" data-i18n="bub.back">← Về bảng thị trường</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="journal.title">📓 Nhật ký lệnh</h2>
+        <div class="jr-actions">
+          <select class="bub-select" id="jrStatus" aria-label="Lọc theo trạng thái"
+                  data-i18n-attr="aria-label:journal.filterStatus">
+            <option value="all" data-i18n="journal.f.all">Tất cả trạng thái</option>
+            <option value="open" data-i18n="journal.f.open">Đang mở</option>
+            <option value="tp" data-i18n="journal.f.tp">Chạm TP</option>
+            <option value="sl" data-i18n="journal.f.sl">Chạm SL</option>
+            <option value="closed" data-i18n="journal.f.closed">Tự đóng</option>
+          </select>
+          <select class="bub-select" id="jrCoin" aria-label="Lọc theo coin"
+                  data-i18n-attr="aria-label:journal.filterCoin"></select>
+          <button class="rescan-btn" type="button" id="jrExport" data-i18n="journal.export">⇩ Xuất CSV</button>
+        </div>
+      </div>
+      <p class="hint" data-i18n-html="journal.intro">Mọi thống kê ở đây tính bằng <b>R</b> — bội số rủi ro,
+        tức khoảng cách từ giá vào lệnh tới stop-loss. Lệnh lãi gấp đôi mức rủi ro là <b>+2R</b>, dù bạn vào
+        10 đô hay 10.000 đô. Cố ý không tính bằng tiền: con số tiền không nói lên chất lượng của quyết định,
+        và một trang toàn số lãi thì thành chỗ khoe.</p>
+      <div class="jr-empty" id="jrEmpty" hidden></div>
+      <div class="table-wrap"><table class="movers jr-table" id="jrTableWrap">
+        <thead><tr>
+          <th data-i18n="journal.th.time">Thời điểm</th>
+          <th data-i18n="journal.th.coin">Coin</th>
+          <th data-i18n="journal.th.side">Hướng</th>
+          <th data-i18n="journal.th.entry">Entry</th>
+          <th data-i18n="journal.th.tp">TP</th>
+          <th data-i18n="journal.th.sl">SL</th>
+          <th data-i18n="journal.th.conf">Hội tụ</th>
+          <th data-i18n="journal.th.status">Trạng thái</th>
+          <th data-i18n="journal.th.r">R</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="jrBody"></tbody>
+      </table></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2 data-i18n="journal.stats.title">📈 Thống kê cá nhân</h2></div>
+      <div class="jr-stats" id="jrStats"></div>
+      <div class="jr-curve">
+        <h3 data-i18n="journal.curve.title">Đường vốn theo R</h3>
+        <svg id="jrCurve" class="jr-curve-svg" viewBox="0 0 720 200" preserveAspectRatio="none"
+             role="img" aria-label="Đường vốn cộng dồn theo R"
+             data-i18n-attr="aria-label:journal.curve.aria"></svg>
+        <p class="hint" data-i18n="journal.curve.note">Cộng dồn R của các lệnh đã đóng, theo thứ tự đóng lệnh.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2 data-i18n="journal.dim.title">🔍 Phân tích theo chiều</h2></div>
+      <div class="jr-dims" id="jrDims"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2 data-i18n="journal.lesson.title">🧠 Bài học</h2></div>
+      <div id="jrLessons"></div>
+    </section>
+  </main>
+
+  <footer class="foot-wrap">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="brand-name">Vdearypto</div>
+        <p data-i18n="foot.tagline">Radar tín hiệu futures — quét toàn thị trường, vào lệnh có kế hoạch. Dữ liệu từ Binance · Bybit · OKX · Bitget.</p>
+      </div>
+      <div class="foot-col"><h4 data-i18n="foot.product">Sản phẩm</h4>
+        <a href="/" data-i18n="foot.markets">Thị trường</a>
+        <a href="bubbles.html" data-i18n="foot.bubbles">Bong bóng thị trường</a>
+        <a href="/#etf" data-i18n="foot.etf">Dòng tiền ETF</a>
+        <a href="coin.html?c=BTC" data-i18n="foot.coin">Phân tích coin</a>
+        <a href="journal.html" data-i18n="journal.nav">Nhật ký lệnh</a>
+        <a href="about.html" data-i18n="foot.about">Giới thiệu</a>
+      </div>
+      <div class="foot-col"><h4 data-i18n="foot.legal">Pháp lý</h4>
+        <a href="terms.html" data-i18n="foot.terms">Điều khoản</a>
+        <a href="privacy.html" data-i18n="foot.privacy">Bảo mật</a>
+        <a href="risk.html" data-i18n="foot.risk">Khuyến cáo rủi ro</a>
+      </div>
+      <div class="foot-col"><h4 data-i18n="foot.contact">Liên hệ</h4>
+        <a href="contact.html" data-i18n="foot.contact">Liên hệ</a>
+        <a href="mailto:support@vdear.io">support@vdear.io</a>
+      </div>
+    </div>
+    <p class="hint" style="text-align:center;margin-top:24px"><span data-i18n="foot.copy">© 2026 Vdearypto · Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</span></p>
+  </footer>
+
+  <script src="env.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/navmenu.js"></script>
+  <script src="js/favstore.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ticker.js"></script>
+  <script src="js/journal.js"></script>
+  <script src="js/journal-page.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/integrations.js"></script>
+  <script src="js/fx.js"></script>
+</body>
+</html>

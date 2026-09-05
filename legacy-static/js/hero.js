@@ -121,6 +121,38 @@
   // gọi lại API — nhãn Bullish/Bearish và "Chưa xác nhận" nằm trong đó.
   let last = null;
 
+  /*
+   * Nút "Ghi vào nhật ký": chép lại ĐÚNG kế hoạch và ĐÚNG ảnh chụp tín hiệu
+   * đang hiện trên thẻ. Không tính lại gì cả — tính lại lúc bấm thì con số ghi
+   * vào có thể khác con số người dùng vừa nhìn thấy và đã quyết định theo.
+   */
+  function wireJournal() {
+    const btn = $('hxJournal');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      const J = window.VdearJournal;
+      if (!J || !last || !last.sig || !last.sig.plan) return;
+      const sig = last.sig;
+      const sr = (TA.supportResistance(last.candles, sig.price) || { supports: [], resistances: [] });
+      btn.disabled = true;
+      try {
+        await J.add({
+          coin: state.base, symbol: state.symbol, side: sig.side, tf: state.tfId,
+          entry: sig.plan.entry, tp: sig.plan.tp, sl: sig.plan.sl,
+          confluence: sig.confluence, rsi: sig.rsi, paMatch: !!sig.paMatch,
+          support: sr.supports[0] ? sr.supports[0].price : null,
+          resistance: sr.resistances[0] ? sr.resistances[0].price : null,
+        });
+        btn.textContent = T('journal.saved');
+      } catch (e) {
+        btn.textContent = T('journal.saveFailed');
+      }
+      // Trả nút về trạng thái cũ sau vài giây: người dùng có thể muốn ghi lại
+      // sau khi đổi khung hay đổi coin.
+      setTimeout(() => { btn.disabled = false; btn.textContent = T('journal.save'); }, 2500);
+    });
+  }
+
   function paint(sig, candles) {
     const dir = sig.side === 'LONG' ? 'up' : sig.side === 'SHORT' ? 'down' : '';
     const label = T(sig.side === 'LONG' ? 'radar.bullish' : sig.side === 'SHORT' ? 'radar.bearish' : 'radar.neutral');
@@ -171,6 +203,10 @@
       // giữ lại kế hoạch của coin/khung trước.
       ['hxEntry', 'hxTp', 'hxSl', 'hxRr'].forEach((id) => { $(id).textContent = '—'; });
     }
+
+    // Trung tính thì không có kế hoạch nào để ghi -> ẩn nút.
+    const jb = $('hxJournal');
+    if (jb) jb.hidden = !plan;
 
     $('hxPrice').textContent = money(sig.price);
     sparkline($('hxSpark'), candles);
@@ -419,6 +455,7 @@
     buildTfs();
     syncStats();
     wirePicker();
+    wireJournal();
     rain('setCoin', state.base);
     load();
     ensureMarket();

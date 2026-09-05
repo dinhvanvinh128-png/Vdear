@@ -80,6 +80,7 @@
       title: 'Của bạn', k: 'nav.g.yours',
       items: [
         { href: '/?view=fav', label: 'Coin yêu thích', k: 'nav.i.fav', icon: 'star' },
+        { href: 'journal.html', label: 'Nhật ký lệnh', k: 'journal.nav', icon: 'doc' },
       ],
     },
     {

@@ -96,7 +96,8 @@
       box.innerHTML = `<div class="panel-head"><h2>${T('coin.combat.title')}</h2>
         <span class="gauge-side neutral">${T('coin.combat.noSignal')}</span></div>
         <p class="hint">${T('coin.combat.noSignalWhy', { tf: currentTf.toUpperCase() })}</p>
-        <p class="hint"><b>${T('coin.refOnly')}</b></p>`;
+        <button type="button" class="jr-save" id="cbJournal">${T('journal.save')}</button>
+      <p class="hint"><b>${T('coin.refOnly')}</b></p>`;
       return;
     }
 
@@ -158,6 +159,33 @@
     };
     slider.addEventListener('input', update);
     update();
+
+    /*
+     * Ghi vào nhật ký ĐÚNG kế hoạch đang hiện — kể cả mức đòn bẩy người dùng
+     * vừa kéo, vì đòn bẩy quyết định TP/SL đang hiển thị. Tính lại lúc bấm thì
+     * con số ghi vào có thể khác con số họ vừa nhìn và đã quyết định theo.
+     */
+    const jb = $('cbJournal');
+    if (jb) jb.addEventListener('click', async () => {
+      const J = window.VdearJournal;
+      const p = TA.tradePlan(sig.price, sig.side, combatLev);
+      if (!J || !p) return;
+      const sr = TA.supportResistance(candles, sig.price) || { supports: [], resistances: [] };
+      jb.disabled = true;
+      try {
+        await J.add({
+          coin: base, symbol: base + 'USDT', side: sig.side, tf: currentTf,
+          entry: p.entry, tp: p.tp, sl: p.sl, leverage: combatLev,
+          confluence: sig.confluence, rsi: sig.rsi, paMatch: !!sig.paMatch,
+          support: sr.supports[0] ? sr.supports[0].price : null,
+          resistance: sr.resistances[0] ? sr.resistances[0].price : null,
+        });
+        jb.textContent = T('journal.saved');
+      } catch (e) {
+        jb.textContent = T('journal.saveFailed');
+      }
+      setTimeout(() => { jb.disabled = false; jb.textContent = T('journal.save'); }, 2500);
+    });
   }
 
   /* --------------------------- Open Interest ---------------------------- */
