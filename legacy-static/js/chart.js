@@ -11,6 +11,16 @@
 
   const TA = window.VdearTA;
 
+  // Rút gọn số lớn: OI của BTC lên tới hàng trăm nghìn hợp đồng, in đủ chữ số
+  // thì nhãn tràn ra ngoài trục.
+  function shortNum(v) {
+    const a = Math.abs(v);
+    if (a >= 1e9) return (v / 1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return (v / 1e6).toFixed(2) + 'M';
+    if (a >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+    return String(Math.round(v * 100) / 100);
+  }
+
   const COLORS = {
     // Black + gold. The two EMAs are tonal steps of the same gold rather than
     // two different hues, so the only non-gold colours on the chart are the
@@ -21,6 +31,10 @@
     support: 'rgba(79,180,119,0.12)', supportLine: '#4FB477',
     resistance: 'rgba(224,87,79,0.12)', resistanceLine: '#E0574F',
     rsiLine: '#8B6BF0', ob: 'rgba(224,87,79,0.12)', os: 'rgba(79,180,119,0.12)',
+    // OI dùng một màu RIÊNG, không mượn vàng của giá cũng không mượn tím của
+    // RSI: ba khung xếp chồng nhau, dùng lại màu là người đọc phải đoán đường
+    // nào thuộc khung nào.
+    oiLine: '#4EA8C4',
     highlight: 'rgba(216,163,43,0.20)', crosshair: 'rgba(237,231,214,0.28)',
     gold: '#D8A32B',
   };
@@ -35,10 +49,16 @@
   }
 
   class VdearChart {
-    constructor(priceCanvas, rsiCanvas) {
-      this.pc = priceCanvas; this.rc = rsiCanvas;
+    constructor(priceCanvas, rsiCanvas, oiCanvas) {
+      this.pc = priceCanvas; this.rc = rsiCanvas; this.oc = oiCanvas || null;
       this.pctx = priceCanvas.getContext('2d');
       this.rctx = rsiCanvas.getContext('2d');
+      this.octx = this.oc ? this.oc.getContext('2d') : null;
+      // OI đã DÓNG THEO CHỈ SỐ NẾN: oi[i] ứng với candles[i]. Khớp một lần ở
+      // setOI() thay vì dò lại mỗi khung vẽ; và nến nào nguồn không có mẫu thì
+      // để null, đường sẽ đứt ở đó chứ không nối bừa qua khoảng trống.
+      this.oi = [];
+      this.oiUnit = '';
       this.candles = [];
       this.highlightZone = null;
       this.padL = 8; this.padR = 72; this.padT = 12; this.padB = 22;
@@ -203,20 +223,24 @@
 
       // Khung RSI nằm dưới cùng trục thời gian, nên kéo/lăn ở đó cũng phải
       // điều khiển cùng cửa sổ xem — người dùng không phân biệt hai canvas.
-      if (this.rc) {
-        this.rc.addEventListener('wheel', onWheel, { passive: false });
-        this.rc.addEventListener('mousedown', (e) => {
+      // Khung RSI và khung OI điều khiển CÙNG một cửa sổ thời gian với khung
+      // giá: lăn hoặc kéo ở bất kỳ khung nào cũng dời cả ba. Ba khung xếp
+      // chồng mà mỗi khung một cửa sổ thì không so được gì với nhau nữa.
+      [this.rc, this.oc].forEach((el) => {
+        if (!el) return;
+        el.addEventListener('wheel', onWheel, { passive: false });
+        el.addEventListener('mousedown', (e) => {
           this._drag = { x: e.clientX - rect().left, vs: this.viewStart };
-          this.rc.style.cursor = 'grabbing';
+          el.style.cursor = 'grabbing';
         });
-        this.rc.addEventListener('mousemove', (e) => {
+        el.addEventListener('mousemove', (e) => {
           if (!this._drag) return;
           this._panTo(this._drag.vs, (e.clientX - rect().left) - this._drag.x);
           this.render();
         });
-        window.addEventListener('mouseup', () => { this.rc.style.cursor = 'grab'; });
-        this.rc.style.cursor = 'grab';
-      }
+        window.addEventListener('mouseup', () => { el.style.cursor = 'grab'; });
+        el.style.cursor = 'grab';
+      });
 
       /* ------------------------------ cảm ứng --------------------------- */
       // Một ngón: kéo ngang = di chuyển biểu đồ, kéo dọc = cuộn trang. Phải
@@ -284,7 +308,7 @@
       };
       const onEnd = () => { touch = null; pinch = null; this.hoverX = null; this.render(); };
 
-      [this.pc, this.rc].forEach((el) => {
+      [this.pc, this.rc, this.oc].forEach((el) => {
         if (!el) return;
         el.addEventListener('touchstart', onStart, { passive: true });
         el.addEventListener('touchmove', onMove, { passive: false });
@@ -322,6 +346,105 @@
       if (!this.viewCount) this.viewCount = this.candles.length;
       this._renderPrice();
       this._renderRSI();
+      if (this.oc) this._renderOI();
+    }
+
+    /*
+     * Dóng chuỗi OI vào trục nến.
+     *
+     * Hai chuỗi cùng khung thời gian nên mốc thời gian gần như trùng nhau,
+     * nhưng KHÔNG được giả định là trùng khít: nguồn OI đóng mốc theo giờ UTC
+     * của riêng nó và có thể thiếu vài mốc. Nên khớp theo mốc gần nhất trong
+     * phạm vi nửa cây nến, ai không có thì để null.
+     */
+    setOI(series, unit) {
+      this.oiUnit = unit || '';
+      this.oi = new Array(this.candles.length).fill(null);
+      if (!series || !series.length || this.candles.length < 2) { this.render(); return; }
+
+      // bước thời gian một cây nến, tính từ chính dữ liệu chứ không gõ sẵn
+      const step = Math.max(1, this.candles[1].time - this.candles[0].time);
+      const tol = step / 2;
+      let j = 0;
+      for (let i = 0; i < this.candles.length; i++) {
+        const t = this.candles[i].time;
+        while (j + 1 < series.length && Math.abs(series[j + 1].t / 1000 - t) <= Math.abs(series[j].t / 1000 - t)) j++;
+        const d = Math.abs(series[j].t / 1000 - t);
+        this.oi[i] = d <= tol ? series[j].oi : null;
+      }
+      this.render();
+    }
+
+    hasOI() { return this.oi.some((v) => v != null); }
+
+    _renderOI() {
+      const ctx = this.octx;
+      const { w, h } = this._prep(this.oc, ctx, this.oc.parentElement.clientHeight || 96);
+      const padT = 8, padB = 12, plotH = h - padT - padB;
+      const { i0, i1 } = this._visRange();
+
+      // Khung giá trị tính trên ĐÚNG phần đang nhìn, không phải toàn chuỗi:
+      // OI thường đi ngang ở mức rất cao, lấy đáy 0 thì đường dẹt thành một
+      // vạch và không còn đọc được gì.
+      let lo = Infinity, hi = -Infinity, n = 0;
+      for (let i = i0; i <= i1; i++) {
+        const v = this.oi[i]; if (v == null) continue;
+        if (v < lo) lo = v; if (v > hi) hi = v; n++;
+      }
+      if (!n) {
+        ctx.fillStyle = COLORS.text; ctx.font = '10px Inter, Arial'; ctx.textAlign = 'left';
+        ctx.fillText(T('oi.none'), this.padL + 4, padT + 10);
+        return;
+      }
+      if (hi === lo) { hi = lo * 1.0005 || 1; lo = lo * 0.9995; }
+      const pad = (hi - lo) * 0.12;
+      lo -= pad; hi += pad;
+      const yFor = (v) => padT + (1 - (v - lo) / (hi - lo)) * plotH;
+
+      [0.5].forEach((f) => {
+        const y = padT + f * plotH;
+        ctx.strokeStyle = COLORS.grid;
+        ctx.beginPath(); ctx.moveTo(this.padL, y); ctx.lineTo(w - this.padR, y); ctx.stroke();
+      });
+
+      // Vùng tô dưới đường cho dễ đọc xu hướng, nhưng chỉ ở alpha thấp để
+      // không đè lên lưới.
+      const pts = [];
+      for (let i = i0; i <= i1; i++) {
+        const v = this.oi[i]; if (v == null) { pts.push(null); continue; }
+        pts.push({ x: this._xForIndex(i, w), y: yFor(v) });
+      }
+      ctx.beginPath();
+      let open = false, firstX = 0, lastX = 0;
+      for (const p of pts) {
+        if (!p) { open = false; continue; }
+        if (!open) { ctx.moveTo(p.x, p.y); open = true; firstX = firstX || p.x; }
+        else ctx.lineTo(p.x, p.y);
+        lastX = p.x;
+      }
+      ctx.strokeStyle = COLORS.oiLine; ctx.lineWidth = 1.6; ctx.stroke(); ctx.lineWidth = 1;
+
+      ctx.save();
+      ctx.globalAlpha = 0.10;
+      ctx.lineTo(lastX, padT + plotH); ctx.lineTo(firstX, padT + plotH); ctx.closePath();
+      ctx.fillStyle = COLORS.oiLine; ctx.fill();
+      ctx.restore();
+
+      // Nhãn: tên chỉ báo bên trái, giá trị mới nhất bám trục phải như RSI.
+      ctx.fillStyle = COLORS.oiLine; ctx.font = 'bold 10px Inter, Arial'; ctx.textAlign = 'left';
+      ctx.fillText(T('oi.label'), this.padL + 4, padT + 10);
+
+      let last = null;
+      for (let i = i1; i >= i0; i--) if (this.oi[i] != null) { last = this.oi[i]; break; }
+      if (last == null) return;
+      const y = Math.max(padT, Math.min(h - padB, yFor(last)));
+      ctx.strokeStyle = COLORS.oiLine; ctx.globalAlpha = 0.5; ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(this.padL, y); ctx.lineTo(w - this.padR, y); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+      ctx.fillStyle = COLORS.oiLine;
+      ctx.fillRect(w - this.padR, y - 8, this.padR, 16);
+      ctx.fillStyle = '#0B0713'; ctx.font = 'bold 10px Inter, Arial'; ctx.textAlign = 'left';
+      ctx.fillText(shortNum(last), w - this.padR + 4, y + 3);
     }
 
     _priceRange() {

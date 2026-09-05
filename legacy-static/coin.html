@@ -88,6 +88,10 @@
       <div class="chart-wrap">
         <div class="price-area"><canvas id="priceCanvas"></canvas></div>
         <div class="rsi-area"><canvas id="rsiCanvas"></canvas></div>
+        <!-- Khung Open Interest: dùng chung cửa sổ thời gian với hai khung
+             trên (js/chart.js). Nguồn không có OI cho khung 1W/1M nên khung
+             này tự ghi "—" thay vì vẽ một đường bịa ra. -->
+        <div class="oi-area"><canvas id="oiCanvas"></canvas></div>
         <div class="chart-error" id="chartError" style="display:none"></div>
         <!-- Menu chuột phải riêng cho biểu đồ (máy để bàn). -->
         <div class="chart-menu" id="chartMenu" role="menu" hidden>
@@ -163,6 +167,7 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/indicators.js"></script>
+  <script src="js/oi.js"></script>
   <script src="js/chart.js"></script>
   <script src="js/ticker.js"></script>
   <script src="js/coin.js"></script>

@@ -358,12 +358,15 @@ h1,h2,h3{margin:0;font-weight:700}
 @media (hover:none),(pointer:coarse){ .chart-reset{display:inline-flex} }
 .price-area{height:400px;position:relative}
 .rsi-area{height:130px;position:relative;margin-top:6px;border-top:1px solid var(--line)}
+/* Khung Open Interest thấp hơn khung RSI: nó chỉ để đọc HƯỚNG của dòng tiền,
+   không cần đọc mức chính xác như RSI có ngưỡng 30/70. */
+.oi-area{height:96px;position:relative;margin-top:6px;border-top:1px solid var(--line)}
 /* touch-action: pan-y là mấu chốt để KÉO ĐƯỢC BẰNG TAY trên điện thoại. Mặc
    định (auto) trình duyệt tự khởi động cuộn ngay khi ngón vừa nhích, và một
    khi cuộn đã bắt đầu thì preventDefault bị bỏ qua — cú kéo ngang không bao
    giờ tới được biểu đồ. pan-y trả chiều dọc cho trình duyệt (vẫn cuộn trang
    bình thường) và giao chiều ngang cho ta. */
-.price-area canvas,.rsi-area canvas{width:100%;display:block;touch-action:pan-y}
+.price-area canvas,.rsi-area canvas,.oi-area canvas{width:100%;display:block;touch-action:pan-y}
 .chart-error{position:absolute;inset:0;display:grid;place-items:center;color:var(--down);
   background:rgba(8,10,15,.9);border-radius:10px;font-weight:600;padding:20px;text-align:center}
 .rsi-legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;font-size:12.5px;color:var(--muted)}
@@ -441,6 +444,7 @@ h1,h2,h3{margin:0;font-weight:700}
   .sr-kind,.sr-band{grid-column:2/3}
   .sr-dist{display:none}
   .price-area{height:320px}
+  .oi-area{height:78px}
 }
 
 /* ============================================================

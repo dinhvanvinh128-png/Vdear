@@ -77,6 +77,7 @@
     chart.setData(candles);
     chart.setZones(sr);
     chart.setHighlight(null);
+    loadOI(tf, candles);
     renderSignal(candles);
     renderSR(sr, tf);
     renderTfScores();
@@ -157,6 +158,26 @@
     };
     slider.addEventListener('input', update);
     update();
+  }
+
+  /* --------------------------- Open Interest ---------------------------- */
+
+  /*
+   * Nạp OI ở NỀN, không chặn luồng vẽ chính: nguồn OI là một request riêng và
+   * một lần chậm không được phép giữ cả trang lại. Đổi khung giữa chừng thì bỏ
+   * kết quả cũ — nếu không, kết quả của khung trước về sau sẽ ghi đè lên khung
+   * đang xem.
+   */
+  let oiSeq = 0;
+  async function loadOI(tf, candles) {
+    const OI = window.VdearOI;
+    if (!OI || !chart) return;
+    const my = ++oiSeq;
+    chart.setOI(null);                       // xoá ngay dữ liệu của khung trước
+    let series = null;
+    try { series = await OI.hist(base, tf, 200); } catch (e) { series = null; }
+    if (my !== oiSeq) return;
+    chart.setOI(series);
   }
 
   /* ----------------------- signal + gauge + RSI note ------------------- */
@@ -336,7 +357,7 @@
 
   async function init() {
     document.title = base + '/USDT — Vdear';
-    chart = new window.VdearChart($('priceCanvas'), $('rsiCanvas'));
+    chart = new window.VdearChart($('priceCanvas'), $('rsiCanvas'), $('oiCanvas'));
     wireChartMenu();
     // Cảm ứng (chụm để zoom, kéo ngang để di chuyển) do chart.js tự lo — để ở
     // đây nữa thì mỗi cú chụm bị nhân đôi hệ số zoom.
@@ -373,6 +394,7 @@
       const c = cacheCandles[currentTf];
       if (!c) return;
       try {
+        chart.render();            // khung OI có chữ, phải vẽ lại
         renderSignal(c);
         renderCombat(c);
         renderSR(TA.supportResistance(c, c[c.length - 1].close), currentTf);
