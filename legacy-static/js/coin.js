@@ -96,8 +96,9 @@
       box.innerHTML = `<div class="panel-head"><h2>${T('coin.combat.title')}</h2>
         <span class="gauge-side neutral">${T('coin.combat.noSignal')}</span></div>
         <p class="hint">${T('coin.combat.noSignalWhy', { tf: currentTf.toUpperCase() })}</p>
-        <button type="button" class="jr-save" id="cbJournal">${T('journal.save')}</button>
-      <p class="hint"><b>${T('coin.refOnly')}</b></p>`;
+        <div id="cbShare"></div>
+        <p class="hint"><b>${T('coin.refOnly')}</b></p>`;
+      mountShare(sig, candles);
       return;
     }
 
@@ -138,6 +139,8 @@
         <div class="lev-scale"><span>x1</span><span>x25</span><span>x50</span><span>x75</span><span>x100</span></div>
       </div>
       <div class="plan-grid" id="planGrid"></div>
+      <button type="button" class="jr-save" id="cbJournal">${T('journal.save')}</button>
+      <div id="cbShare"></div>
       <p class="hint"><b>${T('coin.refOnly')}</b></p>`;
 
     const slider = $('levSlider');
@@ -186,6 +189,52 @@
       }
       setTimeout(() => { jb.disabled = false; jb.textContent = T('journal.save'); }, 2500);
     });
+
+    mountShare(sig, candles);
+  }
+
+  /*
+   * Gắn nút "Tạo ảnh chia sẻ" vào panel thực chiến. Dùng chung cho cả nhánh có
+   * tín hiệu lẫn nhánh trung tính — trung tính vẫn là một trạng thái có thật,
+   * chỉ là không có Entry/TP/SL nên ba ô đó hiện "—".
+   *
+   * snapshot() chạy LÚC BẤM: đòn bẩy người dùng vừa kéo quyết định TP/SL đang
+   * hiển thị, nên phải đọc lại ngay lúc đó chứ không chốt lúc gắn nút.
+   */
+  function mountShare(sig, candles) {
+    const host = $('cbShare');
+    if (!host || !window.VdearShareUI) return;
+    host.innerHTML = '';
+    window.VdearShareUI.attach(host, () => {
+      const p = sig.side === 'NEUTRAL' ? null : TA.tradePlan(sig.price, sig.side, combatLev);
+      const sr = TA.supportResistance(candles, sig.price) || { supports: [], resistances: [] };
+      return {
+        coin: base, tf: currentTf, side: sig.side, price: sig.price,
+        rsi: sig.rsi, confluence: sig.confluence,
+        support: sr.supports[0] ? sr.supports[0].price : null,
+        resistance: sr.resistances[0] ? sr.resistances[0].price : null,
+        entry: p ? p.entry : null, tp: p ? p.tp : null, sl: p ? p.sl : null,
+        candles: candles, logo: shareLogo,
+      };
+    });
+  }
+
+  /*
+   * Logo tải sẵn cho ảnh chia sẻ. crossOrigin bắt buộc: thiếu nó thì canvas bị
+   * "nhiễm" và toBlob() ném lỗi bảo mật — nút Tải về sẽ chết mà không rõ vì sao.
+   */
+  let shareLogo = null;
+  function preloadShareLogo() {
+    if (!API || !API.logoSources) return;
+    const srcs = API.logoSources(base).slice();
+    if (API.letterAvatar) srcs.push(API.letterAvatar(base));
+    let i = 0;
+    const im = new Image();
+    im.crossOrigin = 'anonymous';
+    const next = () => { if (i < srcs.length) im.src = srcs[i++]; };
+    im.onload = () => { if (im.naturalWidth > 1) shareLogo = im; else next(); };
+    im.onerror = next;
+    next();
   }
 
   /* --------------------------- Open Interest ---------------------------- */
@@ -447,6 +496,7 @@
     chart = new window.VdearChart($('priceCanvas'), $('rsiCanvas'), $('oiCanvas'));
     wireChartMenu();
     wireOiBadge();
+    preloadShareLogo();
     // Cảm ứng (chụm để zoom, kéo ngang để di chuyển) do chart.js tự lo — để ở
     // đây nữa thì mỗi cú chụm bị nhân đôi hệ số zoom.
     renderTfTabs();

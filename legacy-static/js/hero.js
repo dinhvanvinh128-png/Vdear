@@ -153,6 +153,47 @@
     });
   }
 
+  /*
+   * Nút tạo ảnh chia sẻ. snapshot() chạy LÚC BẤM và chỉ chép lại đúng những số
+   * đang hiện trên thẻ — không tính lại chỉ báo nào.
+   */
+  function wireShare() {
+    const host = document.querySelector('#hxPlan .hx-plan-grid');
+    if (!host || !window.VdearShareUI) return;
+    window.VdearShareUI.attach(host.parentElement, () => {
+      if (!last || !last.sig) return null;
+      const sig = last.sig;
+      const sr = TA.supportResistance(last.candles, sig.price) || { supports: [], resistances: [] };
+      return {
+        coin: state.base, tf: state.tfId, side: sig.side, price: sig.price,
+        rsi: sig.rsi, confluence: sig.confluence,
+        support: sr.supports[0] ? sr.supports[0].price : null,
+        resistance: sr.resistances[0] ? sr.resistances[0].price : null,
+        entry: sig.plan ? sig.plan.entry : null,
+        tp: sig.plan ? sig.plan.tp : null,
+        sl: sig.plan ? sig.plan.sl : null,
+        candles: last.candles,
+        logo: shareLogo,
+      };
+    });
+  }
+
+  // Logo tải sẵn để lúc vẽ ảnh không phải chờ mạng. Không tải được thì ảnh vẫn
+  // vẽ, chỉ thiếu logo — không chặn cả tính năng vì một cái ảnh nhỏ.
+  let shareLogo = null;
+  function preloadLogo(base) {
+    if (!API || !API.logoSources) return;
+    const srcs = API.logoSources(base).slice();
+    if (API.letterAvatar) srcs.push(API.letterAvatar(base));
+    let i = 0;
+    const im = new Image();
+    im.crossOrigin = 'anonymous';   // cần, nếu không canvas bị nhiễm và toBlob hỏng
+    const next = () => { if (i < srcs.length) im.src = srcs[i++]; };
+    im.onload = () => { if (im.naturalWidth > 1) shareLogo = im; else next(); };
+    im.onerror = next;
+    next();
+  }
+
   function paint(sig, candles) {
     const dir = sig.side === 'LONG' ? 'up' : sig.side === 'SHORT' ? 'down' : '';
     const label = T(sig.side === 'LONG' ? 'radar.bullish' : sig.side === 'SHORT' ? 'radar.bearish' : 'radar.neutral');
@@ -295,6 +336,7 @@
     save();
     clearAll();
     rain('setCoin', state.base);
+    preloadLogo(state.base);
     load();
   }
 
@@ -456,7 +498,9 @@
     syncStats();
     wirePicker();
     wireJournal();
+    wireShare();
     rain('setCoin', state.base);
+    preloadLogo(state.base);
     load();
     ensureMarket();
     schedule();
