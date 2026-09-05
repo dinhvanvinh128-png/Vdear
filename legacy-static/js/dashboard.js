@@ -300,6 +300,76 @@
 
   /* ------------------------------ Favorites ---------------------------- */
 
+  /* ----------------------- Tỉ lệ Long / Short -------------------------- */
+
+  /*
+   * Hai chuỗi Binance công bố cho BTC:
+   *   - vị thế của nhóm top trader (đo TIỀN)
+   *   - tài khoản toàn thị trường  (đo ĐẦU NGƯỜI)
+   * Hai con số này khác nhau về ý nghĩa nên vẽ thành hai thanh riêng, không
+   * trộn lại thành một. Và ghi rõ là của BTC: gộp nhiều coin lại thành một
+   * con số "cả thị trường" là tự chế ra một chỉ số chưa ai định nghĩa.
+   *
+   * Khung 4H cho khớp với chính khung mà Futures Radar đang quét.
+   */
+  const LS_TF = '4h';
+  let lastLs = null;
+
+  async function loadLongShort() {
+    const OI = window.VdearOI;
+    if (!OI || !$('lsBody')) return;
+    let top = null, glob = null;
+    try {
+      const r = await Promise.all([
+        OI.latestRatio('BTC', 'top', LS_TF),
+        OI.latestRatio('BTC', 'global', LS_TF),
+      ]);
+      top = r[0]; glob = r[1];
+    } catch (e) { top = glob = null; }
+    lastLs = { top: top, glob: glob };
+    renderLongShort();
+  }
+
+  function lsRow(labelKey, r) {
+    if (!r) return '';
+    const lo = Math.max(0, Math.min(1, r.long));
+    const sh = Math.max(0, Math.min(1, r.short));
+    // Chuẩn hoá lại cho đủ 100%: nguồn trả hai tỉ trọng riêng, tổng có thể
+    // lệch vài phần nghìn do làm tròn, và thanh vẽ ra sẽ hụt một sợi tóc.
+    const sum = lo + sh || 1;
+    const lp = (lo / sum) * 100, sp = (sh / sum) * 100;
+    return `<div class="ls-row">
+      <div class="ls-row-top"><span>${T(labelKey)}</span>
+        <b>${lp.toFixed(1)}% / ${sp.toFixed(1)}%</b></div>
+      <div class="ls-bar" role="img"
+           aria-label="${T(labelKey)}: ${T('ls.long')} ${lp.toFixed(1)}%, ${T('ls.short')} ${sp.toFixed(1)}%">
+        <i class="ls-long" style="width:${lp.toFixed(2)}%"></i>
+        <i class="ls-short" style="width:${sp.toFixed(2)}%"></i>
+      </div>
+    </div>`;
+  }
+
+  function renderLongShort() {
+    const box = $('lsBody');
+    if (!box) return;
+    const d = lastLs;
+    if (!d || (!d.top && !d.glob)) {
+      box.innerHTML = `<p class="ls-empty">${T('ls.none')}</p>`;
+      return;
+    }
+    box.innerHTML = lsRow('ls.top', d.top) + lsRow('ls.global', d.glob);
+
+    // Câu chú thích nói THẲNG đám đông đang nghiêng bên nào, lấy theo chuỗi
+    // tài khoản toàn thị trường (đo đầu người) vì đó mới là "đám đông".
+    const note = document.querySelector('.ls-note');
+    const g = d.glob || d.top;
+    if (note && g) {
+      const lp = g.long / ((g.long + g.short) || 1);
+      const key = lp > 0.55 ? 'ls.leanLong' : lp < 0.45 ? 'ls.leanShort' : 'ls.balanced';
+      note.textContent = T('ls.crowd') + ' — ' + T(key);
+    }
+  }
+
   /* --------------------- Thang tâm lý thị trường ----------------------- */
   // Câu đang hiện ở ô trạng thái quét, giữ dạng KHOÁ để đổi ngôn ngữ là dịch
   // lại được đúng câu đó — thẻ có thể đứng ở "Đã quét · 0 tín hiệu" rất lâu.
@@ -311,6 +381,7 @@
   window.addEventListener('vdear:langchange', () => {
     try {
       renderSectorBar();
+      renderLongShort();
       const st = $('scanStatus');
       if (st && scanStatusKey) st.textContent = T(scanStatusKey.k, scanStatusKey.v);
       renderMovers();                       // kể cả khi rỗng: dòng "không có coin" cũng là chữ
@@ -371,13 +442,19 @@
     // ETF nạp độc lập: nguồn khác hẳn, hỏng cũng không được kéo theo bảng coin.
     if (window.VdearETF) window.VdearETF.init('etfBody');
 
+    // Long/Short cũng nạp độc lập và KHÔNG await: nguồn riêng, chậm hay hỏng
+    // đều không được giữ bảng coin lại. Làm mới 5 phút một lần cho khớp với
+    // TTL của chính module OI — gọi dày hơn chỉ tốn hạn mức mà không có số mới.
+    loadLongShort();
+    setInterval(() => { if (!document.hidden) loadLongShort(); }, 5 * 60000);
+
     try {
       market = await API.getMarket();
       renderMovers();
       await runScan();
     } catch (e) {
       scanStatusKey = { k: 'scan.loadFailed', v: null };
-    $('scanStatus').textContent = T('scan.loadFailed');
+      $('scanStatus').textContent = T('scan.loadFailed');
       console.error(e);
     }
 

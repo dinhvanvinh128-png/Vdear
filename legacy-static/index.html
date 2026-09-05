@@ -165,11 +165,25 @@
           <h2 data-i18n="home.sentiment.title">Tâm lý thị trường — nên LONG hay SHORT?</h2>
           <span class="gauge-side neutral" id="sentLabel" data-i18n="st.calculatingCap">Đang tính…</span>
         </div>
-        <div class="gauge">
-          <div class="gauge-track"><div class="gauge-fill neutral" id="sentFill" style="width:50%"></div>
-            <div class="gauge-ticks"><span data-i18n="home.sentiment.tickLow">0 · SHORT</span><span>50</span><span data-i18n="home.sentiment.tickHigh">100 · LONG</span></div>
+        <div class="sent-cols">
+          <div class="gauge">
+            <div class="gauge-track"><div class="gauge-fill neutral" id="sentFill" style="width:50%"></div>
+              <div class="gauge-ticks"><span data-i18n="home.sentiment.tickLow">0 · SHORT</span><span>50</span><span data-i18n="home.sentiment.tickHigh">100 · LONG</span></div>
+            </div>
+            <div class="gauge-val" id="sentValue">—</div>
           </div>
-          <div class="gauge-val" id="sentValue">—</div>
+
+          <!-- Tỉ lệ Long/Short của BTC, hai chuỗi Binance công bố. Ghi rõ là
+               BTC chứ không gán cho "cả thị trường": gộp nhiều coin lại thành
+               một con số là tự chế ra một chỉ số chưa ai định nghĩa. -->
+          <div class="ls-wrap" id="lsWrap">
+            <div class="ls-head">
+              <span data-i18n="ls.label">Long / Short</span>
+              <b class="ls-sym">BTC</b>
+            </div>
+            <div class="ls-body" id="lsBody"></div>
+            <p class="ls-note" data-i18n="ls.crowd">Đám đông đang nghiêng bên nào</p>
+          </div>
         </div>
       </section>
 
@@ -270,6 +284,7 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/indicators.js"></script>
+  <script src="js/oi.js"></script>
   <script src="js/radarrain.js"></script>
   <script src="js/hero.js"></script>
   <script src="js/ticker.js"></script>

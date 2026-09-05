@@ -148,7 +148,36 @@ h1,h2,h3{margin:0;font-weight:700}
 .pager-info{color:var(--muted-2);font-size:12px;margin-left:8px}
 
 /* -------------------------- Gauge 0-100 -------------------------- */
+/* Thang tâm lý và thanh Long/Short đứng CẠNH nhau trên màn rộng: hai cách đo
+   cùng một câu hỏi "thị trường đang nghiêng bên nào", đặt cạnh nhau thì so
+   được ngay. Màn hẹp thì xếp dọc. */
+.sent-cols{display:grid;grid-template-columns:1fr minmax(240px,320px);gap:20px;align-items:start;margin-top:6px}
+@media (max-width:820px){ .sent-cols{grid-template-columns:1fr;gap:14px} }
+
 .gauge{display:flex;align-items:center;gap:16px;margin-top:6px}
+
+/* ---- Long / Short ---- */
+.ls-wrap{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel-2)}
+.ls-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.ls-head .ls-sym{font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0;color:var(--accent)}
+.ls-row{margin-top:9px}
+.ls-row-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  font-size:11px;color:var(--muted)}
+.ls-row-top b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;color:var(--text)}
+/* Thanh vẽ bằng hai khối cạnh nhau chứ không phải một khối chồng lên nền: bề
+   rộng của mỗi bên ĐÚNG bằng tỉ trọng của bên đó, không phải ước lượng bằng
+   mắt từ một dải gradient. */
+.ls-bar{position:relative;display:flex;height:10px;margin-top:5px;border-radius:6px;overflow:hidden;
+  background:var(--panel)}
+.ls-bar .ls-long{background:var(--up)}
+.ls-bar .ls-short{background:var(--down)}
+/* Mốc 50%: vạch mảnh chạy suốt chiều cao thanh, để biết bên nào đang quá bán
+   nửa mà không phải đọc số. */
+.ls-bar::after{content:'';position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;
+  background:var(--bg);opacity:.9}
+.ls-note{margin:9px 0 0;font-size:11px;color:var(--muted);line-height:1.4}
+.ls-empty{margin:9px 0 0;font-size:11.5px;color:var(--muted)}
 .gauge-track{position:relative;flex:1;height:14px;border-radius:20px;
   background:linear-gradient(90deg,rgba(224,87,79,.25),rgba(138,148,166,.18),rgba(79,180,119,.25));
   border:1px solid var(--line-2);overflow:visible}
