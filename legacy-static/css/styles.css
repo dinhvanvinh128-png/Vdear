@@ -1579,3 +1579,36 @@ tr.etf-main.open{background:var(--panel-2)}
   .st-cell{min-width:78px;padding:7px 4px}
   .st-cell b{font-size:15px}
 }
+
+/* ---- Huy hiệu chế độ và hạ hạng trên radar ---- */
+/* Thẻ bị hạ hạng NHẠT đi nhưng vẫn đọc được: mục đích là bớt sức nặng thị
+   giác, không phải giấu thông tin đi. */
+.scan-card.demoted{opacity:.72;border-style:dashed}
+.scan-card.demoted:hover{opacity:1}
+.sc-weak{margin:6px 0 0;padding:5px 8px;border-radius:8px;font-size:11px;line-height:1.4;
+  color:var(--down);background:color-mix(in srgb,var(--down) 11%,transparent);
+  border:1px solid color-mix(in srgb,var(--down) 32%,transparent)}
+.scan-filter{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px;
+  padding:8px 11px;border-radius:11px;background:var(--panel-2);border:1px solid var(--line)}
+.scan-filter-on{display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer}
+.scan-filter-thr{display:flex;align-items:center;gap:4px}
+.scan-filter-thr input{width:62px;background:var(--bg-2);color:var(--text);
+  border:1px solid var(--line-2);border-radius:8px;padding:4px 7px;
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px}
+.scan-filter .hint{margin:0;font-size:11px;flex:1;min-width:180px}
+@media (max-width:640px){ .scan-filter .hint{flex-basis:100%} }
+
+/* ---- Độ rộng thị trường ---- */
+.br-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px}
+.br-cell{border-radius:11px;border:1px solid var(--line);background:var(--panel-2);padding:11px 12px}
+.br-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.br-head span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.br-head b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:19px}
+/* Trục dọc cố định 0–100%: một dao động 48–52% không được vẽ ra trông như một
+   cú sập. Đường đứt ở giữa là mốc 50%. */
+.br-svg{display:block;width:100%;height:64px;margin:8px 0 4px;color:var(--muted)}
+.br-cell .hint{margin:2px 0 0;font-size:11px}
+.br-alert{margin:12px 0 0;padding:9px 11px;border-radius:10px;font-size:12.5px;line-height:1.5;
+  color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+@media (max-width:820px){ .br-grid{grid-template-columns:1fr} }

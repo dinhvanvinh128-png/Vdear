@@ -83,12 +83,17 @@
     const universe = market.slice(0, cap);
     const tf = CFG.timeframes.find((t) => t.id === CFG.scanTimeframe);
 
+    const RG = window.VdearRegime;
     const results = await API.pool(universe, async (coin) => {
       try {
         const candles = await API.klinesMulti(coin, tf.id, CFG.scan.klineLimit);
         if (candles.length < 40) return null;
         const sig = TA.combatSignal(candles);
-        return { coin, sig };
+        // Chế độ thị trường của chính coin này, tính từ đúng đống nến vừa tải.
+        // Không tải thêm gì: nến đã nằm sẵn trong tay.
+        let regime = null;
+        try { regime = RG ? RG.current(candles) : null; } catch (e) { regime = null; }
+        return { coin, sig, regime, candles };
       } catch (e) { return null; }
     }, CFG.scan.concurrency);
 
@@ -103,12 +108,117 @@
     scanResults.sort((a, b) => b.rank - a.rank);
     scanResults = scanResults.slice(0, CFG.scan.targetSignals);
 
+    // Bảng winrate theo chế độ chạy trong worker, KHÔNG chặn phần hiển thị:
+    // radar hiện ra ngay, huy hiệu hạ hạng gắn thêm khi bảng tính xong.
+    buildRegimeStats(results.filter((r) => r && r.candles));
+
     scanStatusKey = { k: 'scan.done', v: { n: scanResults.length } };
     if (status) status.textContent = T(scanStatusKey.k, scanStatusKey.v);
     if (btn) { btn.disabled = false; btn.classList.remove('spin'); }
     scanning = false;
     renderScan();
     renderSentiment();
+  }
+
+  /* ---------------- Winrate lịch sử theo chế độ thị trường -------------- */
+
+  let regimeStats = null;
+
+  function buildRegimeStats(rows) {
+    const RS = window.VdearRegimeStats;
+    if (!RS) return;
+    const cached = RS.cached();
+    if (cached) { regimeStats = cached; renderScan(); return; }
+    RS.build(rows.map((r) => ({ base: r.coin.base, candles: r.candles })))
+      .then((res) => {
+        if (!res) return;
+        regimeStats = res;
+        // Có bảng rồi mới xếp lại: tín hiệu bị hạ hạng tụt xuống cuối.
+        scanResults.sort((a, b) => rankOf(b) - rankOf(a));
+        renderScan();
+      });
+  }
+
+  function judgeOf(r) {
+    const RS = window.VdearRegimeStats;
+    if (!RS || !regimeStats || !r.regime || !r.regime.key) return null;
+    return RS.judge(regimeStats, r.regime.key, RS.getThreshold(regimeStats), 'combat');
+  }
+
+  // Hạ hạng = trừ thẳng một khối lớn khỏi điểm, để tín hiệu yếu rơi hẳn xuống
+  // dưới thay vì chỉ tụt vài bậc.
+  function rankOf(r) {
+    const j = judgeOf(r);
+    return r.rank - (j && j.state === 'weak' ? 50000 : 0);
+  }
+
+  /*
+   * Bộ lọc ngưỡng CHỈ loại tín hiệu có ô đủ mẫu và thật sự dưới ngưỡng.
+   * Tín hiệu mà ô của nó chưa đủ mẫu vẫn được hiện: "chưa biết" không phải
+   * "xấu", và giấu đi là âm thầm biến cái này thành cái kia.
+   */
+  function passesFilter(r) {
+    if (!filterOn) return true;
+    const j = judgeOf(r);
+    return !(j && j.state === 'weak');
+  }
+
+  let filterOn = false;
+
+  function regimeBadge(r) {
+    if (!r.regime || !r.regime.key) return '';
+    const K = {
+      trend_up: 'reg.trendUp', trend_down: 'reg.trendDown',
+      range: 'reg.range', volatile: 'reg.volatile',
+    };
+    return `<span class="reg-badge ${r.regime.key}"><i></i>${T(K[r.regime.key])}</span>`;
+  }
+
+  function weakNote(r) {
+    const j = judgeOf(r);
+    if (!j || j.state !== 'weak') return '';
+    const K = {
+      trend_up: 'reg.trendUp', trend_down: 'reg.trendDown',
+      range: 'reg.range', volatile: 'reg.volatile',
+    };
+    return `<div class="sc-weak">${T('scan.weakRegime', {
+      regime: T(K[r.regime.key]),
+      win: j.winRate.toFixed(0),
+      n: j.cell.trades,
+    })}</div>`;
+  }
+
+  function renderFilterUi(shownCount) {
+    const box = $('scanFilter');
+    if (!box) return;
+    const RS = window.VdearRegimeStats;
+    // Chưa có bảng thì không hiện bộ lọc: một nút không lọc được gì chỉ làm
+    // người dùng bấm rồi tự hỏi mình vừa làm gì.
+    if (!RS || !regimeStats) { box.hidden = true; return; }
+    box.hidden = false;
+    const on = $('scanFilterOn'), thr = $('scanFilterThr'), note = $('scanFilterNote');
+    if (on) on.checked = filterOn;
+    if (thr && document.activeElement !== thr) {
+      thr.value = Math.round(RS.getThreshold(regimeStats));
+    }
+    if (note) {
+      const hidden = scanResults.length - shownCount;
+      note.textContent = filterOn
+        ? T('scan.filter.hiding', { n: hidden })
+        : T('scan.filter.default', { be: RS.defaultThreshold(regimeStats).toFixed(0) });
+    }
+  }
+
+  function wireFilter() {
+    const on = $('scanFilterOn'), thr = $('scanFilterThr');
+    if (on) on.addEventListener('change', () => { filterOn = on.checked; renderScan(); });
+    if (thr) thr.addEventListener('input', () => {
+      const v = Number(thr.value);
+      if (!Number.isFinite(v) || v < 0 || v > 100) return;
+      window.VdearRegimeStats.setThreshold(v);
+      scanResults.sort((a, b) => rankOf(b) - rankOf(a));
+      renderScan();
+    });
   }
 
   function scanCard(r) {
@@ -124,13 +234,16 @@
       <span class="cf ${s.paMatch ? 'on' : ''}" title="Xác nhận Price Action">PA</span>
       <span class="cf ${s.breakout ? 'on' : ''}" title="Xác nhận breakout">BO</span>
       <span class="cf ${s.volume ? 'on' : ''}" title="Volume giá bùng nổ">VOL</span></div>`;
-    return `<a class="scan-card ${isLong ? 'long' : 'short'} ${s.valid ? 'valid' : ''}" href="${coinLink(c.base)}">
+    const j = judgeOf(r);
+    const weak = j && j.state === 'weak';
+    return `<a class="scan-card ${isLong ? 'long' : 'short'} ${s.valid ? 'valid' : ''} ${weak ? 'demoted' : ''}" href="${coinLink(c.base)}">
       <div class="sc-top">
         <img class="sc-logo" alt="" data-logo="${c.base}">
         <div class="sc-id"><b>${c.base}</b><span>${'$' + fmt(c.price)}</span></div>
         <span class="sc-side ${isLong ? 'long' : 'short'}">${s.side}</span>
       </div>
-      ${extremeBadge ? `<div class="sc-flags">${extremeBadge}</div>` : ''}
+      ${(extremeBadge || regimeBadge(r)) ? `<div class="sc-flags">${extremeBadge}${regimeBadge(r)}</div>` : ''}
+      ${weakNote(r)}
       <div class="sc-mid">
         <div class="sc-metric"><span>RSI</span><b style="color:${z.color}">${s.rsi.toFixed(0)}</b></div>
         <div class="sc-metric"><span>Win</span><b>${s.winRate}%</b></div>
@@ -143,14 +256,16 @@
 
   function renderScan() {
     const box = $('scanGrid');
-    const shown = scanExpanded ? scanResults : scanResults.slice(0, CFG.scan.initialShow);
+    const list = scanResults.filter(passesFilter);
+    const shown = scanExpanded ? list : list.slice(0, CFG.scan.initialShow);
     box.innerHTML = shown.map(scanCard).join('');
     box.querySelectorAll('[data-logo]').forEach((img) => API.applyLogo(img, img.dataset.logo));
     const more = $('scanMore');
-    if (scanResults.length > CFG.scan.initialShow) {
+    if (list.length > CFG.scan.initialShow) {
       more.style.display = 'inline-flex';
-      more.textContent = scanExpanded ? T('st.less') : T('scan.moreN', { n: scanResults.length - CFG.scan.initialShow });
+      more.textContent = scanExpanded ? T('st.less') : T('scan.moreN', { n: list.length - CFG.scan.initialShow });
     } else more.style.display = 'none';
+    renderFilterUi(list.length);
   }
 
   /* ---------------- Sector bar (cuộn/kéo ngang, trên bảng) ------------- */
@@ -483,6 +598,7 @@
     if (new URLSearchParams(location.search).get('view') === 'fav') setFavOnly(true);
     renderSectorBar();
     $('scanMore').addEventListener('click', () => { scanExpanded = !scanExpanded; renderScan(); });
+    wireFilter();
     $('scanRescan').addEventListener('click', async () => {
       try { market = await API.getMarket(true); renderMovers(); } catch (e) {}
       runScan();

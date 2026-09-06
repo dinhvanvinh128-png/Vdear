@@ -456,6 +456,10 @@
 
     /* thống kê theo chế độ thị trường */
     'st.title2': 'Thống kê',
+    'scan.weakRegime': '{regime}: lịch sử chỉ thắng {win}% trên {n} lệnh — cân nhắc bỏ qua.',
+    'scan.filter.label': 'Chỉ hiện tín hiệu đạt winrate lịch sử',
+    'scan.filter.hiding': 'Đang ẩn {n} tín hiệu dưới ngưỡng. Tín hiệu chưa đủ mẫu vẫn được hiện — chưa biết không phải là xấu.',
+    'scan.filter.default': 'Mặc định là điểm hoà vốn {be}% theo R:R đang cấu hình, không phải 50%.',
     'st.title': '📊 Winrate theo chế độ thị trường',
     'st.reload': 'Chạy lại',
     'st.loading': 'Đang tải nến và chạy backtest trong luồng nền…',
@@ -480,6 +484,23 @@
     'reg.range': 'Tích luỹ',
     'reg.volatile': 'Biến động cao',
     'reg.unknown': 'Chưa xếp được',
+
+    /* độ rộng thị trường */
+    'br.title': '🌍 Độ rộng thị trường',
+    'br.loading': 'Đang tải độ rộng thị trường…',
+    'br.failed': 'Không lấy được dữ liệu độ rộng thị trường.',
+    'br.noSeries': 'Chưa đủ ngày để vẽ.',
+    'br.meta': '{coins} coin · {days} ngày',
+    'br.chartAria': 'Đường tỉ lệ phần trăm theo ngày, trục dọc cố định 0–100%',
+    'br.ma200': 'Trên MA200',
+    'br.ma200.note': 'Xu hướng dài hạn còn nguyên ở bao nhiêu phần thị trường. Chậm và ít nhiễu.',
+    'br.newHigh': 'Đỉnh 30 ngày',
+    'br.newHigh.note': 'Sức mạnh có đang lan ra không. Nhanh và nhạy.',
+    'br.up24h': 'Tăng trong ngày',
+    'br.up24h.note': 'Ảnh chụp một ngày, không phải chỉ báo xu hướng.',
+    'br.div.on': 'PHÂN KỲ: BTC {btc}% trong khi tỉ lệ coin trên MA200 giảm {days} ngày liên tiếp ({pts} điểm). Đây là mô tả trạng thái hiện tại, không phải dự báo giá.',
+    'br.div.off': 'Chưa phân kỳ: tỉ lệ trên MA200 mới giảm {streak}/{need} ngày liên tiếp, BTC {btc}%, độ rộng {pts} điểm.',
+    'br.div.notEnough': 'Chưa đủ ngày để xét phân kỳ.',
     /* ngày giờ */
     'time.justNow': 'vừa xong',
     'time.minAgo': '{n} phút trước',
@@ -1109,6 +1130,10 @@
 
     /* stats by market regime */
     'st.title2': 'Stats',
+    'scan.weakRegime': '{regime}: historically only {win}% across {n} trades — consider skipping.',
+    'scan.filter.label': 'Only show signals meeting the historical win rate',
+    'scan.filter.hiding': 'Hiding {n} signals below the threshold. Signals without enough history are still shown — unknown is not the same as bad.',
+    'scan.filter.default': 'The default is the {be}% break-even implied by the configured R:R, not 50%.',
     'st.title': '📊 Win rate by market regime',
     'st.reload': 'Run again',
     'st.loading': 'Loading candles and running the backtest on a background thread…',
@@ -1133,6 +1158,23 @@
     'reg.range': 'Accumulation',
     'reg.volatile': 'High volatility',
     'reg.unknown': 'Unclassified',
+
+    /* market breadth */
+    'br.title': '🌍 Market breadth',
+    'br.loading': 'Loading market breadth…',
+    'br.failed': 'Could not load market-breadth data.',
+    'br.noSeries': 'Not enough days to plot.',
+    'br.meta': '{coins} coins · {days} days',
+    'br.chartAria': 'Percentage by day, vertical axis fixed at 0–100%',
+    'br.ma200': 'Above MA200',
+    'br.ma200.note': 'How much of the market still holds its long-term trend. Slow and quiet.',
+    'br.newHigh': '30-day highs',
+    'br.newHigh.note': 'Whether strength is spreading. Fast and sensitive.',
+    'br.up24h': 'Up on the day',
+    'br.up24h.note': 'A single day’s snapshot, not a trend indicator.',
+    'br.div.on': 'DIVERGENCE: BTC {btc}% while the share of coins above MA200 fell for {days} consecutive days ({pts} points). This describes the current state; it is not a price forecast.',
+    'br.div.off': 'No divergence yet: the share above MA200 has fallen {streak} of {need} consecutive days, BTC {btc}%, breadth {pts} points.',
+    'br.div.notEnough': 'Not enough days to judge divergence.',
     /* dates */
     'time.justNow': 'just now',
     'time.minAgo': '{n} min ago',

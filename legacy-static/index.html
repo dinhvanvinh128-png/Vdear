@@ -201,6 +201,20 @@
           </div>
         </div>
         <p class="hint" data-i18n-html="home.scan.hint">Chiến lược <b>thực chiến</b>: RSI H4 đảo chiều (quá mua/bán rồi quay đầu) → hướng lệnh; xác nhận thêm bằng vùng <b>hỗ trợ/kháng cự</b> và <b>Price Action</b>. Coin đạt <b>hội tụ ✓</b> (RSI + S&amp;R + PA) được ưu tiên lên đầu.</p>
+        <!-- Bộ lọc theo winrate lịch sử. Ẩn cho tới khi bảng thống kê tính xong:
+             hiện một bộ lọc chưa có gì để lọc chỉ làm người dùng bấm vào rồi
+             không thấy điều gì xảy ra. -->
+        <div class="scan-filter" id="scanFilter" hidden>
+          <label class="scan-filter-on">
+            <input type="checkbox" id="scanFilterOn">
+            <span data-i18n="scan.filter.label">Chỉ hiện tín hiệu đạt winrate lịch sử</span>
+          </label>
+          <label class="scan-filter-thr">
+            <input type="number" id="scanFilterThr" min="0" max="100" step="1">
+            <span class="liq-unit">%</span>
+          </label>
+          <span class="hint" id="scanFilterNote"></span>
+        </div>
         <div class="scan-grid" id="scanGrid"></div>
         <div class="center"><button class="more-btn" id="scanMore" style="display:none" data-i18n="st.more">▼ Xem thêm</button></div>
       </section>
@@ -303,6 +317,8 @@
   <script src="js/radarrain.js"></script>
   <script src="js/hero.js"></script>
   <script src="js/ticker.js"></script>
+  <script src="js/regime.js"></script>
+  <script src="js/regime-stats.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/etf.js"></script>
   <script src="js/coinrain.js"></script>
