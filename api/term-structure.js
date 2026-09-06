@@ -30,6 +30,8 @@
  * chưa từng tồn tại.
  */
 
+const envelope = require('./_envelope');
+
 const BINANCE = process.env.BINANCE_FAPI_BASE || 'https://fapi.binance.com';
 const TIMEOUT_MS = 8000;
 const REFRESH_MS = 5 * 60 * 1000;
@@ -479,15 +481,12 @@ async function get() {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=900');
   try {
     const { payload, cached, revalidating } = await get();
-    res.statusCode = 200;
-    res.end(JSON.stringify({ ...payload, cached: !!cached, revalidating: !!revalidating }));
+    envelope.send(res, { ...payload, cached: !!cached, revalidating: !!revalidating },
+      { sMaxAge: 300, maxAgeSeconds: 900 });
   } catch (e) {
-    res.statusCode = 200;
-    res.end(JSON.stringify({ ok: false, pairs: {}, errors: [String((e && e.message) || e)] }));
+    envelope.fail(res, e);
   }
 };
 

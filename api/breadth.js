@@ -29,6 +29,8 @@
  * "Trung bình N ngày thấp đi" là một phát biểu khác và yếu hơn nhiều.
  */
 
+const envelope = require('./_envelope');
+
 const BINANCE = process.env.BINANCE_FAPI_BASE || 'https://fapi.binance.com';
 const TIMEOUT_MS = 9000;
 const REFRESH_MS = 30 * 60 * 1000;
@@ -261,15 +263,14 @@ async function get() {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=1800, stale-while-revalidate=3600');
   try {
     const { payload, cached, revalidating } = await get();
-    res.statusCode = 200;
-    res.end(JSON.stringify({ ...payload, cached: !!cached, revalidating: !!revalidating }));
+    // Vỏ bọc chung: thêm ageSeconds/stale để giao diện biết số này bao nhiêu
+    // tuổi. Xem api/_envelope.js.
+    envelope.send(res, { ...payload, cached: !!cached, revalidating: !!revalidating },
+      { sMaxAge: 1800, maxAgeSeconds: 3600 });
   } catch (e) {
-    res.statusCode = 200;
-    res.end(JSON.stringify({ ok: false, rows: [], errors: [String((e && e.message) || e)] }));
+    envelope.fail(res, e);
   }
 };
 
