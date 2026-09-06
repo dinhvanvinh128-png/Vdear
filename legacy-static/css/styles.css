@@ -1612,3 +1612,48 @@ tr.etf-main.open{background:var(--panel-2)}
   color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent);
   border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
 @media (max-width:820px){ .br-grid{grid-template-columns:1fr} }
+
+/* ---- Quản trị vốn (money.html) ---- */
+.mn-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.mn-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px}
+.mn-table{min-width:520px}
+.mn-table th,.mn-table td{padding-right:16px;white-space:nowrap}
+.mn-table th:last-child,.mn-table td:last-child{padding-right:0}
+.mn-table td{font-family:'JetBrains Mono',ui-monospace,monospace}
+.mn-table td:first-child{font-family:inherit}
+.mn-table td.up{color:var(--up)}
+.mn-table td.down{color:var(--down)}
+.mn-table td.muted{color:var(--muted)}
+.mn-none{color:var(--muted-2);font-family:inherit;font-size:11.5px}
+.mn-noedge td{opacity:.75}
+.mn-warn-cell{color:var(--down);font-family:inherit;font-size:11.5px;white-space:normal}
+
+/* Đồng hồ nhiệt: vạch đỏ là mốc 6%, luôn hiện kể cả khi thanh còn ngắn — mốc
+   mới là thứ đáng nhìn, không phải chiều dài thanh. */
+.mn-gauge{margin-top:12px}
+.mn-gauge-bar{position:relative;height:14px;border-radius:8px;background:var(--panel-2);
+  border:1px solid var(--line);overflow:hidden}
+.mn-gauge-bar i{display:block;height:100%;background:var(--up);transition:width .18s}
+.mn-gauge.warn .mn-gauge-bar i{background:var(--accent)}
+.mn-gauge.red .mn-gauge-bar i{background:var(--down)}
+.mn-gauge-red{position:absolute;top:0;bottom:0;width:2px;background:var(--down);opacity:.85}
+.mn-gauge-num{display:flex;align-items:baseline;gap:8px;margin-top:7px}
+.mn-gauge-num b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:22px}
+.mn-gauge.red .mn-gauge-num b{color:var(--down)}
+.mn-gauge.warn .mn-gauge-num b{color:var(--accent)}
+.mn-gauge-num span{font-size:11.5px;color:var(--muted)}
+.mn-alert{margin:10px 0 0;padding:9px 11px;border-radius:10px;font-size:12.5px;line-height:1.5;
+  color:var(--down);background:color-mix(in srgb,var(--down) 11%,transparent);
+  border:1px solid color-mix(in srgb,var(--down) 38%,transparent)}
+
+.mn-corr-table{border-collapse:separate;border-spacing:3px;font-size:11.5px}
+.mn-corr-table th{font-size:10px;color:var(--muted);font-weight:600;padding:2px 4px}
+.mn-corr{text-align:center;padding:6px 9px;border-radius:7px;border:1px solid var(--line);
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+.mn-corr-lbl{font-size:11px;font-weight:600;padding-right:6px;white-space:nowrap}
+.mn-eff{display:flex;gap:22px;margin-top:12px;flex-wrap:wrap}
+.mn-eff div{display:flex;flex-direction:column}
+.mn-eff span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mn-eff b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:21px}
+.mn-in-cluster td{background:color-mix(in srgb,var(--down) 10%,transparent)}
+@media (max-width:820px){ .mn-controls{grid-template-columns:repeat(2,1fr)} }

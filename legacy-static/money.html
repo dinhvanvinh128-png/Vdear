@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản trị vốn — Vdearypto</title>
+  <meta name="description" content="Kelly phân số theo chế độ thị trường, khối lượng chuẩn hoá theo ATR, nhiệt danh mục, tương quan 30 ngày và máy tính thang DCA. Mọi thứ tính bằng R và % tài khoản.">
+  <meta property="og:title" content="Quản trị vốn — Vdearypto">
+  <meta property="og:description" content="Cỡ lệnh, nhiệt danh mục, tương quan và thang DCA — tính bằng R và % tài khoản, không bằng tiền.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0A0906">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('vdear_lang');if(l==='en'||l==='vi')document.documentElement.setAttribute('lang',l)}catch(e){}</script>
+</head>
+<body>
+  <div id="ticker" class="ticker-bar" aria-label="Bảng giá chạy" data-i18n-attr="aria-label:nav.ticker"></div>
+
+  <header class="topbar">
+    <button class="nav-toggle" type="button" data-nav-open aria-label="Mở menu" data-i18n-attr="aria-label:nav.open" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><path fill="#0A0906" d="M3 4 L16 27.5 L28 4 L24.2 4 L16 20 L7.2 4 Z"/></svg></span>
+      <div><div class="brand-name">Vdearypto</div><div class="brand-sub" data-i18n="mn.title2">Quản trị vốn</div></div>
+    </a>
+    <div class="tb-actions">
+      <span class="pill live"><span class="live-dot"></span> <span data-i18n="nav.realtime">Realtime</span></span>
+      <button class="icon-btn" data-theme-toggle title="Đổi nền" data-i18n-attr="title:nav.theme">☀️</button>
+      <button class="icon-btn lang-btn" type="button" data-lang-toggle title="Switch to English">EN</button>
+      <a class="btn-ghost" href="/" data-i18n="bub.back">← Về bảng thị trường</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="mn.title">🛡️ Quản trị vốn</h2>
+      </div>
+      <p class="hint" data-i18n-html="mn.intro">Mọi con số trên trang này tính bằng <b>R</b> (bội số rủi ro) và <b>% tài khoản</b>. Không có ô nhập vốn, không có số tiền lãi — muốn ra số hợp đồng thì bạn tự nhân với vốn của mình. Đó là chủ ý: một trang khoe số tiền lãi sẽ biến thành công cụ khoe lãi, và người ta bắt đầu chọn lệnh theo con số to nhất thay vì theo rủi ro.</p>
+
+      <div class="mn-controls">
+        <label class="liq-field"><span data-i18n="mn.risk">Rủi ro mỗi lệnh</span>
+          <input id="mnRisk" class="select" type="number" min="0.1" max="20" step="0.1"><span class="liq-unit">%</span></label>
+        <label class="liq-field"><span data-i18n="mn.atrMult">Dừng lỗ theo ATR</span>
+          <input id="mnAtrMult" class="select" type="number" min="0.5" max="10" step="0.5"><span class="liq-unit">×</span></label>
+        <label class="liq-field"><span data-i18n="mn.fixedStop">Dừng lỗ cố định để so sánh</span>
+          <input id="mnFixedStop" class="select" type="number" min="0.1" max="50" step="0.1"><span class="liq-unit">%</span></label>
+        <label class="liq-field"><span data-i18n="mn.kellyFrac">Phần Kelly</span>
+          <select id="mnKellyFrac" class="select">
+            <option value="0.25" selected>1/4</option>
+            <option value="0.5">1/2</option>
+            <option value="1">1/1</option>
+          </select></label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="mn.k.title">🎲 Khối lượng theo Kelly phân số</h2>
+      </div>
+      <p class="hint" data-i18n-html="mn.k.hint"><b>Kelly là gì:</b> công thức trả lời "nên đem bao nhiêu phần tài khoản ra rủi ro" khi biết tỉ lệ thắng W và tỉ lệ lãi/lỗ R. Công thức là <b>f* = W − (1−W)/R</b>. Nó tối đa hoá tốc độ tăng trưởng dài hạn <i>nếu</i> W và R đúng tuyệt đối — mà ở đây chúng chỉ là ước lượng từ backtest, nên mặc định lấy <b>một phần tư</b> làm biên an toàn cho chính sai số đó. W và R lấy theo đúng chế độ thị trường đang xét.</p>
+      <div id="mnKelly"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="mn.s.title">📏 Khối lượng theo biến động</h2>
+      </div>
+      <p class="hint" data-i18n-html="mn.s.hint">Cùng một mức rủi ro % tài khoản, coin nào biến động mạnh hơn thì khoảng dừng lỗ phải rộng hơn, và vị thế vì thế phải <b>nhỏ đi tương ứng</b>. Cột cuối cho biết cách đặt dừng lỗ cố định đang cho vị thế to hơn (hoặc nhỏ hơn) bao nhiêu lần so với mức biến động cho phép.</p>
+      <div id="mnSizing"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="mn.h.title">🌡️ Nhiệt danh mục</h2>
+      </div>
+      <p class="hint" data-i18n="mn.h.hint">Tổng % tài khoản mất đi nếu MỌI lệnh đang mở đều chạm dừng lỗ cùng lúc. Lấy từ nhật ký lệnh của bạn.</p>
+      <div id="mnHeat"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="mn.c.title">🔗 Rủi ro tương quan</h2>
+      </div>
+      <p class="hint" data-i18n-html="mn.c.hint">Tương quan tính trên <b>lợi suất theo ngày</b> của 30 ngày gần nhất, không tính trên giá: hai coin cùng đi lên trong 30 ngày sẽ có tương quan giá gần 1 dù chúng đi lên vào những ngày hoàn toàn khác nhau. <b>Số lệnh độc lập hiệu dụng</b> trả lời: bạn tưởng đang cầm mấy lệnh, thực chất là mấy lệnh.</p>
+      <div id="mnCorr"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="mn.d.title">🪜 Máy tính thang DCA</h2>
+      </div>
+      <p class="hint" data-i18n="mn.d.hint">Vào lệnh nhiều lần theo hướng bất lợi. Bảng cho biết giá vào trung bình, giá thanh lý sau mỗi lần bù, và tổng vốn đã bỏ vào tính theo % tài khoản.</p>
+      <div class="mn-controls">
+        <label class="liq-field"><span data-i18n="liq.coin">Coin</span>
+          <select id="mnDcaCoin" class="select"></select></label>
+        <label class="liq-field"><span data-i18n="mn.d.side">Hướng</span>
+          <select id="mnDcaSide" class="select">
+            <option value="LONG" selected>LONG</option>
+            <option value="SHORT">SHORT</option>
+          </select></label>
+        <label class="liq-field"><span data-i18n="mn.d.entry">Giá vào lần đầu</span>
+          <input id="mnDcaEntry" class="select" type="number" min="0" step="any"></label>
+        <label class="liq-field"><span data-i18n="mn.d.steps">Số lần vào</span>
+          <input id="mnDcaSteps" class="select" type="number" min="1" max="20" step="1"></label>
+        <label class="liq-field"><span data-i18n="mn.d.spacing">Khoảng cách mỗi lần</span>
+          <input id="mnDcaSpacing" class="select" type="number" min="0.1" max="50" step="0.1"><span class="liq-unit">%</span></label>
+        <label class="liq-field"><span data-i18n="mn.d.lev">Đòn bẩy</span>
+          <input id="mnDcaLev" class="select" type="number" min="2" max="125" step="1"><span class="liq-unit">×</span></label>
+        <label class="liq-field"><span data-i18n="mn.d.margin">Vốn mỗi lần</span>
+          <input id="mnDcaMargin" class="select" type="number" min="0.1" max="50" step="0.1"><span class="liq-unit">%</span></label>
+      </div>
+      <div id="mnDca"></div>
+    </section>
+
+    <section class="panel">
+      <p class="hint" data-i18n="mn.disclaimer">Toàn bộ số liệu và công thức trên trang này chỉ mang tính tham khảo, không phải lời khuyên đầu tư. Backtest mô tả những gì đã xảy ra trong quá khứ, không hứa hẹn điều gì sẽ xảy ra.</p>
+    </section>
+  </main>
+
+  <footer class="foot-wrap">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="brand-name">Vdearypto</div>
+        <p data-i18n="foot.tagline">Radar tín hiệu futures — quét toàn thị trường, vào lệnh có kế hoạch. Dữ liệu từ Binance · Bybit · OKX · Bitget.</p>
+      </div>
+      <div class="foot-col"><h4 data-i18n="foot.product">Sản phẩm</h4>
+        <a href="/" data-i18n="foot.markets">Thị trường</a>
+        <a href="bubbles.html" data-i18n="foot.bubbles">Bong bóng thị trường</a>
+        <a href="/#etf" data-i18n="foot.etf">Dòng tiền ETF</a>
+        <a href="coin.html?c=BTC" data-i18n="foot.coin">Phân tích coin</a>
+        <a href="journal.html" data-i18n="journal.nav">Nhật ký lệnh</a>
+        <a href="derivatives.html" data-i18n="nav.i.funding">Funding &amp; Cấu trúc kỳ hạn</a>
+        <a href="liquidation.html" data-i18n="nav.i.liquidation">Bản đồ thanh lý</a>
+        <a href="stats.html" data-i18n="nav.i.stats">Thống kê chiến lược</a>
+        <a href="money.html" data-i18n="nav.i.money">Quản trị vốn</a>
+        <a href="about.html" data-i18n="foot.about">Giới thiệu</a>
+      </div>
+      <div class="foot-col"><h4 data-i18n="foot.legal">Pháp lý</h4>
+        <a href="terms.html" data-i18n="foot.terms">Điều khoản</a>
+        <a href="privacy.html" data-i18n="foot.privacy">Bảo mật</a>
+        <a href="risk.html" data-i18n="foot.risk">Khuyến cáo rủi ro</a>
+      </div>
+      <div class="foot-col"><h4 data-i18n="foot.contact">Liên hệ</h4>
+        <a href="contact.html" data-i18n="foot.contact">Liên hệ</a>
+        <a href="mailto:support@vdear.io">support@vdear.io</a>
+      </div>
+    </div>
+    <p class="hint" style="text-align:center;margin-top:24px"><span data-i18n="foot.copy">© 2026 Vdearypto · Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</span></p>
+  </footer>
+
+  <script src="env.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/navmenu.js"></script>
+  <script src="js/favstore.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ticker.js"></script>
+  <script src="js/indicators.js"></script>
+  <script src="js/regime.js"></script>
+  <script src="js/regime-stats.js"></script>
+  <script src="js/liq.js"></script>
+  <script src="js/journal.js"></script>
+  <script src="js/money.js"></script>
+  <script src="js/money-page.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/integrations.js"></script>
+  <script src="js/fx.js"></script>
+</body>
+</html>

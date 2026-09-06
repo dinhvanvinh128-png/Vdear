@@ -20,6 +20,7 @@
     { type: 'nav', k: 'nav.i.liquidation', ks: 'cmd.derivatives', label: 'Bản đồ thanh lý', sub: 'Phái sinh', href: 'liquidation.html' },
     { type: 'nav', k: 'journal.nav', ks: 'cmd.yours', label: 'Nhật ký lệnh', sub: 'Của bạn', href: 'journal.html' },
     { type: 'nav', k: 'nav.i.stats', ks: 'cmd.yours', label: 'Thống kê chiến lược', sub: 'Của bạn', href: 'stats.html' },
+    { type: 'nav', k: 'nav.i.money', ks: 'cmd.yours', label: 'Quản trị vốn', sub: 'Của bạn', href: 'money.html' },
   ];
 
   function build() {
