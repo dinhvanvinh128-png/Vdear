@@ -89,6 +89,8 @@
           </svg>
         </button>
         <div class="tf-tabs" id="tfTabs"></div>
+        <button class="btn-ghost small vp-toggle on" id="vpToggle" type="button"
+                aria-pressed="true" data-i18n="vp.toggle">Volume Profile</button>
       </div>
       <div class="chart-wrap">
         <div class="price-area"><canvas id="priceCanvas"></canvas></div>
@@ -97,6 +99,11 @@
              trên (js/chart.js). Nguồn không có OI cho khung 1W/1M nên khung
              này tự ghi "—" thay vì vẽ một đường bịa ra. -->
         <div class="oi-area"><canvas id="oiCanvas"></canvas></div>
+        <!-- Khung CVD: cộng dồn chênh lệch mua/bán chủ động từ luồng lệnh khớp
+             thật. Mức tuyệt đối vô nghĩa vì nó phụ thuộc mốc bắt đầu — chỉ đọc
+             hình dạng và hướng. Chưa có dữ liệu tape thì khung tự ghi rõ. -->
+        <div class="cvd-area"><canvas id="cvdCanvas"></canvas></div>
+        <div class="tape-info" id="tapeInfo"></div>
         <div class="chart-error" id="chartError" style="display:none"></div>
         <!-- Menu chuột phải riêng cho biểu đồ (máy để bàn). -->
         <div class="chart-menu" id="chartMenu" role="menu" hidden>
@@ -181,7 +188,12 @@
   <script src="js/journal.js"></script>
   <script src="js/share.js"></script>
   <script src="js/share-ui.js"></script>
+  <script src="js/tape.js"></script>
+  <script src="js/cvd.js"></script>
+  <script src="js/vp.js"></script>
+  <script src="js/tape-stream.js"></script>
   <script src="js/chart.js"></script>
+  <script src="js/tape-page.js"></script>
   <script src="js/ticker.js"></script>
   <script src="js/coin.js"></script>
   <script src="js/theme.js"></script>

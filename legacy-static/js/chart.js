@@ -49,11 +49,20 @@
   }
 
   class VdearChart {
-    constructor(priceCanvas, rsiCanvas, oiCanvas) {
+    constructor(priceCanvas, rsiCanvas, oiCanvas, cvdCanvas) {
       this.pc = priceCanvas; this.rc = rsiCanvas; this.oc = oiCanvas || null;
+      this.cc = cvdCanvas || null;
       this.pctx = priceCanvas.getContext('2d');
       this.rctx = rsiCanvas.getContext('2d');
       this.octx = this.oc ? this.oc.getContext('2d') : null;
+      this.cctx = this.cc ? this.cc.getContext('2d') : null;
+      // CVD dóng theo CHỈ SỐ NẾN như OI: cvd[i] ứng với candles[i]. Nến nào
+      // không có dữ liệu tape thì để null và đường sẽ đứt ở đó.
+      this.cvd = [];
+      this.cvdDiv = [];
+      this.cvdMeta = null;
+      this.profile = null;
+      this.showProfile = true;
       // OI đã DÓNG THEO CHỈ SỐ NẾN: oi[i] ứng với candles[i]. Khớp một lần ở
       // setOI() thay vì dò lại mỗi khung vẽ; và nến nào nguồn không có mẫu thì
       // để null, đường sẽ đứt ở đó chứ không nối bừa qua khoảng trống.
@@ -347,6 +356,7 @@
       this._renderPrice();
       this._renderRSI();
       if (this.oc) this._renderOI();
+      if (this.cc) this._renderCVD();
     }
 
     /*
@@ -591,6 +601,9 @@
       ctx.save();
       ctx.beginPath(); ctx.rect(this.padL, plotT, this._plotW(w), plotH); ctx.clip();
 
+      // Volume Profile vẽ TRƯỚC nến để nến luôn nằm trên, không bị che.
+      this._renderProfile(ctx, w, yFor, plotT, plotH);
+
       // nến (chỉ vẽ phần hiển thị)
       const { i0, i1 } = this._visRange();
       const cw = Math.max(1, this._barW(w) * 0.66);
@@ -700,6 +713,149 @@
       ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.strokeRect(bx, plotT + 4, bwid, lines.length * 13 + 6);
       ctx.fillStyle = '#d5dae3'; ctx.textAlign = 'left';
       lines.forEach((l, k) => ctx.fillText(l, bx + 6, plotT + 18 + k * 13));
+    }
+
+    /*
+     * Dóng chuỗi CVD theo chỉ số nến, khớp một lần thay vì dò lại mỗi khung vẽ.
+     * Bucket cách nến quá nửa khung thì để null — nối bừa qua khoảng trống sẽ
+     * vẽ ra một đoạn đi ngang trông như thị trường cân bằng.
+     */
+    setCVD(rows, meta) {
+      this.cvd = new Array(this.candles.length).fill(null);
+      this.cvdMeta = meta || null;
+      if (!rows || !rows.length || !this.candles.length) { this.render(); return; }
+      const stepMs = this.candles.length > 1
+        ? (this.candles[1].time - this.candles[0].time) * 1000 : 60000;
+      const tol = stepMs * 0.5;
+      let j = 0;
+      for (let i = 0; i < this.candles.length; i++) {
+        const t = this.candles[i].time * 1000;
+        while (j + 1 < rows.length && Math.abs(rows[j + 1].t - t) <= Math.abs(rows[j].t - t)) j++;
+        this.cvd[i] = Math.abs(rows[j].t - t) <= tol ? rows[j].cvd : null;
+      }
+      this.render();
+    }
+
+    setDivergences(list) { this.cvdDiv = list || []; this.render(); }
+    hasCVD() { return this.cvd.some((v) => v != null); }
+
+    setProfile(profile) { this.profile = profile || null; this.render(); }
+    toggleProfile(on) {
+      this.showProfile = on == null ? !this.showProfile : !!on;
+      this.render();
+    }
+
+    /*
+     * Volume Profile: histogram NGANG ở mép phải vùng vẽ, bán trong suốt và vẽ
+     * TRƯỚC nến nên nến luôn nằm đè lên trên. Chiếm nhiều nhất 28% bề ngang:
+     * rộng hơn nữa thì nó thành nhân vật chính còn giá thành nền.
+     */
+    _renderProfile(ctx, w, yFor, plotT, plotH) {
+      const p = this.profile;
+      if (!p || !this.showProfile || !p.rows || !p.rows.length) return;
+      const right = w - this.padR;
+      const maxW = this._plotW(w) * 0.28;
+      const step = p.step || 0;
+
+      // Vùng giá trị tô nhẹ trước, để nó nằm dưới cả histogram lẫn nến.
+      if (p.vah != null && p.val != null) {
+        const y1 = yFor(p.vah), y2 = yFor(p.val + step);
+        ctx.fillStyle = 'rgba(216,163,43,0.07)';
+        ctx.fillRect(this.padL, Math.min(y1, y2), this._plotW(w), Math.abs(y2 - y1) || 1);
+      }
+
+      for (let i = 0; i < p.rows.length; i++) {
+        const r = p.rows[i];
+        const y = yFor(r.price + step);
+        const hh = Math.max(1, yFor(r.price) - y);
+        if (y + hh < plotT || y > plotT + plotH) continue;
+        const bw = (r.vol / p.max) * maxW;
+        const inVA = p.val != null && r.price >= p.val && r.price <= p.vah;
+        ctx.fillStyle = inVA ? 'rgba(216,163,43,0.34)' : 'rgba(154,144,120,0.22)';
+        ctx.fillRect(right - bw, y, bw, Math.max(1, hh - 0.5));
+      }
+
+      // POC: đường ngang nổi bật chạy hết khung.
+      if (p.poc != null) {
+        const y = yFor(p.poc + step / 2);
+        ctx.strokeStyle = '#F0C55A'; ctx.globalAlpha = 0.9; ctx.lineWidth = 1.5;
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(this.padL, y); ctx.lineTo(right, y); ctx.stroke();
+        ctx.lineWidth = 1; ctx.globalAlpha = 1;
+        ctx.fillStyle = '#F0C55A'; ctx.font = 'bold 10px Inter, Arial'; ctx.textAlign = 'left';
+        ctx.fillText('POC', this.padL + 4, y - 4);
+      }
+    }
+
+    /*
+     * Khung CVD. Trục dọc lấy theo ĐÚNG phần đang nhìn: CVD là chuỗi cộng dồn
+     * nên mức tuyệt đối của nó vô nghĩa, chỉ có hình dạng trong cửa sổ đang
+     * xem mới đọc được. Mốc 0 chỉ vẽ khi nó thật sự nằm trong khoảng đang xem.
+     */
+    _renderCVD() {
+      if (!this.cc) return;
+      const ctx = this.cctx;
+      const { w, h } = this._prep(this.cc, ctx, this.cc.parentElement.clientHeight || 110);
+      const padT = 8, padB = 12, plotH = h - padT - padB;
+      const { i0, i1 } = this._visRange();
+
+      let lo = Infinity, hi = -Infinity, n = 0;
+      for (let i = i0; i <= i1; i++) {
+        const v = this.cvd[i]; if (v == null) continue;
+        if (v < lo) lo = v; if (v > hi) hi = v; n++;
+      }
+      if (!n) {
+        ctx.fillStyle = COLORS.text; ctx.font = '10px Inter, Arial'; ctx.textAlign = 'left';
+        ctx.fillText(T('cvd.none'), this.padL + 4, padT + 10);
+        return;
+      }
+      if (hi === lo) { hi = lo + 1; lo = lo - 1; }
+      const pad = (hi - lo) * 0.12;
+      lo -= pad; hi += pad;
+      const yFor = (v) => padT + (1 - (v - lo) / (hi - lo)) * plotH;
+
+      if (lo < 0 && hi > 0) {
+        const y0 = yFor(0);
+        ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(this.padL, y0); ctx.lineTo(w - this.padR, y0); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.strokeStyle = '#5AA9F0'; ctx.lineWidth = 1.6; ctx.beginPath();
+      let started = false;
+      for (let i = i0; i <= i1; i++) {
+        const v = this.cvd[i];
+        if (v == null) { started = false; continue; }
+        const x = this._xForIndex(i, w), y = yFor(v);
+        if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.lineWidth = 1;
+
+      // Phân kỳ: nối hai pivot bằng một đoạn thẳng, kèm nhãn.
+      for (let k = 0; k < this.cvdDiv.length; k++) {
+        const d = this.cvdDiv[k];
+        if (d.toIdx < i0 || d.fromIdx > i1) continue;
+        const va = this.cvd[d.fromIdx], vb = this.cvd[d.toIdx];
+        if (va == null || vb == null) continue;
+        const col = d.type === 'bullish' ? COLORS.up : COLORS.down;
+        ctx.strokeStyle = col; ctx.lineWidth = 1.4; ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(this._xForIndex(d.fromIdx, w), yFor(va));
+        ctx.lineTo(this._xForIndex(d.toIdx, w), yFor(vb));
+        ctx.stroke();
+        ctx.setLineDash([]); ctx.lineWidth = 1;
+        ctx.fillStyle = col; ctx.font = 'bold 9px Inter, Arial'; ctx.textAlign = 'center';
+        ctx.fillText(d.type === 'bullish' ? '▲' : '▼',
+          this._xForIndex(d.toIdx, w), yFor(vb) + (d.type === 'bullish' ? 12 : -6));
+      }
+
+      // Nhãn: nói rõ đây là chuỗi cộng dồn từ một mốc, không phải số tuyệt đối.
+      ctx.fillStyle = '#5AA9F0'; ctx.font = 'bold 10px Inter, Arial'; ctx.textAlign = 'left';
+      ctx.fillText('CVD', this.padL + 4, padT + 10);
+      if (this.cvdMeta && this.cvdMeta.approximate) {
+        ctx.fillStyle = COLORS.text; ctx.font = '9px Inter, Arial';
+        ctx.fillText(T('cvd.approx'), this.padL + 34, padT + 10);
+      }
     }
 
     _renderRSI() {

@@ -139,6 +139,10 @@
         <div class="lev-scale"><span>x1</span><span>x25</span><span>x50</span><span>x75</span><span>x100</span></div>
       </div>
       <div class="plan-grid" id="planGrid"></div>
+      <!-- Bậc tin cậy từ Volume Profile. Nằm RIÊNG, không chung hàng với năm ô
+           hội tụ: nếu để chung, mắt sẽ đọc nó thành điều kiện thứ sáu, và mọi
+           con số winrate lịch sử đều dựng trên thang 5 điều kiện. -->
+      <div id="vpTier"></div>
       <button type="button" class="jr-save" id="cbJournal">${T('journal.save')}</button>
       <div id="cbShare"></div>
       <p class="hint"><b>${T('coin.refOnly')}</b></p>`;
@@ -191,6 +195,16 @@
     });
 
     mountShare(sig, candles);
+
+    // js/tape-page.js nghe sự kiện này để gắn lại luồng lệnh khớp và vẽ bậc
+    // tin cậy Volume Profile vào #vpTier.
+    try {
+      const sr = TA.supportResistance(candles, sig.price) || { supports: [], resistances: [] };
+      const levels = sr.supports.concat(sr.resistances).map((x) => x.price);
+      window.dispatchEvent(new CustomEvent('vdear:coinchange', {
+        detail: { base: base, tf: currentTf, levels: levels },
+      }));
+    } catch (e) { /* không có S&R thì không có gì để đối chiếu */ }
   }
 
   /*
@@ -493,7 +507,12 @@
 
   async function init() {
     document.title = base + '/USDT — Vdear';
-    chart = new window.VdearChart($('priceCanvas'), $('rsiCanvas'), $('oiCanvas'));
+    chart = new window.VdearChart($('priceCanvas'), $('rsiCanvas'), $('oiCanvas'),
+      $('cvdCanvas'));
+    // js/tape-page.js cần đúng thể hiện biểu đồ này để đẩy CVD và Volume
+    // Profile vào. Một biến toàn cục là cách rẻ nhất và không kéo theo
+    // ràng buộc thứ tự nạp script.
+    window.__vdearChart = chart;
     wireChartMenu();
     wireOiBadge();
     preloadShareLogo();
