@@ -1,22 +1,16 @@
 /*
- * QUAN TRẮC — điểm cuối sức khoẻ và cảnh báo Telegram.
+ * QUAN TRẮC — điểm cuối trạng thái nguồn dữ liệu.
  *
- * Mục 7 của docs/INFRA-SCALING.md.
- *
- * KHOÁ TELEGRAM CHỈ NẰM Ở ĐÂY, KHÔNG BAO GIỜ XUỐNG TRÌNH DUYỆT
- * -----------------------------------------------------------
- * TELEGRAM_BOT_TOKEN và TELEGRAM_CHAT_ID là biến môi trường của hàm server.
- * Trình duyệt gọi /api/health để ĐỌC trạng thái; việc gửi tin nhắn do chính
- * hàm này làm. Không có đường nào để lộ token ra ngoài, và điểm cuối này cũng
- * không nhận nội dung tin nhắn từ người gọi — nếu nhận thì bất kỳ ai cũng biến
- * được nó thành máy phát tin rác.
+ * Mục 7 của docs/INFRA-SCALING.md, phần ĐO. Phần GỬI CẢNH BÁO đã bỏ theo yêu
+ * cầu: endpoint này chỉ trả trạng thái, không gửi thông báo đi đâu cả và không
+ * giữ khoá của dịch vụ nào.
  *
  * ĐO GÌ
  * -----
- * Bốn thứ mục 7 yêu cầu, và mỗi thứ có một ngưỡng nói ra được:
- *   · độ trễ dữ liệu từng sàn — sàn nào ngừng cập nhật quá 5 phút thì báo
+ *   · độ trễ dữ liệu từng sàn — sàn nào ngừng cập nhật quá 5 phút thì đánh dấu
  *   · tỉ lệ lỗi khi gọi API
  *   · thời gian chạy mỗi lượt kiểm
+ *   · lệch đồng hồ giữa ta và sàn
  *   · số tín hiệu sinh ra mỗi ngày (cần kho dữ liệu, xem GHI CHÚ cuối tệp)
  */
 
@@ -26,11 +20,6 @@ const TIMEOUT_MS = 6000;
 
 // Ngưỡng theo yêu cầu: một sàn ngừng cập nhật quá 5 phút là bất thường.
 const STALE_MS = 5 * 60 * 1000;
-
-// Chống spam: cùng một cảnh báo không gửi lại trong vòng 30 phút. Không có
-// chặn này thì một sàn hỏng nửa ngày sẽ gửi hàng trăm tin và người nhận sẽ tắt
-// thông báo — tức là mất luôn tác dụng cảnh báo.
-const ALERT_DEBOUNCE_MS = 30 * 60 * 1000;
 
 const SOURCES = [
   { id: 'binance', url: 'https://fapi.binance.com/fapi/v1/time', pick: (j) => j && j.serverTime },
@@ -120,53 +109,9 @@ function summarize(probes, lastSeen, now, staleMs) {
   };
 }
 
-/*
- * Có nên gửi cảnh báo không.
- *
- * Trả về danh sách cảnh báo CẦN gửi sau khi đã lọc trùng theo thời gian.
- * `sentAt` = { key: ms } của những cảnh báo đã gửi.
- */
-function alertsFor(summary, sentAt, now, debounceMs) {
-  const deb = num(debounceMs) != null ? num(debounceMs) : ALERT_DEBOUNCE_MS;
-  const out = [];
-  for (const s of (summary && summary.sources) || []) {
-    if (s.state !== 'down') continue;
-    const key = 'down:' + s.id;
-    const last = sentAt ? num(sentAt[key]) : null;
-    if (last != null && now - last < deb) continue;   // vừa gửi rồi, im lặng
-    out.push({
-      key: key,
-      text: 'Vdearypto: sàn ' + s.id + ' ngừng cập nhật '
-        + Math.round((s.sinceMs || 0) / 60000) + ' phút.',
-    });
-  }
-  return { alerts: out, debounceMs: deb };
-}
-
-/* ----------------------------- gửi Telegram ---------------------------- */
-
-async function sendTelegram(text) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chat = process.env.TELEGRAM_CHAT_ID;
-  // Chưa cắm khoá thì đây không phải lỗi: quan trắc vẫn chạy, chỉ là không có
-  // ai được đánh thức. Trả trạng thái ra ngoài để biết mà cắm.
-  if (!token || !chat) return { sent: false, reason: 'not-configured' };
-  try {
-    const r = await fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chat, text: text, disable_notification: false }),
-    });
-    return { sent: r.ok, reason: r.ok ? null : 'HTTP ' + r.status };
-  } catch (e) {
-    return { sent: false, reason: String((e && e.message) || e) };
-  }
-}
-
 /* --------------------------- đệm của instance -------------------------- */
 
 let lastSeen = {};
-let sentAt = {};
 let cache = null;
 const REFRESH_MS = 60 * 1000;
 
@@ -177,19 +122,9 @@ async function build() {
   for (const p of probes) if (p.ok) lastSeen[p.id] = now;
 
   const summary = summarize(probes, lastSeen, now, STALE_MS);
-  const { alerts } = alertsFor(summary, sentAt, now, ALERT_DEBOUNCE_MS);
-
-  const delivered = [];
-  for (const a of alerts) {
-    const res = await sendTelegram(a.text);
-    if (res.sent) sentAt[a.key] = now;
-    delivered.push({ key: a.key, sent: res.sent, reason: res.reason });
-  }
 
   return Object.assign({ ok: true }, summary, {
     jobMs: Date.now() - started,
-    alerts: delivered,
-    telegramConfigured: !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID),
     generatedAt: new Date(now).toISOString(),
   });
 }
@@ -218,5 +153,5 @@ module.exports = async function handler(req, res) {
  * có worker và kho dữ liệu như docs/INFRA-SCALING.md mô tả — phần đó cần hạ
  * tầng bên ngoài repo này.
  */
-module.exports._pure = { summarize, alertsFor, STALE_MS, ALERT_DEBOUNCE_MS };
-module.exports._reset = function () { lastSeen = {}; sentAt = {}; cache = null; };
+module.exports._pure = { summarize, STALE_MS };
+module.exports._reset = function () { lastSeen = {}; cache = null; };

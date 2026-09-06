@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
-// api/oi-scan.js là CommonJS (module.exports) như api/etf-flow.js sẵn có, còn
+// api/oi-scan.js là CommonJS (module.exports) như mọi hàm trong api/, còn
 // bài kiểm chạy ở chế độ ESM — nên nạp qua createRequire.
 const require = createRequire(import.meta.url);
 const MOD = path.join(process.cwd(), 'api/oi-scan.js');

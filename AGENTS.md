@@ -30,13 +30,18 @@ hơn là không có số nào**.
   thanh lý, giao dịch cá voi. Không `Math.random()` cho bất cứ thứ gì người dùng
   đọc như dữ liệu.
 * **Không có nguồn thì nói thẳng là chưa có nguồn** — nêu rõ thiếu gì và vì sao.
-  Xem `noSource()` cũ hoặc ô "Nguồn không công bố" trong `js/etf.js`.
+  Xem cách `js/derivatives.js` ghi lý do từng sàn bị loại khỏi phép gộp funding,
+  hoặc cách `/liquidation` in "không mức nào thoả điều kiện" thay vì hạ chuẩn.
 * **Số 0 khác với không có dữ liệu.** `$0` là dữ liệu; `—` là thiếu dữ liệu.
-  Gộp hai thứ này đã từng gây lỗi thật (xem lịch sử `js/etf.js`).
+  Gộp hai thứ này đã gây lỗi thật nhiều lần: `Number(null) === 0` từng biến
+  "chưa đặt ngưỡng" thành "ngưỡng 0%" trong `js/regime-stats.js`, và từng sinh
+  ra một con số R bịa trong `js/journal.js`.
 * **Không đoán endpoint API.** Sai thì phải sửa được bằng biến môi trường, và
   thông báo lỗi phải nói rõ *đã gọi gì* và *nhận được cấu trúc gì*.
 * **API key chỉ nằm ở server.** Trình duyệt không bao giờ được thấy key. Cần key
-  thì viết serverless function trong `api/`, như `api/etf-flow.js`.
+  thì viết serverless function trong `api/`. Hiện KHÔNG endpoint nào cần key —
+  toàn bộ `api/` chỉ dùng dữ liệu công khai; chúng nằm ở server để một máy gọi
+  thay cho hàng nghìn IP người dùng, không phải để giấu khoá.
 * **Không tạo chỉ số mới nếu chưa xác định công thức.** Không có "điểm thị
   trường 68/100" nếu không nói được 68 tính từ đâu.
 * Không hứa "chắc chắn thắng", không tạo tín hiệu "100% chính xác".
@@ -53,12 +58,14 @@ Bản đang chạy là **trang tĩnh**, không có bước build:
       bubbles.html          bóng bóng thị trường
       js/api.js             gọi 4 sàn + CoinGecko, gộp dữ liệu
       js/indicators.js      RSI, hỗ trợ/kháng cự, chấm điểm tín hiệu
-      js/etf.js             dòng tiền ETF + biểu đồ khối 3D theo quỹ
       js/chart.js           chart nến tự vẽ trên canvas
       js/navmenu.js         menu 3 gạch / dải icon bên trái
       js/hero.js            thẻ Signal Radar + Trading plan, bộ chọn coin/khung
       js/radarrain.js       mưa logo + mũi tên xu hướng ở nền thẻ radar
-    api/etf-flow.js         serverless function, giữ API key
+    api/oi-scan.js          quét Open Interest top 300, một máy gọi cho tất cả
+    api/term-structure.js   basis hợp đồng quý + funding gộp 4 sàn
+    api/breadth.js          độ rộng thị trường (MA200, đỉnh 30 ngày)
+    api/health.js           trạng thái bốn sàn, chỉ ĐO chứ không gửi cảnh báo
 
 Thư mục `app/`, `lib/`, `components/` là app Next.js **không được deploy**.
 `vercel.json` đặt `outputDirectory: legacy-static`.
@@ -110,6 +117,7 @@ hơn nhiều lần.
 * Cảnh 3D phải **dừng render** khi khuất tầm nhìn / tab ẩn, và tôn trọng
   `prefers-reduced-motion`.
 * Phải có đường lùi cho máy không có WebGL và cho điện thoại yếu.
-* Đã có sẵn hai thứ 3D **không cần thư viện**, dùng lại được:
-  `js/etf.js` (`isoChart`, chiếu isometric bằng SVG) và `js/bubbles.js` (canvas 2D).
+* Đã có sẵn cách vẽ **không cần thư viện**, dùng lại được: `js/bubbles.js`
+  (canvas 2D), `js/liq-page.js` (heatmap + đường giá chung một trục) và
+  `js/chart.js` (nến, RSI, OI, CVD, Volume Profile).
 * Số liệu trong cảnh 3D vẫn phải theo mục 2. Đẹp không phải lý do để bịa số.

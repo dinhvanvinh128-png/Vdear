@@ -616,8 +616,6 @@
       th.addEventListener('click', () => setSort(th.dataset.sort)));
     updateSortUI();
 
-    // ETF nạp độc lập: nguồn khác hẳn, hỏng cũng không được kéo theo bảng coin.
-    if (window.VdearETF) window.VdearETF.init('etfBody');
 
     // Long/Short cũng nạp độc lập và KHÔNG await: nguồn riêng, chậm hay hỏng
     // đều không được giữ bảng coin lại. Làm mới 5 phút một lần cho khớp với

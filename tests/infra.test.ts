@@ -323,32 +323,6 @@ test('CHƯA TỪNG THẤY SÀN THÌ LÀ "unknown", KHÔNG PHẢI "chết"', () =
   assert.equal(s.healthy, true, 'chưa biết thì không được kết luận là hỏng');
 });
 
-test('CHỐNG SPAM: cùng một cảnh báo không gửi lại trong cửa sổ chặn', () => {
-  const now = 1_700_000_000_000;
-  const summary = H.summarize(
-    [{ id: 'binance', ok: false, latencyMs: 1, error: 'x' }],
-    { binance: now - 20 * 60000 }, now, H.STALE_MS);
-
-  const lan1 = H.alertsFor(summary, {}, now, H.ALERT_DEBOUNCE_MS);
-  assert.equal(lan1.alerts.length, 1);
-  assert.ok(/binance/.test(lan1.alerts[0].text));
-
-  // Vừa gửi xong -> im lặng
-  const lan2 = H.alertsFor(summary, { 'down:binance': now - 60000 }, now, H.ALERT_DEBOUNCE_MS);
-  assert.equal(lan2.alerts.length, 0,
-    'một sàn hỏng nửa ngày mà gửi hàng trăm tin thì người nhận sẽ tắt thông báo');
-
-  // Quá cửa sổ chặn -> nhắc lại
-  const lan3 = H.alertsFor(summary, { 'down:binance': now - 60 * 60000 }, now, H.ALERT_DEBOUNCE_MS);
-  assert.equal(lan3.alerts.length, 1);
-});
-
-test('sàn khoẻ thì không sinh cảnh báo nào', () => {
-  const now = 1_700_000_000_000;
-  const s = H.summarize([{ id: 'binance', ok: true, latencyMs: 20 }], { binance: now }, now);
-  assert.equal(H.alertsFor(s, {}, now).alerts.length, 0);
-});
-
 test('tỉ lệ lỗi tính trên số nguồn đã đo', () => {
   const now = 1_700_000_000_000;
   const s = H.summarize([

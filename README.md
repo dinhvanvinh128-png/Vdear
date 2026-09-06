@@ -200,208 +200,28 @@ block.
 
 ---
 
-## Dòng tiền ETF
+## Hàm server trong `api/`
 
-`api/etf-flow.js` là một Vercel Serverless Function chạy cùng bản tĩnh. Nó tồn
-tại vì một lý do duy nhất: **API key không được xuống trình duyệt.**
+Bản deploy là trang tĩnh, nhưng có bốn hàm serverless chạy cùng. Chúng ở server
+vì **hạn mức IP**, không phải vì khoá bí mật — toàn bộ đều dùng dữ liệu công
+khai và **không endpoint nào cần API key**.
 
-Dòng tiền ròng của ETF (tiền thực vào/ra quỹ mỗi ngày) tính từ số chứng chỉ quỹ
-được phát hành thêm hoặc mua lại. Nó **không suy ra được** từ giá hay khối lượng
-khớp lệnh — khối lượng là nhà đầu tư sang tay nhau, tiền không chạm tới quỹ.
-Không nguồn miễn phí nào công bố số này.
+| endpoint | làm gì | cache |
+|---|---|---|
+| `/api/oi-scan` | Open Interest + Long/Short cho ~300 coin | 5 phút |
+| `/api/term-structure` | basis hợp đồng quý, funding gộp 4 sàn | 5 phút |
+| `/api/breadth` | % coin trên MA200, đỉnh 30 ngày, tăng trong ngày | 30 phút |
+| `/api/health` | trạng thái bốn sàn, độ trễ, lệch đồng hồ | 1 phút |
 
-### Nguồn: SoSoValue
+Lý do đặt ở server, lấy `/api/breadth` làm ví dụ: một lượt tính cần nến ngày
+của 150 coin. Để trình duyệt tự gọi thì mỗi người mở trang lại bắn 150 request
+từ IP của họ tới Binance, và Binance chặn IP đó. Một máy gọi, CDN phục vụ tất
+cả.
 
-`POST /openapi/v2/etf/currentEtfDataMetrics`, header `x-soso-api-key`, body
-`{"type":"us-<symbol>-spot"}`. **Một nguồn duy nhất** phủ hết danh sách theo dõi — nên
-cả bảng cùng một ngày và cùng một cách tính, không phải giải thích vì sao dòng
-này lệch dòng kia.
+Mọi phản hồi đi qua `api/_envelope.js` nên đều có `ageSeconds` và `stale`. Thiếu
+`generatedAt` thì bị coi là **cũ** chứ không tự đặt là bây giờ — "không biết
+tuổi" phải nghiêng về thận trọng, vì phía kia là hiện một con số cũ như thể nó
+vừa mới.
 
-Đường dẫn **đã xác nhận chạy được**: API trả HTTP 200 kèm dữ liệu thật, với các
-trường `totalNetAssets`, `totalNetAssetsPercentage`, `dailyNetInflow`,
-`cumNetInflow`, `dailyTotalValueTraded`, `totalTokenHoldings`, `list`. Đó là
-tên trường thật, đọc từ phản hồi thật, không phải phỏng đoán. `list` là bảng
-chia theo từng quỹ, dùng để dựng cột "quỹ đóng góp nhiều nhất" và đếm số quỹ
-đang niêm yết (SoSoValue hiện là "×12", "×11").
-
-Bảng lấy đủ bốn chỉ số nguồn công bố, không chỉ dòng tiền:
-`dailyNetInflow` → **Dòng tiền ròng ngày**, `totalNetAssets` → **Tài sản ròng**,
-`dailyTotalValueTraded` → **GT giao dịch**, `list.length` → **số quỹ**.
-
-Giá trị có thể là số trần, chuỗi số, hoặc object bọc `{value, date}` — bộ đọc
-chịu được cả ba. Không đọc ra thì **báo lỗi kèm chẩn đoán**, không suy ra số.
-
-`m.sosovalue.com/...` là **giao diện web, không phải API** — đọc dữ liệu từ đó
-là scrape, vi phạm điều khoản và bị CORS chặn. Hàm này chỉ gọi API chính thức.
-
-### Vỏ rỗng không phải là số 0 — phân biệt bằng TÀI SẢN RÒNG
-
-Nguồn trả HTTP 200 đúng khuôn cho cả những mã tài sản nó không nhận ra: mọi chỉ
-số bằng 0, không quỹ nào.
-
-Nhưng **số 0 thật cũng tồn tại**: trang SoSoValue cho thấy LINK, HBAR, AVAX,
-DOGE, DOT có dòng tiền đúng `$0.00` mà tài sản ròng vẫn là $170.25M, $56.88M,
-$37.03M… Quỹ có thật, chỉ là hôm đó không ai tạo/huỷ chứng chỉ. Đó là **dữ
-liệu**, phải hiện `$0`.
-
-Nên dấu hiệu phân biệt **không phải** thiếu ngày, mà là **tài sản ròng**: quỹ có
-tồn tại thì tài sản ròng không thể bằng 0. Vỏ rỗng = không dòng tiền, không tài
-sản ròng, không giá trị giao dịch, không quỹ nào — tài sản đó vào `notCovered`
-và bảng ghi "Nguồn không công bố".
-
-### Lấy bảng tổng quan, không phải 12 lần gọi riêng
-
-Trang "Tổng quan ETF Crypto Giao ngay Mỹ / All US" của SoSoValue liệt kê mọi
-tài sản kèm đủ bốn chỉ số trong **một bảng**, ở mã loại `us-crypto-spot` (đuôi
-URL của chính trang đó). Nên hàm gọi bảng đó **một lần** thay vì hỏi từng tài
-sản: cùng một ảnh chụp, cùng một ngày, và không phải đoán mã riêng của từng tài
-sản — mã sai chính là thứ làm XRP và HYPE ra `$0` trong khi thật ra là $28.14M
-và $14.71M.
-
-Việc chọn cách nào **không dựa vào phỏng đoán**: bảng tổng quan chỉ được dùng
-khi nhận ra được ít nhất 4 tài sản trong `list` của nó — hoặc bằng số tài sản
-đang theo dõi, nếu theo dõi ít hơn 4 (hỏi 3 mà đòi nhận ra 4 thì bảng tổng quan
-không đời nào dùng được). Nhận ra ít hơn nghĩa là
-`list` không phải bảng theo tài sản, và hàm rơi xuống cách gọi từng tài sản,
-ghi lý do vào `overviewNote`. Trường `via` cho biết đường nào đã chạy.
-
-Mã quỹ (IBIT, GBTC, ETHA…) không có trong bảng tổng quan nên vẫn phải gọi riêng
-— nhưng **chỉ cho tài sản có dòng tiền khác 0** (ngày không ai tạo/huỷ chứng chỉ
-thì chẳng quỹ nào để xếp hạng), và lần gọi đó **chỉ lấy danh sách quỹ**, không
-được ghi đè con số đã đúng của bảng tổng quan.
-
-### Thử mã tài sản, có kiểm chứng (chỉ khi bảng tổng quan không dùng được)
-
-`us-btc-spot`, `us-eth-spot`, `us-sol-spot` đã chạy thật. Các tài sản khác trả
-vỏ rỗng với cùng khuôn đó — khuôn đúng, mã có thể khác, vì vài nguồn dùng tên
-đầy đủ (`us-ripple-spot`, `us-dogecoin-spot`, `us-hyperliquid-spot`) thay cho
-mã ngắn.
-
-Nên mỗi tài sản có một danh sách mã để thử lần lượt, và **chỉ nhận bản ghi có
-ngày thật**. Đây không phải đoán bừa: mỗi lần thử đều được kiểm chứng bằng dữ
-liệu trả về, thử hết mà vẫn rỗng thì báo "nguồn không có tài sản này" kèm danh
-sách đã thử. Biết chắc mã đúng thì đặt `SOSOVALUE_TYPE_MAP` để khỏi phải thử.
-
-### Sai thì sửa bằng env, không phải sửa code
-
-Đường dẫn / method / tên header / mã tài sản đều ghi đè được
-(`SOSOVALUE_API_BASE`, `SOSOVALUE_ETF_PATH`, `SOSOVALUE_ETF_METHOD`,
-`SOSOVALUE_KEY_HEADER`, `SOSOVALUE_TYPE_MAP`). Và hàm tự chẩn đoán:
-
-* Gọi hỏng → `errors[]` ghi **đúng thứ đã gọi**:
-  `HTTP 404 · POST /openapi/... type=us-doge-spot`.
-* Số ra **không khớp trang sosovalue.com** → gọi `/api/etf-flow?diag=1`. Nó
-  trả về, cho từng tài sản: các khoá thật của bản ghi, tên trường đã lấy, và
-  **mọi số đọc được bên trong object bọc đó**. Ví dụ
-  `netCandidates: {value: 0.53, valueUsd: 232100000}` cho biết ngay là đang
-  lấy nhầm `value` thay vì `valueUsd`. Chỉ tên trường và số, không bao giờ kèm
-  key.
-* Mọi tài sản ra **cùng một con số** → `sameValue: true`, và bảng tự hiện cảnh
-  báo đừng tin nó. Nghĩa là nhà cung cấp không dùng tham số `type`, trả cùng
-  một bản ghi cho mọi lần gọi. Trông vẫn hợp lý nên không ai nhận ra.
-* Đọc không ra → báo **từng trường ứng viên kèm kiểu của nó**:
-  `dailyNetInflow=null · list=mảng[0]`, hoặc `dailyNetInflow={amount,asOf}`.
-  Biết kiểu thì sửa dứt điểm; biết mỗi tên trường thì vẫn phải đoán thêm vòng.
-
-Phản hồi dạng **mảng** thì lấy bản ghi có ngày mới nhất, không phải phần tử
-đầu — nhà cung cấp xếp cũ-trước thì `d[0]` là ngày cũ nhất, số hiện ra sai hoàn
-toàn mà trông vẫn hợp lý.
-
-### Một ngày cho cả bảng
-
-Cùng một nguồn nhưng mỗi tài sản chốt số xong vào lúc khác nhau. Bảng trộn hai
-ngày mà không nói ra thì cộng lại ra một con số không tồn tại. Hàm chốt **một
-ngày cho cả bảng**: ngày mà nhiều tài sản có nhất (hoà thì lấy ngày mới hơn).
-Tài sản nào nguồn chưa chốt xong ngày ấy thì giữ ngày riêng nhưng **bị đánh dấu
-⚠** ở cột ngày, và bảng hiện cảnh báo `mixedDates`.
-
-### Bấm vào tài sản để xem từng quỹ
-
-Bảng chính chỉ đủ chỗ cho 3 quỹ đóng góp lớn nhất, nhưng API trả về **tất cả**.
-Bấm vào tên tài sản để mở **biểu đồ khối 3D** (isometric): mỗi quỹ một cột,
-chiều cao theo **trị tuyệt đối** so với quỹ lớn nhất — quỹ rút tiền ra vẫn thấy
-được độ lớn thay vì tụt về 0, quỹ đứng im vẫn còn một tấm mỏng thay vì biến
-mất. Giá trị ghi trên đỉnh, mã quỹ ghi dưới bệ, **cả hai nằm ngang**.
-
-Vẽ bằng SVG với phép chiếu isometric thật, không dùng CSS 3D transform —
-transform vỡ khi phóng to và không kiểm soát được thứ tự che khuất:
-
-```
-sx = (x − y)·CX        sy = (x + y)·CY − z
-```
-
-Các cột **quây thành cụm** trên lưới, không phải một hàng: hàng 0 ở sau, hàng
-cuối ở trước, `rows = n≤4 ? 1 : n≤8 ? 2 : 3`. Danh sách quỹ đã sắp giảm dần nên
-**cột cao nằm hàng sau, cột thấp nằm hàng trước** — cột trước chỉ che phần chân
-của cột sau, còn đỉnh (chỗ mang thông tin) vẫn thấy hết. Trong cùng một hàng,
-khoảng cách đúng bằng bề rộng chiếu của một cột nên không cột nào chồng cột nào
-theo chiều ngang.
-
-Vẽ từ sau ra trước (thuật toán hoạ sĩ), sắp theo `(x + y)` tăng dần: tổng đó
-lớn hơn nghĩa là gần người xem hơn, phải vẽ sau để nằm đè lên.
-
-Bệ là hình chữ nhật **thẳng trục trong không gian**, nên chiếu ra đúng hình
-thoi như tấm nền trong ảnh mẫu.
-
-Mã quỹ in **úp trên mặt trên** của cột bằng ma trận `(CX, CY, −CX, CY)` — chính
-là ảnh chiếu của hai trục x và y, nên chữ trông như in lên mặt khối chứ không
-phải dán nổi lên trên. Cỡ chữ tính bằng đơn vị không gian rồi để ma trận phóng
-ra.
-
-Ba mặt ba độ sáng là toàn bộ thứ tạo ra cảm giác khối, nên nền sáng phải đổi cả
-ba (bạc hà nhạt trên nền trắng chỉ đạt 2.12:1, gần như tàng hình) mà vẫn giữ
-đúng thứ tự trên > phải > trái. Mặt trên đạt ≥3:1 so với nền panel ở cả hai nền,
-và mọi mặt có viền mảnh để đường bao của khối luôn đọc được.
-
-Vì mã quỹ nằm **trên** mặt khối, tương phản của nó phải đo với **màu mặt khối**,
-không phải với nền trang. Một màu chữ tối dùng chung cho cả hai nền: mặt khối ở
-nền sáng tuy đậm hơn nhưng vẫn là tông trung, nên chữ tối vẫn hơn chữ sáng ở đó
-(5.25:1 so với 3.00:1). Đo đủ 6 tổ hợp (2 nền × xanh/đỏ/xám), thấp nhất 5.25:1.
-
-Hình vẽ `aria-hidden`; con số đến với trình đọc màn hình qua một danh sách
-`.sr-only` — nhồi 12 con số vào một `aria-label` thì nghe không ra gì.
-
-Nút là `<button>` thật với `aria-expanded`/`aria-controls`, nên bàn phím và trình
-đọc màn hình dùng được. Tài sản không có dữ liệu quỹ thì **không dựng nút** —
-nút bấm ra chỗ trống là nút lừa người. Nguồn ghi nhiều quỹ hơn số chi tiết trả
-về thì dòng chi tiết nói thẳng ra chênh lệch đó.
-
-Handler gắn một lần ở gốc (uỷ quyền sự kiện), và những dòng đang mở được nhớ
-lại rồi mở lại sau mỗi lần vẽ lại — nhịp làm mới 15 phút không được đóng sập
-cái người ta đang đọc.
-
-### Làm mới
-
-Dữ liệu này đổi **mỗi ngày một lần**, sau khi phiên Mỹ đóng cửa — nên không cần
-nhịp 30s như bảng coin. Nhưng không làm mới lần nào thì tab mở qua đêm sẽ hiện
-số hôm qua mà không báo gì; đó mới là vấn đề thật.
-
-Bảng ETF tự lấy lại **mỗi 15 phút** khi tab đang hiện, và **mỗi khi bạn quay lại
-tab** sau hơn 5 phút — trình duyệt hay bóp nghẹt `setInterval` ở tab ẩn, nên chỉ
-dựa vào nhịp định kỳ là không đủ. Hàm server đặt `s-maxage=300` nên phần lớn lần
-gọi dừng ở CDN, không chạm tới nhà cung cấp. Chân bảng ghi **giờ lấy số**.
-
-Lấy lại mà hỏng thì **giữ nguyên bảng đang có**. `fetchFlow` trả `null` khi hàm
-server lỗi, và vẽ lại với `null` sẽ thay bảng đúng bằng câu "chưa cấu hình
-nguồn" — vừa xoá mất dữ liệu người ta đang đọc, vừa nói sai, vì key vẫn cấu hình
-đủ.
-
-### Số 0 không phải là chỗ trống
-
-Ngày không quỹ nào tạo/huỷ chứng chỉ thì dòng tiền **đúng bằng 0** — đó là dữ
-liệu, không phải thiếu dữ liệu. `$0` hiện ra với chip trung tính (không xanh
-không đỏ); chỉ khi thật sự không đọc được mới hiện `—`.
-
-### Bật lên
-
-1. Lấy API key ở SoSoValue.
-2. Vercel → Settings → Environment Variables → `SOSOVALUE_API_KEY`.
-3. Redeploy.
-
-Chưa có key → `configured:false`, giao diện hiện "chưa cấu hình nguồn" và để
-trống. Có key mà gọi hỏng → `available:false` kèm lý do từng tài sản. Không
-đường nào trong `api/etf-flow.js` sinh ra số liệu.
-
-**Key chỉ nằm ở biến môi trường.** Không commit vào repo, không dán vào chat,
-không để lọt vào thông báo lỗi — hàm scrub key ra khỏi mọi message trước khi
-trả về. Key đã lộ ở đâu đó thì coi như hỏng: revoke và tạo key mới.
+`/api/health` chỉ **đo và trả trạng thái**. Nó không gửi thông báo đi đâu cả và
+không giữ khoá của dịch vụ nào; muốn theo dõi thì chủ động đọc endpoint này.

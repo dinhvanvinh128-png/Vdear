@@ -72,26 +72,6 @@ window.VDEAR_CONFIG = {
   // phỏng: giá bịa nằm cạnh giá thật là thứ nguy hiểm nhất trên một trang tài
   // chính. Trường `base` cũ đã bỏ vì nó chính là hạt giống của phần mô phỏng đó.
 
-  // ETF giao ngay niêm yết tại Mỹ.
-  //
-  // Hai đại lượng KHÁC HẲN nhau, đừng lẫn:
-  //  · DÒNG TIỀN (net flow) — tiền thực vào/ra quỹ mỗi ngày, tính từ số chứng
-  //    chỉ quỹ phát hành thêm/mua lại. Chỉ nhà cung cấp có API mới công bố;
-  //    lấy qua hàm server /api/etf-flow để API key không xuống trình duyệt.
-  //  · GIÁ — giá cổ phiếu quỹ, lấy được từ nguồn báo giá miễn phí.
-  //    KHÔNG suy ra dòng tiền từ giá hay khối lượng khớp lệnh: khối lượng là
-  //    nhà đầu tư sang tay nhau, tiền không hề chạm tới quỹ.
-  etf: {
-    // Danh sách tài sản. `type` là mã nhóm ETF phía nhà cung cấp; tài sản nào
-    // nguồn chưa có thì hàng đó báo "không lấy được", không bịa số.
-    assets: [
-      { symbol: 'BTC', label: 'Bitcoin' },
-      { symbol: 'ETH', label: 'Ethereum' },
-      { symbol: 'SOL', label: 'Solana' },
-    ],
-
-  },
-
   // Số coin quét & hiển thị
   scan: {
     universeSize: 'all',  // 'all' = quét TOÀN BỘ coin futures; hoặc đặt 1 số để giới hạn

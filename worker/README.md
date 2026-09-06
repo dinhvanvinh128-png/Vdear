@@ -26,8 +26,6 @@ Nói cách khác: đây là mã sẵn sàng để triển khai, không phải m�
 ```bash
 export DATABASE_URL="postgres://..."        # Postgres đã bật TimescaleDB
 export SYMBOLS="BTCUSDT,ETHUSDT,SOLUSDT"    # danh sách cặp theo dõi
-export TELEGRAM_BOT_TOKEN="..."             # tuỳ chọn, để nhận cảnh báo
-export TELEGRAM_CHAT_ID="..."
 
 psql "$DATABASE_URL" -f ../sql/timescale.sql
 node ingest.mjs

@@ -176,18 +176,23 @@ khác nhau, không phải so hai thuật toán.
 Bảng `ops_metrics` (hypertable) ghi mỗi phút: `signals_generated`,
 `lag_seconds` theo sàn, `api_error_rate`, `job_duration_ms`, `ws_reconnects`.
 
-Cảnh báo Telegram (Bot API, không cần thư viện — một `fetch` POST):
+**Không gửi cảnh báo ra kênh thông báo nào.** Hệ thống chỉ ĐO và ghi lại;
+`/api/health` trả trạng thái cho ai muốn xem, còn việc theo dõi là chủ động đọc
+chứ không phải bị đánh thức. Bỏ phần gửi thông báo cũng bỏ luôn nhu cầu giữ
+khoá của một dịch vụ bên thứ ba trong biến môi trường.
 
-| điều kiện | mức |
+Ngưỡng để ĐÁNH DẤU trạng thái (không phải để gửi tin):
+
+| điều kiện | trạng thái |
 |---|---|
-| worker không heartbeat > 2 phút | đỏ |
-| một sàn không có dữ liệu mới > 5 phút | đỏ |
-| lag > 60 s liên tục 10 phút | vàng |
-| tỉ lệ lỗi API > 5% trong 15 phút | vàng |
-| số tín hiệu/ngày lệch > 3σ so với 30 ngày | vàng |
+| worker không heartbeat > 2 phút | down |
+| một sàn không có dữ liệu mới > 5 phút | down |
+| một sàn vừa lỗi nhưng còn trong 5 phút | degraded |
+| chưa từng thấy sàn kể từ lúc khởi động | unknown |
 
-Cảnh báo phải có **chống dội**: một sự cố gửi một tin, không phải một tin mỗi
-phút — nếu không thì ai cũng tắt thông báo và cảnh báo thành vô dụng.
+`unknown` **khác** `down`: chưa biết không phải là hỏng. Một hàm serverless vừa
+khởi động lạnh thì chưa thấy sàn nào, và kết luận "cả bốn sàn đều chết" lúc đó
+là sai.
 
 ---
 
