@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phái sinh · Term structure &amp; Funding — Vdearypto</title>
-  <meta name="description" content="Cấu trúc kỳ hạn và basis quy về năm của hợp đồng quý BTC/ETH, cùng chi phí giữ vị thế gộp funding bốn sàn theo trọng số Open Interest.">
-  <meta property="og:title" content="Phái sinh — Vdearypto">
-  <meta property="og:description" content="Basis quy về năm của hợp đồng quý so với perpetual, và chi phí giữ vị thế gộp funding bốn sàn theo trọng số Open Interest.">
+  <title>Thống kê theo chế độ thị trường — Vdearypto</title>
+  <meta name="description" content="Winrate và kỳ vọng theo R của từng chiến lược trong từng chế độ thị trường: trend tăng, trend giảm, tích luỹ, biến động cao. Ô dưới 30 tín hiệu không công bố con số.">
+  <meta property="og:title" content="Thống kê theo chế độ thị trường — Vdearypto">
+  <meta property="og:description" content="Chiến lược nào ăn trong chế độ nào — winrate, số mẫu và kỳ vọng theo R.">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#0A0906">
   <link rel="manifest" href="site.webmanifest">
@@ -24,7 +24,7 @@
     <button class="nav-toggle" type="button" data-nav-open aria-label="Mở menu" data-i18n-attr="aria-label:nav.open" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
     <a class="brand" href="/">
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><path fill="#0A0906" d="M3 4 L16 27.5 L28 4 L24.2 4 L16 20 L7.2 4 Z"/></svg></span>
-      <div><div class="brand-name">Vdearypto</div><div class="brand-sub" data-i18n="drv.title2">Phái sinh</div></div>
+      <div><div class="brand-name">Vdearypto</div><div class="brand-sub" data-i18n="st.title2">Thống kê</div></div>
     </a>
     <div class="tb-actions">
       <span class="pill live"><span class="live-dot"></span> <span data-i18n="nav.realtime">Realtime</span></span>
@@ -37,25 +37,33 @@
   <main class="container">
     <section class="panel">
       <div class="panel-head">
-        <h2 data-i18n="drv.term.title">📐 Cấu trúc kỳ hạn &amp; basis</h2>
-        <span class="muted small" id="drvAge"></span>
+        <h2 data-i18n="st.title">📊 Winrate theo chế độ thị trường</h2>
+        <button class="btn-ghost small" id="stReload" type="button" data-i18n="st.reload">Chạy lại</button>
       </div>
-      <p class="hint" data-i18n-html="drv.term.hint">Basis quy về năm =
-        <b>(giá hợp đồng quý − giá perpetual) / giá perpetual × 365 / số ngày còn lại</b>.
-        Nó trả lời: giữ vị thế chênh lệch giữa hai hợp đồng này tới ngày đáo hạn thì lợi suất quy về năm là bao nhiêu.
-        Basis dương cao nghĩa là thị trường đang trả giá đắt cho đòn bẩy dài hạn — thường đi kèm giai đoạn hưng phấn.</p>
-      <div id="drvTerm"></div>
+      <p class="hint" data-i18n-html="st.hint">Mỗi ô là kết quả backtest của một <b>chiến lược</b> trong một <b>chế độ thị trường</b>, gom theo chế độ tại đúng nến phát tín hiệu. Chế độ phân loại bằng quy tắc ADX / độ rộng Bollinger / ATR, và chỉ đổi nhãn khi điều kiện giữ đủ 3 nến liên tiếp.</p>
+      <p class="hint" data-i18n-html="st.warn"><b>Ô dưới 30 tín hiệu không hiện winrate.</b> Ba lệnh thắng hai không phải "winrate 67%", nó là ba lần tung đồng xu. Những ô đó ghi "mẫu quá nhỏ" và không có con số nào.</p>
+      <div id="stMatrix"></div>
     </section>
 
     <section class="panel">
       <div class="panel-head">
-        <h2 data-i18n="drv.funding.title">💸 Chi phí giữ vị thế toàn thị trường</h2>
+        <h2 data-i18n="st.now.title">🧭 Chế độ hiện tại của thị trường</h2>
       </div>
-      <p class="hint" data-i18n-html="drv.funding.hint">Funding của bốn sàn được quy về
-        <b>%/năm theo đúng chu kỳ riêng của từng sàn</b> rồi lấy trung bình có trọng số theo Open Interest quy ra USD.
-        Sàn nào thiếu funding hoặc thiếu OI thì bị loại và trọng số các sàn còn lại được chuẩn hoá lại —
-        thiếu dữ liệu làm giảm <b>độ phủ</b>, không làm lệch con số.</p>
-      <div id="drvFunding"></div>
+      <p class="hint" data-i18n="st.now.hint">Số coin đang ở mỗi chế độ, tính trên chính nhóm coin vừa backtest.</p>
+      <div id="stNow"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="st.method.title">📐 Cách tính</h2>
+      </div>
+      <div class="st-method">
+        <p data-i18n-html="st.m.regime"><b>Chế độ:</b> ADX &gt; 25 và +DI &gt; −DI → trend tăng; ADX &gt; 25 và −DI &gt; +DI → trend giảm; ADX &lt; 20 kèm độ rộng Bollinger dưới percentile 30 của 100 nến gần → tích luỹ; ATR/giá vượt percentile 85 → biến động cao, đè lên mọi nhãn khác.</p>
+        <p data-i18n-html="st.m.rank"><b>Xếp hạng percentile</b> tính trên cửa sổ trượt kết thúc tại chính nến đang xét. Xếp hạng trên toàn chuỗi là nhìn trộm tương lai, và mọi winrate dựng trên đó đều đẹp giả tạo.</p>
+        <p data-i18n-html="st.m.strat"><b>Hai chiến lược:</b> <i>Hội tụ</i> — RSI đảo chiều kèm vùng S&amp;R, price action, breakout và volume; <i>RSI trần</i> — chỉ RSI đảo chiều. Cái sau là mốc so sánh: nếu hội tụ không ăn đứt được nó thì bốn xác nhận kia không đáng để lọc bớt tín hiệu.</p>
+        <p data-i18n-html="st.m.r"><b>Kỳ vọng tính bằng R</b>, không bằng tiền. Thắng +2R, thua −1R theo đúng TP/SL đang cấu hình. Điểm hoà vốn vì thế là 33,3% chứ không phải 50% — màu của ô neo vào điểm hoà vốn thật, không neo vào 50%.</p>
+        <p class="hint" data-i18n="st.m.limit">Backtest chạy trên dữ liệu quá khứ của một nhóm coin và một khung thời gian. Nó mô tả những gì đã xảy ra, không hứa hẹn điều gì sẽ xảy ra.</p>
+      </div>
     </section>
   </main>
 
@@ -96,7 +104,9 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/ticker.js"></script>
-  <script src="js/derivatives.js"></script>
+  <script src="js/indicators.js"></script>
+  <script src="js/regime.js"></script>
+  <script src="js/stats-page.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/integrations.js"></script>

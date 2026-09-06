@@ -19,6 +19,7 @@
     { type: 'nav', k: 'nav.i.funding', ks: 'cmd.derivatives', label: 'Funding & Cấu trúc kỳ hạn', sub: 'Phái sinh', href: 'derivatives.html' },
     { type: 'nav', k: 'nav.i.liquidation', ks: 'cmd.derivatives', label: 'Bản đồ thanh lý', sub: 'Phái sinh', href: 'liquidation.html' },
     { type: 'nav', k: 'journal.nav', ks: 'cmd.yours', label: 'Nhật ký lệnh', sub: 'Của bạn', href: 'journal.html' },
+    { type: 'nav', k: 'nav.i.stats', ks: 'cmd.yours', label: 'Thống kê chiến lược', sub: 'Của bạn', href: 'stats.html' },
   ];
 
   function build() {

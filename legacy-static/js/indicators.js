@@ -347,7 +347,21 @@
 
   // Backtest nhanh trên chuỗi nến 1 khung: bắt tín hiệu (RSI đảo chiều + gần S&R + PA
   // + breakout + volume giá) rồi mô phỏng TP/SL với đòn bẩy cho trước -> win-rate THẬT.
-  function miniBacktest(candles, leverage) {
+  /*
+   * `opts.strategy` chọn bộ điều kiện:
+   *   'combat' (mặc định) — RSI đảo chiều + gần S&R + Price Action + breakout
+   *                          + volume, đúng chiến lược đang chạy trên radar.
+   *   'rsi'              — CHỈ RSI đảo chiều. Đây là mốc so sánh: nếu hội tụ
+   *                          không ăn đứt được nó thì bốn xác nhận kia không
+   *                          đáng để lọc bớt tín hiệu.
+   *
+   * `opts.onTrade` nhận từng lệnh đã dứt. Có nó thì nơi khác (ví dụ
+   * js/stats-worker.js gom winrate theo chế độ thị trường) không phải chép lại
+   * bộ điều kiện — chép lại là bảo đảm hai bản sẽ lệch nhau sau vài lần sửa.
+   */
+  function miniBacktest(candles, leverage, opts) {
+    const O = opts || {};
+    const strat = O.strategy || 'combat';
     if (!candles || candles.length < 60) return { trades: 0, wins: 0, winRate: null };
     const closes = candles.map((c) => c.close);
     const rsi = rsiSeries(closes);
@@ -358,12 +372,17 @@
       if (i < nextIdx) continue;
       const rev = rsiReversal(rsi, i);
       if (!rev) continue;
-      if (!nearLevel(closes[i], levels)) continue;
-      if (priceAction(candles, i) !== rev.dir) continue;
-      if ((CFG.strategy.breakout || {}).enabled && !breakoutConfirm(candles, i, rev.dir)) continue;
-      if ((CFG.money.volume || {}).enabled && !volumeConfirm(candles, i)) continue;
+      if (strat !== 'rsi') {
+        if (!nearLevel(closes[i], levels)) continue;
+        if (priceAction(candles, i) !== rev.dir) continue;
+        if ((CFG.strategy.breakout || {}).enabled && !breakoutConfirm(candles, i, rev.dir)) continue;
+        if ((CFG.money.volume || {}).enabled && !volumeConfirm(candles, i)) continue;
+      }
       const r = simulateTrade(candles, i, rev.dir, leverage);
-      if (r) { trades++; if (r.win) wins++; nextIdx = r.resolveIdx + 1; }
+      if (r) {
+        trades++; if (r.win) wins++; nextIdx = r.resolveIdx + 1;
+        if (O.onTrade) O.onTrade({ entryIdx: i, dir: rev.dir, win: r.win, resolveIdx: r.resolveIdx });
+      }
     }
     return { trades, wins, winRate: trades ? Math.round((wins / trades) * 100) : null };
   }

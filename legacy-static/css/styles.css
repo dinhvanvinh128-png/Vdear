@@ -1530,3 +1530,52 @@ tr.etf-main.open{background:var(--panel-2)}
   .liq-dangers{grid-template-columns:1fr}
   #liqCanvas{height:320px}
 }
+
+/* ---- Thống kê theo chế độ thị trường (stats.html) ---- */
+.st-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px}
+.st-table{width:100%;border-collapse:separate;border-spacing:4px;min-width:560px}
+.st-table th{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;text-align:center;padding:2px 4px}
+.st-table th:first-child{text-align:left}
+.st-strat{font-size:12px;font-weight:600;white-space:nowrap;padding-right:8px}
+.st-cell{border-radius:10px;border:1px solid var(--line);text-align:center;
+  padding:9px 6px;min-width:92px;background:var(--panel-2)}
+.st-cell b{display:block;font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-size:17px;line-height:1.15}
+.st-cell .st-n{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.st-cell .st-r{display:block;font-size:11px;margin-top:2px;
+  font-family:'JetBrains Mono',ui-monospace,monospace}
+.st-cell .st-r.up{color:var(--up)}
+.st-cell .st-r.down{color:var(--down)}
+/* Ô mẫu nhỏ và ô không có lệnh nào cố ý trông NHẠT và KHÔNG có con số lớn:
+   chỗ này không có kết luận nào để đọc. */
+.st-cell.small,.st-cell.empty{background:transparent;border-style:dashed}
+.st-none{display:block;font-size:11px;color:var(--muted-2);line-height:1.35}
+
+.st-now{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}
+.st-now-cell{border-radius:11px;border:1px solid var(--line);background:var(--panel-2);
+  padding:11px 12px}
+.st-now-cell b{display:block;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:22px}
+.st-now-cell span{font-size:11px;color:var(--muted)}
+.st-now-cell.reg-trend_up{border-color:color-mix(in srgb,var(--up) 40%,transparent)}
+.st-now-cell.reg-trend_up b{color:var(--up)}
+.st-now-cell.reg-trend_down{border-color:color-mix(in srgb,var(--down) 40%,transparent)}
+.st-now-cell.reg-trend_down b{color:var(--down)}
+.st-now-cell.reg-volatile{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.st-now-cell.reg-volatile b{color:var(--accent)}
+
+.st-method p{font-size:12.5px;line-height:1.6;margin:8px 0;color:var(--text);opacity:.9}
+.st-method b{color:var(--gold)}
+
+/* Huy hiệu chế độ dùng chung cho radar và trang coin. */
+.reg-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:20px;
+  font-size:10.5px;font-weight:600;letter-spacing:.03em;
+  border:1px solid var(--line);background:var(--panel-2);color:var(--muted)}
+.reg-badge i{width:6px;height:6px;border-radius:50%;background:currentColor;font-style:normal}
+.reg-badge.trend_up{color:var(--up);border-color:color-mix(in srgb,var(--up) 40%,transparent)}
+.reg-badge.trend_down{color:var(--down);border-color:color-mix(in srgb,var(--down) 40%,transparent)}
+.reg-badge.volatile{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 42%,transparent)}
+@media (max-width:640px){
+  .st-cell{min-width:78px;padding:7px 4px}
+  .st-cell b{font-size:15px}
+}
