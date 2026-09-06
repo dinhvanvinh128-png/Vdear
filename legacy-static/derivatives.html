@@ -3,42 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Không tìm thấy trang — Vdearypto</title>
-  <meta name="description" content="Lỗi 404">
-  <meta property="og:title" content="Không tìm thấy trang — Vdearypto">
-  <meta property="og:description" content="Lỗi 404">
+  <title>Phái sinh · Term structure &amp; Funding — Vdearypto</title>
+  <meta name="description" content="Cấu trúc kỳ hạn và basis quy về năm của hợp đồng quý BTC/ETH, cùng chi phí giữ vị thế gộp funding bốn sàn theo trọng số Open Interest.">
+  <meta property="og:title" content="Phái sinh — Vdearypto">
+  <meta property="og:description" content="Basis quy về năm của hợp đồng quý so với perpetual, và chi phí giữ vị thế gộp funding bốn sàn theo trọng số Open Interest.">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#0A0906">
+  <link rel="manifest" href="site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('vdear_lang');if(l==='en'||l==='vi')document.documentElement.setAttribute('lang',l)}catch(e){}</script>
 </head>
 <body>
+  <div id="ticker" class="ticker-bar" aria-label="Bảng giá chạy" data-i18n-attr="aria-label:nav.ticker"></div>
+
   <header class="topbar">
     <button class="nav-toggle" type="button" data-nav-open aria-label="Mở menu" data-i18n-attr="aria-label:nav.open" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
     <a class="brand" href="/">
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><path fill="#0A0906" d="M3 4 L16 27.5 L28 4 L24.2 4 L16 20 L7.2 4 Z"/></svg></span>
-      <div><div class="brand-name">Vdearypto</div><div class="brand-sub">Crypto Intelligence Terminal</div></div>
+      <div><div class="brand-name">Vdearypto</div><div class="brand-sub" data-i18n="drv.title2">Phái sinh</div></div>
     </a>
     <div class="tb-actions">
+      <span class="pill live"><span class="live-dot"></span> <span data-i18n="nav.realtime">Realtime</span></span>
       <button class="icon-btn" data-theme-toggle title="Đổi nền" data-i18n-attr="title:nav.theme">☀️</button>
       <button class="icon-btn lang-btn" type="button" data-lang-toggle title="Switch to English">EN</button>
-      <a class="btn-ghost" href="/" data-i18n="nav.backToApp">← Về ứng dụng</a>
+      <a class="btn-ghost" href="/" data-i18n="bub.back">← Về bảng thị trường</a>
     </div>
   </header>
-  <main class="doc" data-i18n-html="page.404">
-    <a class="back" href="/">← Về ứng dụng</a>
-    <h1>Không tìm thấy trang</h1>
-    <div class="doc-meta">Lỗi 404</div>
-    
-<p style="font-size:60px;margin:10px 0">🧭</p>
-<p>Trang bạn tìm không tồn tại hoặc đã được di chuyển.</p>
-<p><a class="btn-primary" href="/" style="margin-top:12px">← Về trang thị trường</a></p>
 
+  <main class="container">
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="drv.term.title">📐 Cấu trúc kỳ hạn &amp; basis</h2>
+        <span class="muted small" id="drvAge"></span>
+      </div>
+      <p class="hint" data-i18n-html="drv.term.hint">Basis quy về năm =
+        <b>(giá hợp đồng quý − giá perpetual) / giá perpetual × 365 / số ngày còn lại</b>.
+        Nó trả lời: giữ vị thế chênh lệch giữa hai hợp đồng này tới ngày đáo hạn thì lợi suất quy về năm là bao nhiêu.
+        Basis dương cao nghĩa là thị trường đang trả giá đắt cho đòn bẩy dài hạn — thường đi kèm giai đoạn hưng phấn.</p>
+      <div id="drvTerm"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="drv.funding.title">💸 Chi phí giữ vị thế toàn thị trường</h2>
+      </div>
+      <p class="hint" data-i18n-html="drv.funding.hint">Funding của bốn sàn được quy về
+        <b>%/năm theo đúng chu kỳ riêng của từng sàn</b> rồi lấy trung bình có trọng số theo Open Interest quy ra USD.
+        Sàn nào thiếu funding hoặc thiếu OI thì bị loại và trọng số các sàn còn lại được chuẩn hoá lại —
+        thiếu dữ liệu làm giảm <b>độ phủ</b>, không làm lệch con số.</p>
+      <div id="drvFunding"></div>
+    </section>
   </main>
+
   <footer class="foot-wrap">
     <div class="foot-cols">
       <div class="foot-brand">
@@ -64,13 +84,20 @@
         <a href="mailto:support@vdear.io">support@vdear.io</a>
       </div>
     </div>
-    <p class="hint" style="text-align:center;margin-top:24px" data-i18n="foot.copyShort">© 2026 Vdearypto. Chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</p>
+    <p class="hint" style="text-align:center;margin-top:24px"><span data-i18n="foot.copy">© 2026 Vdearypto · Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</span></p>
   </footer>
+
   <script src="env.js"></script>
   <script src="js/i18n.js"></script>
-  <script src="js/i18n-pages.js"></script>
   <script src="js/navmenu.js"></script>
+  <script src="js/favstore.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ticker.js"></script>
+  <script src="js/derivatives.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/integrations.js"></script>
+  <script src="js/fx.js"></script>
 </body>
 </html>

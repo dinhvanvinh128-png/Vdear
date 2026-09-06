@@ -71,7 +71,7 @@
       title: 'Phái sinh', k: 'nav.g.derivatives',
       items: [
         { label: 'Open Interest', k: 'nav.i.oi', icon: 'layers', soon: true },
-        { label: 'Funding', k: 'nav.i.funding', icon: 'percent', soon: true },
+        { href: 'derivatives.html', label: 'Funding & Cấu trúc kỳ hạn', k: 'nav.i.funding', icon: 'percent' },
         { label: 'Thanh lý', k: 'nav.i.liquidation', icon: 'drop', soon: true },
         { label: 'Long / Short', k: 'nav.i.ls', icon: 'scale', soon: true },
       ],

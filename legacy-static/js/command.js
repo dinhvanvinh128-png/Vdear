@@ -16,6 +16,8 @@
     { type: 'nav', k: 'cmd.markets', ks: 'cmd.home', label: 'Thị trường', sub: 'Trang chủ', href: 'index.html' },
     { type: 'nav', k: null, ks: 'cmd.analysis', label: 'BTC · Bitcoin', sub: 'Phân tích', href: 'coin.html?c=BTC' },
     { type: 'nav', k: null, ks: 'cmd.analysis', label: 'ETH · Ethereum', sub: 'Phân tích', href: 'coin.html?c=ETH' },
+    { type: 'nav', k: 'nav.i.funding', ks: 'cmd.derivatives', label: 'Funding & Cấu trúc kỳ hạn', sub: 'Phái sinh', href: 'derivatives.html' },
+    { type: 'nav', k: 'journal.nav', ks: 'cmd.yours', label: 'Nhật ký lệnh', sub: 'Của bạn', href: 'journal.html' },
   ];
 
   function build() {

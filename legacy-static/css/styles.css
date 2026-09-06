@@ -1409,3 +1409,50 @@ tr.etf-main.open{background:var(--panel-2)}
 .sh-actions .btn-primary{text-align:center;padding:9px 12px}
 .sh-note{margin:0;font-size:11px;line-height:1.5;color:var(--muted)}
 .sh-open{margin-top:8px}
+
+/* ---- Phái sinh: cấu trúc kỳ hạn + funding gộp (derivatives.html) ---- */
+.drv-pair{padding:14px 0;border-top:1px solid var(--line)}
+.drv-pair:first-child{padding-top:0;border-top:0}
+.drv-pair-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.drv-pair-head b{font-size:15px;letter-spacing:.02em}
+.drv-pair-head .oi-badge{margin-left:auto}
+.oi-badge.muted{color:var(--muted);border-color:var(--line)}
+.drv-svg{display:block;width:100%;height:150px;margin-top:10px;color:var(--muted)}
+.drv-table{margin-top:2px}
+/* .jr-dim-table không có đệm ngang: ở 390px thì '+11.50%' và '$9.10B' dính
+   liền nhau thành một chuỗi vô nghĩa. Bảng này nhiều cột nên phải tự có
+   khoảng thở, và cuộn NGANG trong khung của chính nó chứ không đẩy cả trang. */
+/* Bóng mờ ở hai mép báo còn cột phía ngoài. `local` bám theo nội dung nên
+   lớp mờ tự biến mất khi cuộn tới đầu/cuối — không có thì người dùng điện
+   thoại không biết bảng còn cột bên phải. */
+.drv-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;
+  background:
+    linear-gradient(to right,var(--panel) 30%,rgba(18,16,10,0)) left center/26px 100% no-repeat local,
+    linear-gradient(to left,var(--panel) 30%,rgba(18,16,10,0)) right center/26px 100% no-repeat local,
+    linear-gradient(to right,rgba(216,163,43,.20),rgba(216,163,43,0)) left center/14px 100% no-repeat scroll,
+    linear-gradient(to left,rgba(216,163,43,.20),rgba(216,163,43,0)) right center/14px 100% no-repeat scroll}
+.drv-scroll .drv-table{min-width:460px}
+.drv-table th,.drv-table td{padding-right:16px;white-space:nowrap}
+.drv-table th:last-child,.drv-table td:last-child{padding-right:0}
+.drv-table td:first-child{white-space:normal}
+.drv-table td{font-family:'JetBrains Mono',ui-monospace,monospace}
+.drv-table td.up{color:var(--up)}
+.drv-table td.down{color:var(--down)}
+.drv-table td.muted{color:var(--muted)}
+/* Thanh chi phí: mốc 0 nằm CHÍNH GIỮA. Vạch giữa luôn hiện kể cả khi thanh
+   dài bằng 0, vì "0%/năm" là một phát biểu, không phải chỗ trống. */
+.drv-bar{position:relative;height:10px;margin:10px 0 4px;border-radius:6px;
+  background:var(--panel-2);border:1px solid var(--line);overflow:hidden}
+.drv-bar::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:var(--accent-2);opacity:.75;z-index:1}
+.drv-bar i{position:absolute;top:0;bottom:0;display:block;opacity:.85}
+.drv-bar-scale{display:flex;justify-content:space-between;font-size:10px;
+  color:var(--muted-2);font-family:'JetBrains Mono',ui-monospace,monospace}
+.drv-legend{font-size:11.5px;margin-top:7px}
+.drv-alert{margin:9px 0 0;padding:8px 10px;border-radius:10px;font-size:12px;
+  color:var(--down);background:color-mix(in srgb,var(--down) 10%,transparent);
+  border:1px solid color-mix(in srgb,var(--down) 34%,transparent)}
+@media (max-width:640px){
+  .drv-svg{height:130px}
+  .drv-pair-head .oi-badge{margin-left:0}
+}

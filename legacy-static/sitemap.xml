@@ -3,6 +3,7 @@
   <url><loc>https://vdearypto.vercel.app/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>
   <url><loc>https://vdearypto.vercel.app/bubbles.html</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vdearypto.vercel.app/coin.html?c=BTC</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://vdearypto.vercel.app/derivatives.html</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
   <url><loc>https://vdearypto.vercel.app/about.html</loc><priority>0.6</priority></url>
   <url><loc>https://vdearypto.vercel.app/contact.html</loc><priority>0.4</priority></url>
   <url><loc>https://vdearypto.vercel.app/risk.html</loc><priority>0.4</priority></url>
