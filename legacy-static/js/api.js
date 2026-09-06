@@ -158,10 +158,15 @@
 
   function normKlines(rows, idx) {
     // idx = {t,o,h,l,c,v}; sắp xếp tăng dần theo thời gian.
+    // idx.q (khối lượng quy ra USDT) là TUỲ CHỌN: chỉ khai báo cho sàn nào ta
+    // đã đối chiếu tài liệu và biết chắc chỉ số cột. Thiếu thì để undefined
+    // chứ không lấy đại một cột — js/liq.js phân biệt được VWAP thật với giá
+    // điển hình xấp xỉ, và nói ra sự khác biệt đó.
     const out = rows.map((k) => ({
       time: Math.floor(num(k[idx.t]) / 1000),
       open: num(k[idx.o]), high: num(k[idx.h]), low: num(k[idx.l]),
       close: num(k[idx.c]), volume: num(k[idx.v]),
+      quote: idx.q == null ? undefined : (num(k[idx.q]) || undefined),
     })).filter((c) => c.close > 0);
     out.sort((a, b) => a.time - b.time);
     return out;
@@ -170,7 +175,7 @@
   async function binanceKlines(symbol, interval, limit) {
     const url = `${CFG.exchanges.binance.klines}?symbol=${symbol}&interval=${interval}&limit=${limit || 200}`;
     const raw = await getJSON(url);
-    return normKlines(raw, { t: 0, o: 1, h: 2, l: 3, c: 4, v: 5 });
+    return normKlines(raw, { t: 0, o: 1, h: 2, l: 3, c: 4, v: 5, q: 7 });
   }
   async function bybitKlines(base, tfId, limit) {
     const iv = IV.bybit[tfId]; if (!iv) throw new Error('tf');

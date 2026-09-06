@@ -1456,3 +1456,77 @@ tr.etf-main.open{background:var(--panel-2)}
   .drv-svg{height:130px}
   .drv-pair-head .oi-badge{margin-left:0}
 }
+
+/* ---- Bản đồ thanh lý (liquidation.html) ---- */
+/* Cảnh báo bắt buộc. Đủ tương phản để đọc được, đủ nổi để không lướt qua, và
+   nằm ngay trên canvas — yêu cầu là "không giấu trong tooltip". */
+.liq-warn{display:block;margin:0 0 12px;padding:11px 13px;border-radius:11px;
+  background:color-mix(in srgb,var(--down) 13%,transparent);
+  border:1px solid color-mix(in srgb,var(--down) 45%,transparent);
+  border-left-width:4px;font-size:12.5px;line-height:1.55}
+.liq-warn b{display:block;color:var(--down);margin-bottom:3px;
+  font-size:13px;letter-spacing:.01em}
+.liq-warn span{color:var(--text);opacity:.86}
+.liq-warn-inline{color:var(--down);opacity:.9}
+
+.liq-chart-wrap{position:relative;width:100%}
+#liqCanvas{display:block;width:100%;height:380px;border-radius:11px;
+  background:var(--bg-2);border:1px solid var(--line)}
+
+.liq-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.liq-cell{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
+  padding:9px 11px}
+.liq-cell span{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted)}
+.liq-cell b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:15px}
+
+/* Thanh cân bằng: hai nửa gặp nhau ở đâu chính là câu trả lời, nên vạch giữa
+   phải thấy được kể cả khi một phía gần bằng 0. */
+.liq-bal{display:flex;height:14px;border-radius:8px;overflow:hidden;
+  border:1px solid var(--line);background:var(--panel-2)}
+.liq-bal i{display:block;height:100%}
+.liq-bal i.down{background:color-mix(in srgb,var(--down) 78%,transparent)}
+.liq-bal i.up{background:color-mix(in srgb,var(--up) 78%,transparent)}
+.liq-bal-legend{display:flex;justify-content:space-between;margin-top:6px;font-size:11.5px}
+.liq-bal-legend .down{color:var(--down)}
+.liq-bal-legend .up{color:var(--up)}
+.liq-bal-legend b{font-family:'JetBrains Mono',ui-monospace,monospace}
+
+.liq-dangers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.liq-danger{padding:11px 13px;border-radius:11px;border:1px solid var(--line);
+  background:var(--panel-2)}
+.liq-danger>b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.liq-danger.down{border-color:color-mix(in srgb,var(--down) 38%,transparent)}
+.liq-danger.up{border-color:color-mix(in srgb,var(--up) 38%,transparent)}
+.liq-danger-price{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:19px;
+  font-weight:700;margin:4px 0 2px}
+.liq-danger.down .liq-danger-price{color:var(--down)}
+.liq-danger.up .liq-danger-price{color:var(--up)}
+.liq-danger .hint{margin-top:4px}
+
+.liq-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.liq-field{display:grid;grid-template-columns:1fr auto;align-items:center;
+  gap:4px 6px;font-size:11px;color:var(--muted)}
+.liq-field>span:first-child{grid-column:1/-1}
+.liq-field .select{width:100%;grid-column:1}
+/* Đơn vị nằm CẠNH ô nhập, không rơi xuống dòng dưới: "0.5" rồi xuống dòng "%"
+   đọc ra như hai thứ khác nhau. */
+.liq-field .liq-unit{grid-column:2}
+.liq-unit{color:var(--muted-2);font-size:11px}
+.liq-sub{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  margin:16px 0 8px;font-weight:600}
+.liq-levs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.liq-lev{display:flex;align-items:center;gap:6px;background:var(--panel-2);
+  border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.liq-lev>span:first-child{font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-weight:700;min-width:38px}
+.liq-lev input{flex:1;min-width:0;background:transparent;border:0;color:var(--text);
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;padding:2px 0}
+.liq-lev input:focus{outline:none;color:var(--gold)}
+#liqLevSum.warn{color:var(--accent)}
+
+@media (max-width:820px){
+  .liq-grid,.liq-controls,.liq-levs{grid-template-columns:repeat(2,1fr)}
+  .liq-dangers{grid-template-columns:1fr}
+  #liqCanvas{height:320px}
+}

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bản đồ thanh lý (ước tính) — Vdearypto</title>
+  <meta name="description" content="Mô phỏng cụm thanh lý và phản ứng dây chuyền từ Open Interest, phân bố đòn bẩy giả định và sổ lệnh Binance. Đây là ước tính từ mô hình, không phải dữ liệu thanh lý thật.">
+  <meta property="og:title" content="Bản đồ thanh lý (ước tính) — Vdearypto">
+  <meta property="og:description" content="Cụm thanh lý, ngưỡng nguy hiểm và áp lực ròng — tất cả là ước tính từ một mô hình giả định, không phải dữ liệu thanh lý thật.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0A0906">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <script>try{var t=localStorage.getItem('vdear_theme');if(t)document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('vdear_lang');if(l==='en'||l==='vi')document.documentElement.setAttribute('lang',l)}catch(e){}</script>
+</head>
+<body>
+  <div id="ticker" class="ticker-bar" aria-label="Bảng giá chạy" data-i18n-attr="aria-label:nav.ticker"></div>
+
+  <header class="topbar">
+    <button class="nav-toggle" type="button" data-nav-open aria-label="Mở menu" data-i18n-attr="aria-label:nav.open" aria-expanded="false" aria-controls="siteNav"><span></span><span></span><span></span></button>
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22"><path fill="#0A0906" d="M3 4 L16 27.5 L28 4 L24.2 4 L16 20 L7.2 4 Z"/></svg></span>
+      <div><div class="brand-name">Vdearypto</div><div class="brand-sub" data-i18n="liq.title2">Bản đồ thanh lý</div></div>
+    </a>
+    <div class="tb-actions">
+      <span class="pill live"><span class="live-dot"></span> <span data-i18n="nav.realtime">Realtime</span></span>
+      <button class="icon-btn" data-theme-toggle title="Đổi nền" data-i18n-attr="title:nav.theme">☀️</button>
+      <button class="icon-btn lang-btn" type="button" data-lang-toggle title="Switch to English">EN</button>
+      <a class="btn-ghost" href="/" data-i18n="bub.back">← Về bảng thị trường</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="liq.title">🧯 Bản đồ thanh lý &amp; phản ứng dây chuyền</h2>
+        <span class="muted small" id="liqMeta"></span>
+      </div>
+
+      <!-- CANH BAO BAT BUOC. Khoi nay phai nam NGAY TREN bieu do, cung tam mat.
+           Khong duoc chuyen thanh tooltip, khong duoc day xuong cuoi trang. -->
+      <div class="liq-warn" id="liqWarn" role="note">
+        <b data-i18n="liq.warn.head">Đây là ƯỚC TÍNH từ mô hình giả định, KHÔNG phải dữ liệu thanh lý thật.</b>
+        <span data-i18n="liq.warn.body">Không sàn nào công bố vị thế của từng người dùng. Những cụm dưới đây được suy ra từ Open Interest hiện tại, giả định vị thế mở theo khối lượng của các nến gần nhất và giả định phân bố đòn bẩy bạn đặt bên dưới. Đổi giả định thì bản đồ đổi theo.</span>
+      </div>
+
+      <div class="liq-chart-wrap">
+        <canvas id="liqCanvas" height="380" aria-label="Bản đồ mật độ cụm thanh lý theo mức giá" role="img"></canvas>
+      </div>
+      <p class="hint" data-i18n="liq.chart.legend">Đỏ: cụm thanh lý phía LONG (bị quét khi giá giảm). Xanh: cụm phía SHORT (bị quét khi giá tăng). Đường vàng là giá đóng của các nến đã dùng để suy giá vào lệnh; đường đứt là giá hiện tại.</p>
+
+      <div id="liqNumbers"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="liq.pressure.title">⚖️ Áp lực thanh lý ròng</h2>
+      </div>
+      <p class="hint" data-i18n="liq.pressure.hint">So tổng USD cụm LONG nằm dưới giá hiện tại với tổng USD cụm SHORT nằm trên. Phía nào nặng hơn là phía có nhiều vị thế chờ bị quét hơn — vẫn là con số của mô hình, không phải lệnh thanh lý đã xảy ra.</p>
+      <div id="liqPressure"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="liq.danger.title">🚨 Ngưỡng nguy hiểm</h2>
+      </div>
+      <p class="hint" data-i18n="liq.danger.hint">Mức giá mà nếu chạm tới sẽ châm ngòi một chuỗi: cụm bị thanh lý sinh ra lệnh bán thị trường, lệnh đó ăn vào sổ lệnh và đẩy giá tới cụm tiếp theo. Chỉ gọi là ngưỡng nguy hiểm khi chuỗi chạy được ít nhất 2 vòng và đẩy giá đi thêm ít nhất 1% so với chính mức đó.</p>
+      <div id="liqDanger" class="liq-dangers"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 data-i18n="liq.assume.title">🎛️ Giả định của mô hình</h2>
+        <button class="btn-ghost small" id="liqReset" type="button" data-i18n="liq.assume.reset">Về mặc định</button>
+      </div>
+      <p class="hint" data-i18n="liq.assume.hint">Mọi con số trên trang này là hệ quả của bảng dưới đây. Sửa vào rồi xem bản đồ đổi thế nào — đó là cách nhanh nhất để thấy nó là mô hình chứ không phải phép đo.</p>
+
+      <div class="liq-controls">
+        <label class="liq-field"><span data-i18n="liq.coin">Coin</span>
+          <select id="liqCoin" class="select"></select></label>
+        <label class="liq-field"><span data-i18n="liq.tf">Khung nến suy giá vào lệnh</span>
+          <select id="liqTf" class="select"></select></label>
+        <label class="liq-field"><span data-i18n="liq.mmr">Ký quỹ duy trì</span>
+          <input id="liqMmr" class="select" type="number" min="0.1" max="10" step="0.1"><span class="liq-unit">%</span></label>
+        <label class="liq-field"><span data-i18n="liq.band">Dải giá quanh giá hiện tại</span>
+          <input id="liqBand" class="select" type="number" min="1" max="90" step="1"><span class="liq-unit">%</span></label>
+      </div>
+
+      <h3 class="liq-sub" data-i18n="liq.lev.title">Phân bố đòn bẩy giả định</h3>
+      <div class="liq-levs" id="liqLev"></div>
+      <p class="hint" id="liqLevSum"></p>
+      <p class="hint" data-i18n="liq.assume.foot">Công thức giá thanh lý dùng ở đây bỏ qua phí giao dịch và funding đã trả, nên thanh lý thật xảy ra sớm hơn một chút so với mức vẽ ra.</p>
+    </section>
+  </main>
+
+  <footer class="foot-wrap">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="brand-name">Vdearypto</div>
+        <p data-i18n="foot.tagline">Radar tín hiệu futures — quét toàn thị trường, vào lệnh có kế hoạch. Dữ liệu từ Binance · Bybit · OKX · Bitget.</p>
+      </div>
+      <div class="foot-col"><h4 data-i18n="foot.product">Sản phẩm</h4>
+        <a href="/" data-i18n="foot.markets">Thị trường</a>
+        <a href="bubbles.html" data-i18n="foot.bubbles">Bong bóng thị trường</a>
+        <a href="/#etf" data-i18n="foot.etf">Dòng tiền ETF</a>
+        <a href="coin.html?c=BTC" data-i18n="foot.coin">Phân tích coin</a>
+        <a href="journal.html" data-i18n="journal.nav">Nhật ký lệnh</a>
+        <a href="derivatives.html" data-i18n="nav.i.funding">Funding &amp; Cấu trúc kỳ hạn</a>
+        <a href="liquidation.html" data-i18n="nav.i.liquidation">Bản đồ thanh lý</a>
+        <a href="about.html" data-i18n="foot.about">Giới thiệu</a>
+      </div>
+      <div class="foot-col"><h4 data-i18n="foot.legal">Pháp lý</h4>
+        <a href="terms.html" data-i18n="foot.terms">Điều khoản</a>
+        <a href="privacy.html" data-i18n="foot.privacy">Bảo mật</a>
+        <a href="risk.html" data-i18n="foot.risk">Khuyến cáo rủi ro</a>
+      </div>
+      <div class="foot-col"><h4 data-i18n="foot.contact">Liên hệ</h4>
+        <a href="contact.html" data-i18n="foot.contact">Liên hệ</a>
+        <a href="mailto:support@vdear.io">support@vdear.io</a>
+      </div>
+    </div>
+    <p class="hint" style="text-align:center;margin-top:24px"><span data-i18n="foot.copy">© 2026 Vdearypto · Dữ liệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư.</span></p>
+  </footer>
+
+  <script src="env.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/navmenu.js"></script>
+  <script src="js/favstore.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ticker.js"></script>
+  <script src="js/oi.js"></script>
+  <script src="js/liq.js"></script>
+  <script src="js/liq-page.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/integrations.js"></script>
+  <script src="js/fx.js"></script>
+</body>
+</html>

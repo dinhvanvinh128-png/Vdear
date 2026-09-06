@@ -72,7 +72,7 @@
       items: [
         { label: 'Open Interest', k: 'nav.i.oi', icon: 'layers', soon: true },
         { href: 'derivatives.html', label: 'Funding & Cấu trúc kỳ hạn', k: 'nav.i.funding', icon: 'percent' },
-        { label: 'Thanh lý', k: 'nav.i.liquidation', icon: 'drop', soon: true },
+        { href: 'liquidation.html', label: 'Bản đồ thanh lý', k: 'nav.i.liquidation', icon: 'drop' },
         { label: 'Long / Short', k: 'nav.i.ls', icon: 'scale', soon: true },
       ],
     },
