@@ -567,14 +567,19 @@
         ctx.strokeStyle = z.kind === 'support' ? COLORS.supportLine : COLORS.resistanceLine;
         ctx.setLineDash([4, 4]); ctx.beginPath();
         ctx.moveTo(this.padL, yl); ctx.lineTo(w - this.padR, yl); ctx.stroke(); ctx.setLineDash([]);
-        // nhãn LONG/SHORT ở mép trái, chống đè
+        // nhãn S/R ở mép trái, chống đè. Một ký tự thì bề rộng đo được rất
+        // hẹp, nên ép bề rộng tối thiểu để hai loại nhãn bằng nhau và không
+        // trông như vệt màu; chữ căn giữa bằng tay để không đụng textAlign
+        // chung của ngữ cảnh vẽ.
         ctx.font = 'bold 10px Inter, Arial';
-        const tag = z.side, tw = ctx.measureText(tag).width + 10;
+        const tag = z.kind === 'support' ? 'S' : 'R';
+        const tagW = ctx.measureText(tag).width;
+        const tw = Math.max(16, tagW + 12);
         const ly = this._placeLabel(usedLeft, yl, 15, plotT, plotB);
         ctx.fillStyle = z.kind === 'support' ? COLORS.supportLine : COLORS.resistanceLine;
         ctx.fillRect(this.padL + 2, ly - 7, tw, 14);
         ctx.fillStyle = '#0b0e14'; ctx.textAlign = 'left';
-        ctx.fillText(tag, this.padL + 7, ly + 3);
+        ctx.fillText(tag, this.padL + 2 + (tw - tagW) / 2, ly + 3);
       };
       if (this.sr) {
         // Chọn một vùng thì CHỈ vẽ vùng đó, các vùng còn lại ẩn hẳn — nhìn một

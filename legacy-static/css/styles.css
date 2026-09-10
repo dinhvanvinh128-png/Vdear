@@ -464,7 +464,7 @@ h1,h2,h3{margin:0;font-weight:700}
 
 /* Support / Resistance list */
 .sr-list{margin-top:12px;display:flex;flex-direction:column;gap:4px}
-.sr-head,.sr-row{display:grid;grid-template-columns:70px 90px 1fr 1.4fr 70px 90px;gap:10px;align-items:center;
+.sr-head,.sr-row{display:grid;grid-template-columns:38px 90px 1fr 1.4fr 70px 90px;gap:10px;align-items:center;
   padding:9px 12px;font-variant-numeric:tabular-nums}
 .sr-head{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted-2)}
 .sr-row{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;cursor:pointer;transition:all .12s}
@@ -475,6 +475,10 @@ h1,h2,h3{margin:0;font-weight:700}
 .sr-tag{font-weight:800;font-size:11px;padding:4px 9px;border-radius:7px;text-align:center}
 .sr-tag.long{background:rgba(79,180,119,.16);color:var(--up);border:1px solid rgba(79,180,119,.5)}
 .sr-tag.short{background:rgba(224,87,79,.16);color:var(--down);border:1px solid rgba(224,87,79,.5)}
+/* Nhãn một ký tự (S/R). Cột đầu đã thu về 38px nên viên nhãn vừa khít chữ,
+   không thành hộp rộng bao quanh một ký tự lẻ loi. Nhật ký lệnh vẫn dùng
+   .sr-tag với chữ LONG/SHORT đầy đủ nên không đặt bề rộng này lên .sr-tag. */
+.sr-tag.sr-letter{padding-left:0;padding-right:0;font-size:12px}
 .sr-kind{color:var(--muted);font-weight:600;font-size:12.5px}
 .sr-price{font-weight:700}
 .sr-band{color:var(--muted);font-size:12.5px}

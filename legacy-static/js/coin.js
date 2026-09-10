@@ -359,8 +359,13 @@
     const box = $('srList');
     const mk = (z) => {
       const dir = z.side;
+      // Nhãn hiển thị là S/R (dữ kiện kỹ thuật), không phải LONG/SHORT (hướng
+      // lệnh). z.side vẫn giữ nguyên trong data-side cho nơi khác đọc.
+      const isSup = z.kind === 'support';
+      const tag = isSup ? 'S' : 'R';
+      const tagName = T(isSup ? 'coin.sr.support' : 'coin.sr.resistance');
       return `<div class="sr-row ${z.kind}" data-price="${z.price}" data-low="${z.low}" data-high="${z.high}" data-side="${dir}">
-        <span class="sr-tag ${dir === 'LONG' ? 'long' : 'short'}">${dir}</span>
+        <span class="sr-tag sr-letter ${isSup ? 'long' : 'short'}" title="${tagName}" aria-label="${tagName}">${tag}</span>
         <span class="sr-kind">${T(z.kind === 'support' ? 'coin.sr.support' : 'coin.sr.resistance')}</span>
         <span class="sr-price">$${fmt(z.price)}</span>
         <span class="sr-band">$${fmt(z.low)} – $${fmt(z.high)}</span>

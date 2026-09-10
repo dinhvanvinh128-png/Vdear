@@ -825,7 +825,7 @@
     'coin.sr.title': '🧱 Support & resistance zones',
     'coin.sr.note': 'Click a zone to show only that one on the chart',
     'coin.sr.showAll': 'Show all zones',
-    'coin.sr.hint': 'More ★ = a safer zone to enter on. <span class="sr-tag long">LONG</span> at support · <span class="sr-tag short">SHORT</span> at resistance. A price band is a zone where a strong reversal can happen.',
+    'coin.sr.hint': 'More ★ = a safer zone to enter on. <span class="sr-tag sr-letter long">S</span> = support · <span class="sr-tag sr-letter short">R</span> = resistance. A price band is a zone where a strong reversal can happen.',
 
     /* coin page — strings generated in JS */
     'coin.combat.title': '⚔️ Battle-tested strategy',
