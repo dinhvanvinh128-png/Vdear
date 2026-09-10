@@ -267,8 +267,21 @@
     var pA = candles[Math.max(0, candles.length - 1 - n)].close;
     var pB = candles[candles.length - 1].close;
 
-    var oiPct = pct(oiA, oiB), pricePct = pct(pA, pB);
-    if (oiPct == null || pricePct == null) return null;
+    return classifyPct(pct(oiA, oiB), pct(pA, pB));
+  }
+
+  /*
+   * Cùng một phép phân loại nhưng nhận thẳng hai phần trăm đã tính sẵn.
+   *
+   * Trang /oi lấy số từ /api/oi-scan (máy chủ đã tính sẵn oiPct 24h) và lấy
+   * biến động giá 24h từ bảng thị trường, nên không có chuỗi nến để đưa vào
+   * classify(). Tách ra thế này để bốn trạng thái chỉ có ĐÚNG MỘT định nghĩa:
+   * chép lại logic sang trang mới là cách chắc chắn nhất để hai nơi trôi khỏi
+   * nhau rồi cùng một coin lại hiện hai trạng thái khác nhau.
+   */
+  function classifyPct(oiPct, pricePct) {
+    if (oiPct == null || pricePct == null
+      || !Number.isFinite(oiPct) || !Number.isFinite(pricePct)) return null;
 
     var priceUp = pricePct > DEAD ? 1 : pricePct < -DEAD ? -1 : 0;
     var oiUp = oiPct > DEAD ? 1 : oiPct < -DEAD ? -1 : 0;
@@ -308,6 +321,7 @@
     ratio: ratio,
     latestRatio: latestRatio,
     classify: classify,
+    classifyPct: classifyPct,
     stateKey: function (s) { return STATE_KEY[s] || STATE_KEY.flat; },
     DEAD: DEAD,
     budget: budget,

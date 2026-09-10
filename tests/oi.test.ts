@@ -232,3 +232,56 @@ test('symbol dựng đúng từ base, không nhân đôi USDT', () => {
   assert.equal(OI.symbolOf('BTCUSDT'), 'BTCUSDT');
   assert.equal(OI.symbolOf('BTC-USDT'), 'BTCUSDT');
 });
+
+/* ------------------------------------------------------------------ *
+ * classifyPct — cùng một phép phân loại, nhận thẳng hai phần trăm.
+ *
+ * Trang /oi dùng hàm này vì số đến từ /api/oi-scan chứ không có chuỗi nến.
+ * Bài kiểm quan trọng nhất ở đây KHÔNG phải "nó chạy được", mà là "nó cho
+ * ĐÚNG CÙNG kết quả với classify()". Hai định nghĩa trôi khỏi nhau thì cùng
+ * một coin sẽ hiện hai trạng thái khác nhau ở hai trang.
+ * ------------------------------------------------------------------ */
+
+test('classifyPct khớp từng trạng thái với classify', () => {
+  const { OI } = load(() => ({}));
+  const cases: Array<[number, number, string]> = [
+    [110, 110, 'longsIn'],     // OI ↑ giá ↑
+    [90, 110, 'shortCover'],   // OI ↓ giá ↑
+    [110, 90, 'shortsIn'],     // OI ↑ giá ↓
+    [90, 90, 'longsOut'],      // OI ↓ giá ↓
+  ];
+  for (const [oiEnd, priceEnd, want] of cases) {
+    const viaSeries = OI.classify(series(100, oiEnd), candles(100, priceEnd), 1);
+    const viaPct = OI.classifyPct(viaSeries.oiPct, viaSeries.pricePct);
+    assert.equal(viaSeries.state, want);
+    assert.equal(viaPct.state, viaSeries.state);
+    assert.equal(viaPct.oiPct, viaSeries.oiPct);
+    assert.equal(viaPct.pricePct, viaSeries.pricePct);
+    assert.equal(viaPct.priceUp, viaSeries.priceUp);
+    assert.equal(viaPct.oiUp, viaSeries.oiUp);
+  }
+});
+
+test('classifyPct giữ nguyên ngưỡng chết ±0.35%', () => {
+  const { OI } = load(() => ({}));
+  // Ngay dưới ngưỡng: đi ngang, KHÔNG gán hướng.
+  assert.equal(OI.classifyPct(0.3, 0.3).state, 'flat');
+  assert.equal(OI.classifyPct(-0.34, 0.34).state, 'flat');
+  // Đúng bằng ngưỡng vẫn là đi ngang (so sánh dùng >, không phải >=).
+  assert.equal(OI.classifyPct(0.35, 0.35).state, 'flat');
+  // Vượt ngưỡng thì mới có hướng.
+  assert.equal(OI.classifyPct(0.36, 0.36).state, 'longsIn');
+});
+
+test('classifyPct trả null khi thiếu số, không trả "flat"', () => {
+  const { OI } = load(() => ({}));
+  // "Không có dữ liệu" KHÁC "đi ngang". Gộp hai thứ là bịa ra một phát biểu
+  // về thị trường từ chỗ trống.
+  assert.equal(OI.classifyPct(null, 1), null);
+  assert.equal(OI.classifyPct(1, null), null);
+  assert.equal(OI.classifyPct(undefined, undefined), null);
+  assert.equal(OI.classifyPct(NaN, 1), null);
+  assert.equal(OI.classifyPct(1, Infinity), null);
+  // Nhưng 0 là một con số thật: OI không đổi là dữ kiện, không phải chỗ trống.
+  assert.equal(OI.classifyPct(0, 0).state, 'flat');
+});

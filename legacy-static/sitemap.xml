@@ -4,6 +4,8 @@
   <url><loc>https://vdearypto.vercel.app/bubbles.html</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vdearypto.vercel.app/coin.html?c=BTC</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
   <url><loc>https://vdearypto.vercel.app/derivatives.html</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://vdearypto.vercel.app/oi.html</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://vdearypto.vercel.app/longshort.html</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
   <url><loc>https://vdearypto.vercel.app/liquidation.html</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
   <url><loc>https://vdearypto.vercel.app/stats.html</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
   <url><loc>https://vdearypto.vercel.app/money.html</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>

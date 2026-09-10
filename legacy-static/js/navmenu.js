@@ -68,10 +68,10 @@
     {
       title: 'Phái sinh', k: 'nav.g.derivatives',
       items: [
-        { label: 'Open Interest', k: 'nav.i.oi', icon: 'layers', soon: true },
+        { href: 'oi.html', label: 'Open Interest', k: 'nav.i.oi', icon: 'layers' },
         { href: 'derivatives.html', label: 'Funding & Cấu trúc kỳ hạn', k: 'nav.i.funding', icon: 'percent' },
         { href: 'liquidation.html', label: 'Bản đồ thanh lý', k: 'nav.i.liquidation', icon: 'drop' },
-        { label: 'Long / Short', k: 'nav.i.ls', icon: 'scale', soon: true },
+        { href: 'longshort.html', label: 'Long / Short', k: 'nav.i.ls', icon: 'scale' },
       ],
     },
     {

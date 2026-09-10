@@ -1576,3 +1576,67 @@ body.nd-locked{overflow:hidden}
 .vp-tier.up{color:var(--up);border-color:color-mix(in srgb,var(--up) 34%,transparent)}
 .vp-tier.down{color:var(--down);border-color:color-mix(in srgb,var(--down) 34%,transparent)}
 @media (max-width:640px){ .cvd-area{height:92px} }
+
+/* ---------------- Trang Open Interest & Long/Short ------------------- */
+.oi-sum{margin-top:12px}
+.oi-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.oi-card{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+  display:flex;flex-direction:column;gap:4px}
+.oi-card-l{color:var(--muted-2);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+.oi-card-v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.oi-card-v.up{color:var(--up)}.oi-card-v.down{color:var(--down)}.oi-card-v.muted{color:var(--muted-2)}
+
+.oi-filters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.oi-chip{font:inherit;font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;cursor:pointer;
+  background:var(--panel-2);border:1px solid var(--line-2);color:var(--muted);transition:all .12s}
+.oi-chip span{opacity:.65;font-variant-numeric:tabular-nums}
+.oi-chip:hover{color:var(--text);border-color:var(--accent-2)}
+.oi-chip.sel{color:var(--text);border-color:var(--accent);background:var(--panel)}
+.oi-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.oi-state{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:7px;white-space:nowrap;
+  border:1px solid var(--line-2);color:var(--muted)}
+.oi-state.st-longsIn{color:var(--up);border-color:rgba(79,180,119,.5);background:rgba(79,180,119,.12)}
+.oi-state.st-shortsIn{color:var(--down);border-color:rgba(224,87,79,.5);background:rgba(224,87,79,.12)}
+.oi-state.st-shortCover{color:var(--gold);border-color:rgba(216,163,43,.45);background:rgba(216,163,43,.1)}
+.oi-state.st-longsOut{color:var(--gold);border-color:rgba(216,163,43,.45);background:rgba(216,163,43,.1)}
+
+.oi-row.open{background:var(--panel)}
+.oi-detail>td{padding:0 12px 14px}
+.oi-detail-in{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.oi-why b{display:block;margin-bottom:5px}
+.oi-why p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+.oi-spark{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.oi-svg{width:420px;max-width:100%;height:auto}
+.oi-ax{fill:var(--muted-2);font-size:9px;font-family:inherit}
+.oi-spark-cap{color:var(--muted-2);font-size:11px}
+
+/* Thanh Long/Short trong bảng */
+.ls-barcell{min-width:190px}
+.lsb{position:relative;display:flex;height:20px;border-radius:6px;overflow:hidden;
+  background:var(--panel-2);border:1px solid var(--line)}
+.lsb-l{background:rgba(79,180,119,.45)}
+.lsb-s{background:rgba(224,87,79,.45)}
+.lsb-t{position:absolute;top:0;line-height:20px;font-size:10.5px;font-weight:700;
+  font-variant-numeric:tabular-nums;color:var(--text);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.lsb-tl{left:6px}.lsb-ts{right:6px}
+
+.lsp-defs{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.65}
+.lsp-defs li{margin-bottom:4px}
+.lsp-defs b{color:var(--text)}
+.lsp-avgnote{margin-top:10px}
+.lsp-detail{display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.lsp-side{display:flex;flex-direction:column;gap:6px}
+.lsp-side-h{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted-2)}
+.lsp-side-n{color:var(--muted);font-size:12px;line-height:1.5}
+.lsp-detail>#lsDiv{grid-column:1/-1}
+.lsp-detail>#lsDiv:empty{display:none}
+.lsp-div{margin:0;padding-top:10px;border-top:1px dashed var(--line-2);
+  color:var(--gold);font-size:12.5px;line-height:1.55}
+
+@media (max-width:760px){
+  .oi-detail-in,.lsp-detail{grid-template-columns:1fr}
+  .oi-spark{align-items:stretch}
+}
