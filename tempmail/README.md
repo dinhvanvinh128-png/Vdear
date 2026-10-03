@@ -23,10 +23,20 @@ vì file đó thuộc về Vdearypto.
 Chạy thử trên máy: `cd tempmail && python3 -m http.server 8000` rồi mở http://localhost:8000
 (phải chạy qua HTTP vì trang dùng ES module, mở thẳng file sẽ không chạy).
 
+## Dự phòng nhiều lớp
+- Đường gọi: proxy `/api/mailtm` trước; proxy hỏng (5xx, 404, mất mạng) thì trình duyệt gọi thẳng.
+- Nhà cung cấp: khi tạo hộp thư, mail.tm không với tới được thì dùng **mail.gw** (cùng kiểu API).
+  Hộp thư tạo ở đâu thì luôn đọc thư ở đó.
+- Lỗi luôn ghi rõ từng nơi đã thử và lý do.
+
+## Chẩn đoán
+Mở `https://<tên-miền>/api/mailtm?diag=1`: máy chủ Vercel gọi thử `/domains` của mail.tm và
+mail.gw rồi in ra mã HTTP, thời gian và vài chữ đầu của phản hồi.
+
 ## Vì sao có proxy
 Gọi thẳng `api.mail.tm` từ trình duyệt từng báo `Failed to fetch` (CORS, trình chặn
 quảng cáo hoặc nhà mạng). Nên trình duyệt gọi `/api/mailtm?path=/messages` cùng tên
-miền, hàm `api/mailtm.js` gọi tiếp mail.tm. Hàm chỉ chuyển tiếp các đường dẫn mail.tm
+miền, hàm `api/mailtm.js` (Node.js runtime) gọi tiếp mail.tm. Hàm chỉ chuyển tiếp các đường dẫn mail.tm
 mà web dùng (không phải proxy mở) và không lưu gì.
 
 Lưu ý: giới hạn 8 yêu cầu/giây của mail.tm giờ tính theo IP máy chủ Vercel.

@@ -1,5 +1,5 @@
-import { API_BASE, POLL_MS, USE_PROXY } from './config.js';
-import { createClient, MailTmError } from './mailtm.js';
+import { DIRECT_FALLBACK, POLL_MS, PROVIDERS_ORDER, PROXY_BASE } from './config.js';
+import { createClient, MailTmError, PROVIDERS } from './mailtm.js';
 import { buildSrcdoc, escapeHtml, formatSize, formatWhen, hasRemoteImages, senderLabel } from './render.js';
 
 const STORE_KEY = 'tempmail.session.v1';
@@ -13,7 +13,7 @@ const el = {
   list: $('list'), empty: $('empty'), updated: $('updated'), mail: document.querySelector('.mail'),
   placeholder: $('placeholder'), reader: $('reader'), back: $('back'), showImages: $('show-images'),
   deleteMsg: $('delete-msg'), rSubject: $('r-subject'), rFrom: $('r-from'), rTime: $('r-time'),
-  rNote: $('r-images-note'), rAttachments: $('r-attachments'), rBody: $('r-body'),
+  addrLabel: $('addr-label'), rNote: $('r-images-note'), rAttachments: $('r-attachments'), rBody: $('r-body'),
 };
 
 // localStorage có thể ném lỗi (chế độ riêng tư, bị chặn) — trang vẫn chạy, chỉ không nhớ hộp thư.
@@ -24,12 +24,20 @@ function saveSession(s) {
   try { s ? localStorage.setItem(STORE_KEY, JSON.stringify(s)) : localStorage.removeItem(STORE_KEY); } catch { /* bỏ qua */ }
 }
 
-const client = createClient({ base: API_BASE, proxy: USE_PROXY, session: loadSession(), onSession: saveSession });
+const client = createClient({
+  proxyBase: PROXY_BASE,
+  direct: DIRECT_FALLBACK,
+  providers: PROVIDERS_ORDER,
+  session: loadSession(),
+  onSession: saveSession,
+});
 
 let messages = [];
 let openMessage = null;
 let pollTimer = null;
 let busy = false;
+let lastError = null;
+let customProvider = null;
 
 function setStatus(kind, text) {
   el.status.className = `status ${kind}`;
@@ -45,6 +53,8 @@ function showError(err) {
 
 function setAddress(address) {
   el.address.textContent = address || '—';
+  const p = client.session?.provider;
+  el.addrLabel.textContent = address && PROVIDERS[p] ? `Địa chỉ của bạn · ${PROVIDERS[p].name}` : 'Địa chỉ của bạn';
   el.copy.disabled = !address;
   el.refresh.disabled = !address;
 }
@@ -78,8 +88,10 @@ async function refresh() {
     const t = new Date();
     el.updated.textContent = `Cập nhật ${t.toLocaleTimeString('vi-VN')}`;
     setStatus('live', 'Đang theo dõi');
+    lastError = null;
     showError(null);
   } catch (err) {
+    lastError = err;
     setStatus('down', 'Mất kết nối');
     showError(err);
   } finally {
@@ -171,6 +183,7 @@ async function newAddress(opts) {
     // Hộp thư cũ bị xoá hẳn ở mail.tm: không giữ tài khoản mồ côi mà không ai còn mật khẩu.
     if (client.session) {
       await client.deleteAccount().catch((err) => console.warn('Không xoá được hộp thư cũ', err));
+      client.forget();
     }
     saveSession(null);
     const s = await client.createAccount(opts);
@@ -221,7 +234,8 @@ el.customToggle.addEventListener('click', async () => {
   el.customToggle.setAttribute('aria-expanded', String(open));
   if (open && !el.customDomain.options.length) {
     try {
-      const domains = await client.getDomains();
+      const { provider, domains } = await client.getDomains();
+      customProvider = provider;
       el.customDomain.replaceChildren(...domains.map((d) => new Option(d, d)));
     } catch (err) {
       showError(err);
@@ -233,7 +247,7 @@ el.customToggle.addEventListener('click', async () => {
 el.custom.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (messages.length && !confirm('Địa chỉ hiện tại và toàn bộ thư sẽ bị xoá. Tiếp tục?')) return;
-  const ok = await newAddress({ localPart: el.customName.value.trim(), domain: el.customDomain.value });
+  const ok = await newAddress({ localPart: el.customName.value.trim(), domain: el.customDomain.value, provider: customProvider || undefined });
   if (ok) { el.custom.hidden = true; el.customToggle.setAttribute('aria-expanded', 'false'); el.customName.value = ''; }
 });
 
@@ -258,7 +272,8 @@ async function start() {
     setAddress(s.address);
     await refresh();
     // Hộp thư đã bị mail.tm xoá (đăng nhập lại cũng 401) → tạo cái mới
-    if (el.status.classList.contains('down') && /HTTP 401/.test(el.error.textContent)) {
+    if (lastError instanceof MailTmError && lastError.status === 401) {
+      client.forget();
       await newAddress();
       return;
     }

@@ -1,22 +1,33 @@
 /**
- * Client cho API công khai của mail.tm (https://docs.mail.tm).
+ * Client cho API công khai của mail.tm (https://docs.mail.tm) và mail.gw
+ * (cùng một kiểu API). Không cần API key: mỗi người tự tạo hộp thư và nhận JWT.
  *
- * Không cần API key: mỗi người tự tạo tài khoản mail.tm và nhận JWT riêng,
- * nên trình duyệt gọi thẳng api.mail.tm. Giới hạn của mail.tm là 8 yêu cầu/giây
- * mỗi IP.
+ * Hai lớp dự phòng:
+ *  - Đường gọi: thử proxy cùng tên miền (/api/mailtm) trước, hỏng (mạng, 5xx,
+ *    hoặc host không có proxy) thì gọi thẳng nhà cung cấp. Đường nào chạy được
+ *    thì nhớ để dùng tiếp.
+ *  - Nhà cung cấp: khi TẠO hộp thư, mail.tm không với tới được thì dùng mail.gw.
+ *    Hộp thư đã tạo ở đâu thì luôn gọi đúng nơi đó (lưu trong session.provider),
+ *    vì token của mail.tm không dùng được ở mail.gw.
  *
- * Lỗi luôn ghi rõ đã gọi gì (method + URL) và nhận được gì (mã HTTP, hoặc các
- * khoá JSON khi cấu trúc không như mong đợi), để sửa được khi API thay đổi.
+ * Lỗi luôn ghi rõ đã gọi gì, qua đường nào, và nhận được gì.
  */
 
+export const PROVIDERS = {
+  tm: { name: 'mail.tm', base: 'https://api.mail.tm' },
+  gw: { name: 'mail.gw', base: 'https://api.mail.gw' },
+};
+
 export class MailTmError extends Error {
-  constructor(message, { method, url, status = null, body = null } = {}) {
+  constructor(message, { method, url, status = null, body = null, unreachable = false } = {}) {
     super(message);
     this.name = 'MailTmError';
     this.method = method;
     this.url = url;
     this.status = status;
     this.body = body;
+    /** true = không tới được nhà cung cấp (mạng/5xx ở mọi đường) — đáng thử nhà cung cấp khác. */
+    this.unreachable = unreachable;
   }
 }
 
@@ -32,17 +43,13 @@ export function describeShape(value) {
 }
 
 /**
- * mail.tm trả danh sách theo hai kiểu, tuỳ header Accept: mảng thuần
+ * API trả danh sách theo hai kiểu, tuỳ header Accept: mảng thuần
  * (application/json) hoặc Hydra (application/ld+json, nằm trong "hydra:member").
- * Nhận cả hai; kiểu khác thì báo lỗi kèm cấu trúc thật.
  */
 export function listOf(json, ctx) {
   if (Array.isArray(json)) return json;
   if (json && Array.isArray(json['hydra:member'])) return json['hydra:member'];
-  throw new MailTmError(
-    `${ctx.method} ${ctx.url}: cần một danh sách, nhận được ${describeShape(json)}`,
-    ctx,
-  );
+  throw new MailTmError(`${ctx.method} ${ctx.url}: cần một danh sách, nhận được ${describeShape(json)}`, ctx);
 }
 
 const ALNUM = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -61,52 +68,105 @@ export function isValidLocalPart(name) {
   return /^[a-z0-9][a-z0-9._-]{2,63}$/.test(name);
 }
 
-function detailOf(body) {
-  if (!body || typeof body !== 'object') return '';
-  return body['hydra:description'] || body.detail || body.message || '';
+function snippet(text, max = 140) {
+  return String(text || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function detailOf(body, text) {
+  // JSON hợp lệ → chỉ lấy trường mô tả lỗi; không phải JSON (trang lỗi HTML…) → vài chữ đầu.
+  if (body && typeof body === 'object') {
+    const d = body['hydra:description'] || body.detail || body.message;
+    return d ? String(d) : '';
+  }
+  return snippet(text);
 }
 
 /**
- * proxy = false: gọi thẳng `${base}${path}` (vd. https://api.mail.tm/domains).
- * proxy = true : gọi `${base}?path=${path}` qua hàm api/mailtm.js cùng tên miền.
+ * proxyBase: đường proxy cùng tên miền ('/api/mailtm'), null = không dùng.
+ * direct: có gọi thẳng nhà cung cấp không (dự phòng hoặc đường chính).
+ * providers: thứ tự thử khi tạo hộp thư mới.
+ * bases: ghi đè địa chỉ gọi thẳng của từng nhà cung cấp (dùng cho test).
  */
-export function createClient({ base, proxy = false, fetchImpl = globalThis.fetch.bind(globalThis), session = null, onSession } = {}) {
-  if (!base) throw new Error('createClient: thiếu base URL');
-  const root = base.replace(/\/+$/, '');
-  const urlFor = (path) => (proxy ? `${root}?path=${encodeURIComponent(path)}` : root + path);
-  // Dùng trong thông báo lỗi: luôn ghi đường dẫn mail.tm, kèm proxy nếu có.
-  const label = (path) => (proxy ? `${path} (qua ${root})` : root + path);
-  /** session = { id, address, password, token } */
-  let current = session;
+export function createClient({
+  proxyBase = '/api/mailtm',
+  direct = true,
+  providers = ['tm', 'gw'],
+  bases = {},
+  fetchImpl = globalThis.fetch.bind(globalThis),
+  session = null,
+  onSession,
+} = {}) {
+  const transports = [proxyBase && 'proxy', direct && 'direct'].filter(Boolean);
+  if (!transports.length) throw new Error('createClient: cần proxyBase hoặc direct');
+  let preferred = 0;
+  let current = session ? { provider: 'tm', ...session } : null;
 
-  async function raw(method, path, { body, auth = true, contentType = 'application/json', accept = 'application/json', parse = 'json' } = {}) {
-    const url = urlFor(path);
-    const where = label(path);
-    const headers = { Accept: accept };
-    // Qua proxy luôn gửi JSON; proxy tự đổi sang merge-patch cho PATCH.
-    if (body !== undefined) headers['Content-Type'] = proxy ? 'application/json' : contentType;
-    if (auth && current?.token) headers.Authorization = `Bearer ${current.token}`;
-
-    let res;
-    try {
-      res = await fetchImpl(url, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
-    } catch (err) {
-      throw new MailTmError(`${method} ${where}: không kết nối được (${err?.message || err})`, { method, url });
+  function urlFor(transport, provider, path) {
+    if (transport === 'proxy') {
+      return `${proxyBase}?provider=${provider}&path=${encodeURIComponent(path)}`;
     }
+    return (bases[provider] || PROVIDERS[provider].base) + path;
+  }
+  const where = (provider, path) => `${PROVIDERS[provider].name}${path}`;
+  const transportLabel = (t) => (t === 'proxy' ? `qua ${proxyBase}` : 'gọi thẳng');
+
+  /**
+   * Gửi một yêu cầu, thử lần lượt các đường gọi. Trả { res, text, json }.
+   * Chuyển sang đường khác khi: lỗi mạng, hoặc proxy trả 5xx / 404 (host không có proxy).
+   */
+  async function send(provider, method, path, { body, auth, contentType, accept, parse }) {
+    const attempts = [];
+    const order = transports.map((_, i) => transports[(preferred + i) % transports.length]);
+    for (const t of order) {
+      const url = urlFor(t, provider, path);
+      const headers = { Accept: accept };
+      if (body !== undefined) headers['Content-Type'] = t === 'proxy' ? 'application/json' : contentType;
+      if (auth && current?.token) headers.Authorization = `Bearer ${current.token}`;
+      let res;
+      try {
+        res = await fetchImpl(url, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+      } catch (err) {
+        attempts.push(`${transportLabel(t)}: không kết nối được (${err?.message || err})`);
+        continue;
+      }
+      const isLast = t === order[order.length - 1];
+      const proxyBroken = t === 'proxy' && (res.status >= 500 || res.status === 404);
+      if (proxyBroken && !isLast) {
+        let text = '';
+        try { text = await res.text(); } catch { /* bỏ qua */ }
+        let j = null;
+        try { j = JSON.parse(text); } catch { /* không phải JSON */ }
+        attempts.push(`${transportLabel(t)}: HTTP ${res.status}${detailOf(j, text) ? ` (${detailOf(j, text)})` : ''}`);
+        continue;
+      }
+      preferred = transports.indexOf(t);
+      return { res, transport: t, attempts };
+    }
+    throw new MailTmError(`${method} ${where(provider, path)} thất bại — ${attempts.join('; ')}`, {
+      method, url: where(provider, path), unreachable: true,
+    });
+  }
+
+  async function raw(provider, method, path, { body, auth = true, contentType = 'application/json', accept = 'application/json', parse = 'json' } = {}) {
+    const { res, transport, attempts } = await send(provider, method, path, { body, auth, contentType, accept, parse });
+    const label = `${method} ${where(provider, path)} (${transportLabel(transport)})`;
+    const prior = attempts.length ? ` [trước đó: ${attempts.join('; ')}]` : '';
 
     if (res.status === 204) return null;
 
     if (!res.ok) {
+      let text = '';
+      try { text = await res.text(); } catch { /* bỏ qua */ }
       let errBody = null;
-      try { errBody = await res.json(); } catch { /* thân lỗi không phải JSON */ }
-      const detail = detailOf(errBody);
+      try { errBody = JSON.parse(text); } catch { /* không phải JSON */ }
+      const detail = detailOf(errBody, text);
       let hint = '';
-      if (res.status === 429) hint = ' — bị giới hạn tốc độ (mail.tm cho 8 yêu cầu/giây), thử lại sau giây lát';
+      if (res.status === 429) hint = ' — bị giới hạn tốc độ (8 yêu cầu/giây), thử lại sau giây lát';
       if (res.status === 401) hint = ' — phiên đăng nhập không hợp lệ';
-      throw new MailTmError(
-        `${method} ${where} → HTTP ${res.status}${detail ? `: ${detail}` : ''}${hint}`,
-        { method, url, status: res.status, body: errBody },
-      );
+      throw new MailTmError(`${label} → HTTP ${res.status}${detail ? `: ${detail}` : ''}${hint}${prior}`, {
+        method, url: where(provider, path), status: res.status, body: errBody,
+        unreachable: res.status >= 500 || res.status === 403,
+      });
     }
 
     if (parse === 'blob') return res.blob();
@@ -115,86 +175,108 @@ export function createClient({ base, proxy = false, fetchImpl = globalThis.fetch
     try {
       return JSON.parse(text);
     } catch {
-      throw new MailTmError(`${method} ${where}: phản hồi không phải JSON (${text.slice(0, 80)}…)`, { method, url, status: res.status });
+      throw new MailTmError(`${label}: phản hồi không phải JSON (${snippet(text, 80)})`, {
+        method, url: where(provider, path), status: res.status, unreachable: true,
+      });
     }
   }
 
-  async function login(address, password) {
-    const ctx = { method: 'POST', url: label('/token') };
-    const json = await raw('POST', '/token', { body: { address, password }, auth: false });
+  async function loginAt(provider, address, password) {
+    const json = await raw(provider, 'POST', '/token', { body: { address, password }, auth: false });
     if (!json || typeof json.token !== 'string' || typeof json.id !== 'string') {
-      throw new MailTmError(`POST ${ctx.url}: cần {id, token}, nhận được ${describeShape(json)}`, ctx);
+      throw new MailTmError(`POST ${where(provider, '/token')}: cần {id, token}, nhận được ${describeShape(json)}`, { method: 'POST', url: where(provider, '/token') });
     }
-    current = { id: json.id, address, password, token: json.token };
+    current = { provider, id: json.id, address, password, token: json.token };
     onSession?.(current);
     return current;
   }
 
-  /** Gọi có xác thực; nếu JWT hết hạn (401) thì đăng nhập lại bằng mật khẩu đã lưu, thử một lần. */
+  function login(address, password) {
+    return loginAt(current?.provider || providers[0], address, password);
+  }
+
+  /** Gọi có xác thực; JWT hết hạn (401) thì đăng nhập lại bằng mật khẩu đã lưu, thử một lần. */
   async function authed(method, path, opts) {
     if (!current) throw new Error('Chưa có hộp thư');
     try {
-      return await raw(method, path, opts);
+      return await raw(current.provider, method, path, opts);
     } catch (err) {
       if (err instanceof MailTmError && err.status === 401 && current.password) {
-        await login(current.address, current.password);
-        return raw(method, path, opts);
+        await loginAt(current.provider, current.address, current.password);
+        return raw(current.provider, method, path, opts);
       }
       throw err;
     }
   }
 
-  async function getDomains() {
-    const ctx = { method: 'GET', url: label('/domains') };
-    const json = await raw('GET', '/domains', { auth: false });
-    const domains = listOf(json, ctx)
+  async function domainsAt(provider) {
+    const json = await raw(provider, 'GET', '/domains', { auth: false });
+    const domains = listOf(json, { method: 'GET', url: where(provider, '/domains') })
       .filter((d) => d && typeof d.domain === 'string' && d.isActive !== false && d.isPrivate !== true)
       .map((d) => d.domain);
-    if (!domains.length) throw new MailTmError(`GET ${ctx.url}: mail.tm không trả tên miền nào đang hoạt động`, ctx);
+    if (!domains.length) {
+      throw new MailTmError(`GET ${where(provider, '/domains')}: không có tên miền nào đang hoạt động`, {
+        method: 'GET', url: where(provider, '/domains'), unreachable: true,
+      });
+    }
     return domains;
   }
 
-  /** Tạo hộp thư mới rồi đăng nhập. `localPart` để trống thì tạo ngẫu nhiên. */
-  async function createAccount({ localPart, domain } = {}) {
-    const domains = await getDomains();
-    const chosenDomain = domain && domains.includes(domain) ? domain : domains[0];
-    const name = (localPart || randomString(10)).toLowerCase();
-    if (!isValidLocalPart(name)) {
+  /** Lần lượt thử từng nhà cung cấp; chỉ chuyển tiếp khi lỗi kiểu "không với tới được". */
+  async function eachProvider(list, fn) {
+    const errors = [];
+    for (const p of list) {
+      try {
+        return await fn(p);
+      } catch (err) {
+        if (!(err instanceof MailTmError) || !err.unreachable) throw err;
+        errors.push(err.message);
+      }
+    }
+    throw new MailTmError(`Không nhà cung cấp nào phản hồi. ${errors.join(' | ')}`, { unreachable: true });
+  }
+
+  /** { provider, domains } của nhà cung cấp đầu tiên phản hồi được. */
+  function getDomains() {
+    return eachProvider(providers, async (provider) => ({ provider, domains: await domainsAt(provider) }));
+  }
+
+  /** Tạo hộp thư mới rồi đăng nhập. Có `provider` thì chỉ dùng nơi đó. */
+  async function createAccount({ localPart, domain, provider } = {}) {
+    const name = (localPart || '').toLowerCase();
+    if (name && !isValidLocalPart(name)) {
       throw new Error('Tên hộp thư chỉ gồm chữ thường, số, dấu . _ - và dài 3–64 ký tự');
     }
-    const address = `${name}@${chosenDomain}`;
-    const password = randomString(20, ALNUM + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-    try {
-      await raw('POST', '/accounts', { body: { address, password }, auth: false });
-    } catch (err) {
-      if (err instanceof MailTmError && err.status === 422) {
-        throw new MailTmError(`Địa chỉ ${address} đã có người dùng hoặc không hợp lệ. Thử tên khác.`, err);
+    const list = provider ? [provider] : providers;
+    return eachProvider(list, async (p) => {
+      const domains = await domainsAt(p);
+      const chosenDomain = domain && domains.includes(domain) ? domain : domains[0];
+      const address = `${name || randomString(10)}@${chosenDomain}`;
+      const password = randomString(20, ALNUM + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+      try {
+        await raw(p, 'POST', '/accounts', { body: { address, password }, auth: false });
+      } catch (err) {
+        if (err instanceof MailTmError && err.status === 422) {
+          throw new MailTmError(`Địa chỉ ${address} đã có người dùng hoặc không hợp lệ. Thử tên khác.`, err);
+        }
+        throw err;
       }
-      throw err;
-    }
-    return login(address, password);
+      return loginAt(p, address, password);
+    });
   }
 
   async function listMessages(page = 1) {
     const path = `/messages?page=${page}`;
     const json = await authed('GET', path);
-    return listOf(json, { method: 'GET', url: label(path) });
+    return listOf(json, { method: 'GET', url: where(current.provider, path) });
   }
 
-  function getMessage(id) {
-    return authed('GET', `/messages/${encodeURIComponent(id)}`);
-  }
-
-  function markSeen(id) {
-    return authed('PATCH', `/messages/${encodeURIComponent(id)}`, {
-      body: { seen: true },
-      contentType: 'application/merge-patch+json',
-    });
-  }
-
-  function deleteMessage(id) {
-    return authed('DELETE', `/messages/${encodeURIComponent(id)}`);
-  }
+  const getMessage = (id) => authed('GET', `/messages/${encodeURIComponent(id)}`);
+  const markSeen = (id) => authed('PATCH', `/messages/${encodeURIComponent(id)}`, {
+    body: { seen: true },
+    contentType: 'application/merge-patch+json',
+  });
+  const deleteMessage = (id) => authed('DELETE', `/messages/${encodeURIComponent(id)}`);
 
   /** downloadUrl của tệp đính kèm là đường dẫn tương đối, cần JWT nên phải tải qua fetch. */
   function downloadAttachment(downloadUrl) {
@@ -209,8 +291,15 @@ export function createClient({ base, proxy = false, fetchImpl = globalThis.fetch
     onSession?.(null);
   }
 
+  /** Bỏ phiên hiện tại mà không gọi mạng (khi hộp thư đã mất ở phía nhà cung cấp). */
+  function forget() {
+    current = null;
+    onSession?.(null);
+  }
+
   return {
     get session() { return current; },
+    get transport() { return transports[preferred]; },
     getDomains,
     createAccount,
     login,
@@ -220,5 +309,6 @@ export function createClient({ base, proxy = false, fetchImpl = globalThis.fetch
     deleteMessage,
     downloadAttachment,
     deleteAccount,
+    forget,
   };
 }
