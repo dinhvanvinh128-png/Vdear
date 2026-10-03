@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hộp Thư Tạm</title>
+  <meta name="description" content="Tạo địa chỉ email tạm thời miễn phí, nhận thư ngay trên trình duyệt. Chạy trên API công khai của mail.tm.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23ff5a36'/%3E%3Cpath d='M5 8l7 5 7-5' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true"></span>Hộp Thư Tạm</div>
+    <span id="status" class="status" role="status" aria-live="polite"></span>
+  </header>
+
+  <main class="wrap">
+    <section class="addr-card" aria-labelledby="addr-label">
+      <p id="addr-label" class="eyebrow">Địa chỉ của bạn</p>
+      <div class="addr-row">
+        <code id="address" class="address">Đang chuẩn bị…</code>
+        <button id="copy" class="btn primary" type="button" disabled>Sao chép</button>
+      </div>
+      <div class="actions">
+        <button id="refresh" class="btn" type="button" disabled>Làm mới</button>
+        <button id="new" class="btn" type="button">Địa chỉ mới</button>
+        <button id="custom-toggle" class="btn" type="button" aria-expanded="false" aria-controls="custom">Tự đặt tên</button>
+      </div>
+      <form id="custom" class="custom" hidden>
+        <input id="custom-name" name="name" autocomplete="off" spellcheck="false" placeholder="ten-cua-ban" aria-label="Tên hộp thư">
+        <span class="at">@</span>
+        <select id="custom-domain" aria-label="Tên miền"></select>
+        <button class="btn primary" type="submit">Tạo</button>
+      </form>
+      <p id="error" class="error" role="alert" hidden></p>
+    </section>
+
+    <section class="mail" aria-label="Hộp thư đến">
+      <div id="list-pane" class="list-pane">
+        <div class="pane-head">
+          <h2>Hộp thư đến</h2>
+          <span id="updated" class="muted"></span>
+        </div>
+        <ul id="list" class="list"></ul>
+        <div id="empty" class="empty" hidden>
+          <p class="empty-title">Chưa có thư nào</p>
+          <p class="muted">Thư mới tự hiện ở đây — trang kiểm tra mỗi 10 giây khi tab đang mở.</p>
+        </div>
+      </div>
+
+      <div id="placeholder" class="placeholder muted">Chọn một thư để đọc</div>
+
+      <article id="reader" class="reader" hidden>
+        <div class="reader-head">
+          <button id="back" class="btn ghost" type="button">← Quay lại</button>
+          <div class="reader-tools">
+            <button id="show-images" class="btn" type="button" hidden>Hiện ảnh</button>
+            <button id="delete-msg" class="btn danger" type="button">Xoá thư</button>
+          </div>
+        </div>
+        <h3 id="r-subject" class="r-subject"></h3>
+        <p class="r-meta"><span id="r-from"></span> · <time id="r-time"></time></p>
+        <p id="r-images-note" class="note" hidden>Ảnh từ xa đang bị chặn để người gửi không biết bạn đã mở thư.</p>
+        <ul id="r-attachments" class="attachments"></ul>
+        <iframe id="r-body" class="r-body" title="Nội dung thư" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"></iframe>
+      </article>
+    </section>
+
+    <footer class="foot muted">
+      Địa chỉ và thư do <a href="https://mail.tm" rel="noopener" target="_blank">mail.tm</a> cung cấp qua API công khai.
+      Thư có thể bị mail.tm xoá sau vài ngày. Đừng dùng cho tài khoản quan trọng: ai có mật khẩu (lưu trong trình duyệt này) đều đọc được thư.
+    </footer>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

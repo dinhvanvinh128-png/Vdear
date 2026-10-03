@@ -1,0 +1,9 @@
+{
+  "name": "vdear-tempmail",
+  "private": true,
+  "type": "module",
+  "description": "Hộp thư tạm dùng API công khai của mail.tm — trang tĩnh, không bước build",
+  "scripts": {
+    "test": "node --test"
+  }
+}
