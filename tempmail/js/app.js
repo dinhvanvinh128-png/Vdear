@@ -1,4 +1,4 @@
-import { API_BASE, POLL_MS } from './config.js';
+import { API_BASE, POLL_MS, USE_PROXY } from './config.js';
 import { createClient, MailTmError } from './mailtm.js';
 import { buildSrcdoc, escapeHtml, formatSize, formatWhen, hasRemoteImages, senderLabel } from './render.js';
 
@@ -24,7 +24,7 @@ function saveSession(s) {
   try { s ? localStorage.setItem(STORE_KEY, JSON.stringify(s)) : localStorage.removeItem(STORE_KEY); } catch { /* bỏ qua */ }
 }
 
-const client = createClient({ base: API_BASE, session: loadSession(), onSession: saveSession });
+const client = createClient({ base: API_BASE, proxy: USE_PROXY, session: loadSession(), onSession: saveSession });
 
 let messages = [];
 let openMessage = null;

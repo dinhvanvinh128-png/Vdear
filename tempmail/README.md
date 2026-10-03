@@ -1,7 +1,8 @@
 # Hộp Thư Tạm
 
 Web hộp thư tạm thời chạy trên **API công khai của mail.tm** (https://docs.mail.tm).
-Trang tĩnh, không có bước build, không cần API key. Dự án này độc lập với Vdearypto
+Trang tĩnh + một hàm proxy (`api/mailtm.js`, Vercel Edge), không có bước build,
+không cần API key. Dự án này độc lập với Vdearypto
 và web gia phả trong cùng repo.
 
 ## Tính năng
@@ -22,13 +23,21 @@ vì file đó thuộc về Vdearypto.
 Chạy thử trên máy: `cd tempmail && python3 -m http.server 8000` rồi mở http://localhost:8000
 (phải chạy qua HTTP vì trang dùng ES module, mở thẳng file sẽ không chạy).
 
+## Vì sao có proxy
+Gọi thẳng `api.mail.tm` từ trình duyệt từng báo `Failed to fetch` (CORS, trình chặn
+quảng cáo hoặc nhà mạng). Nên trình duyệt gọi `/api/mailtm?path=/messages` cùng tên
+miền, hàm `api/mailtm.js` gọi tiếp mail.tm. Hàm chỉ chuyển tiếp các đường dẫn mail.tm
+mà web dùng (không phải proxy mở) và không lưu gì.
+
+Lưu ý: giới hạn 8 yêu cầu/giây của mail.tm giờ tính theo IP máy chủ Vercel.
+
 ## Nếu mail.tm đổi địa chỉ API
-Sửa `API_BASE` trong `js/config.js` **và** `connect-src` trong `vercel.json`.
+Đặt biến môi trường `MAILTM_UPSTREAM` trên Vercel. Muốn bỏ proxy và gọi thẳng, xem
+chú thích trong `js/config.js`.
 Khi API trả về cấu trúc lạ, thông báo lỗi trên trang sẽ ghi rõ URL đã gọi và
 các khoá JSON nhận được.
 
 ## Giới hạn
-- mail.tm cho tối đa 8 yêu cầu/giây mỗi IP. Mỗi người dùng gọi từ IP riêng của họ.
 - mail.tm tự xoá thư sau một thời gian. Không dùng cho tài khoản quan trọng:
   mật khẩu hộp thư nằm trong localStorage của trình duyệt.
 

@@ -66,23 +66,32 @@ function detailOf(body) {
   return body['hydra:description'] || body.detail || body.message || '';
 }
 
-export function createClient({ base, fetchImpl = globalThis.fetch.bind(globalThis), session = null, onSession } = {}) {
+/**
+ * proxy = false: gọi thẳng `${base}${path}` (vd. https://api.mail.tm/domains).
+ * proxy = true : gọi `${base}?path=${path}` qua hàm api/mailtm.js cùng tên miền.
+ */
+export function createClient({ base, proxy = false, fetchImpl = globalThis.fetch.bind(globalThis), session = null, onSession } = {}) {
   if (!base) throw new Error('createClient: thiếu base URL');
   const root = base.replace(/\/+$/, '');
+  const urlFor = (path) => (proxy ? `${root}?path=${encodeURIComponent(path)}` : root + path);
+  // Dùng trong thông báo lỗi: luôn ghi đường dẫn mail.tm, kèm proxy nếu có.
+  const label = (path) => (proxy ? `${path} (qua ${root})` : root + path);
   /** session = { id, address, password, token } */
   let current = session;
 
   async function raw(method, path, { body, auth = true, contentType = 'application/json', accept = 'application/json', parse = 'json' } = {}) {
-    const url = root + path;
+    const url = urlFor(path);
+    const where = label(path);
     const headers = { Accept: accept };
-    if (body !== undefined) headers['Content-Type'] = contentType;
+    // Qua proxy luôn gửi JSON; proxy tự đổi sang merge-patch cho PATCH.
+    if (body !== undefined) headers['Content-Type'] = proxy ? 'application/json' : contentType;
     if (auth && current?.token) headers.Authorization = `Bearer ${current.token}`;
 
     let res;
     try {
       res = await fetchImpl(url, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
     } catch (err) {
-      throw new MailTmError(`${method} ${url}: không kết nối được (${err?.message || err})`, { method, url });
+      throw new MailTmError(`${method} ${where}: không kết nối được (${err?.message || err})`, { method, url });
     }
 
     if (res.status === 204) return null;
@@ -95,7 +104,7 @@ export function createClient({ base, fetchImpl = globalThis.fetch.bind(globalThi
       if (res.status === 429) hint = ' — bị giới hạn tốc độ (mail.tm cho 8 yêu cầu/giây), thử lại sau giây lát';
       if (res.status === 401) hint = ' — phiên đăng nhập không hợp lệ';
       throw new MailTmError(
-        `${method} ${url} → HTTP ${res.status}${detail ? `: ${detail}` : ''}${hint}`,
+        `${method} ${where} → HTTP ${res.status}${detail ? `: ${detail}` : ''}${hint}`,
         { method, url, status: res.status, body: errBody },
       );
     }
@@ -106,12 +115,12 @@ export function createClient({ base, fetchImpl = globalThis.fetch.bind(globalThi
     try {
       return JSON.parse(text);
     } catch {
-      throw new MailTmError(`${method} ${url}: phản hồi không phải JSON (${text.slice(0, 80)}…)`, { method, url, status: res.status });
+      throw new MailTmError(`${method} ${where}: phản hồi không phải JSON (${text.slice(0, 80)}…)`, { method, url, status: res.status });
     }
   }
 
   async function login(address, password) {
-    const ctx = { method: 'POST', url: `${root}/token` };
+    const ctx = { method: 'POST', url: label('/token') };
     const json = await raw('POST', '/token', { body: { address, password }, auth: false });
     if (!json || typeof json.token !== 'string' || typeof json.id !== 'string') {
       throw new MailTmError(`POST ${ctx.url}: cần {id, token}, nhận được ${describeShape(json)}`, ctx);
@@ -136,7 +145,7 @@ export function createClient({ base, fetchImpl = globalThis.fetch.bind(globalThi
   }
 
   async function getDomains() {
-    const ctx = { method: 'GET', url: `${root}/domains` };
+    const ctx = { method: 'GET', url: label('/domains') };
     const json = await raw('GET', '/domains', { auth: false });
     const domains = listOf(json, ctx)
       .filter((d) => d && typeof d.domain === 'string' && d.isActive !== false && d.isPrivate !== true)
@@ -169,7 +178,7 @@ export function createClient({ base, fetchImpl = globalThis.fetch.bind(globalThi
   async function listMessages(page = 1) {
     const path = `/messages?page=${page}`;
     const json = await authed('GET', path);
-    return listOf(json, { method: 'GET', url: root + path });
+    return listOf(json, { method: 'GET', url: label(path) });
   }
 
   function getMessage(id) {
